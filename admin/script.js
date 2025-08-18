@@ -263,11 +263,9 @@ async function performAdminTokenRefreshWithRetries() {
         });
 
         if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({
-              detail: `Admin: Помилка сервера при оновленні: ${response.status}`,
-            }));
+          const errorData = await response.json().catch(() => ({
+            detail: `Admin: Помилка сервера при оновленні: ${response.status}`,
+          }));
           if (
             response.status === 400 ||
             response.status === 401 ||
@@ -464,11 +462,9 @@ async function fetchWithAuth(url, options = {}, statusElementId = null) {
       if (response.ok && response.status === 204) return null;
       // Якщо статус не ОК, але JSON не парситься, повертаємо текст помилки
       if (!response.ok)
-        return response
-          .text()
-          .then((text) => ({
-            detail: text || `HTTP помилка ${response.status} без JSON тіла`,
-          }));
+        return response.text().then((text) => ({
+          detail: text || `HTTP помилка ${response.status} без JSON тіла`,
+        }));
       return null; // Для інших випадків
     });
 
@@ -1559,9 +1555,11 @@ async function loadProfileDetails(phone) {
   detailsDiv.innerHTML = '<p>Завантаження профілю...</p>';
 
   try {
+    // userData тепер має структуру UserWithProfile
     const { data: userData } = await fetchWithAuth(`/admin/profiles/${phone}`);
+    const profile = userData.profile; // Вся детальна інформація тепер у вкладеному об'єкті
 
-    let profileHTML = `<h3>Профіль користувача: ${userData.profile?.full_name || userData.phone}</h3>`;
+    let profileHTML = `<h3>Профіль користувача: ${profile?.full_name || userData.phone}</h3>`;
 
     profileHTML += `<div class="user-roles-status">`;
     if (userData.is_admin) {
@@ -1570,7 +1568,7 @@ async function loadProfileDetails(phone) {
       profileHTML += `<span class="role trainer" title="Тренер">Тренер</span>`;
     } else {
       const userTypeText =
-        userData.profile?.registration_type === 'self'
+        profile?.registration_type === 'self'
           ? "Користувач 'без тренера'"
           : "Користувач 'з тренером'";
       profileHTML += `<span class="role user" title="Звичайний користувач">${userTypeText}</span>`;
@@ -1578,20 +1576,16 @@ async function loadProfileDetails(phone) {
     if (userData.is_independent) {
       profileHTML += `<span class="role independent" title="Може самостійно створювати тренування">Самостійний</span>`;
     }
-    // Відображення статусу підписки
     if (userData.has_active_subscription) {
       profileHTML += `<span class="status subscription-active" title="Є активна підписка">Підписка активна</span>`;
     } else {
       profileHTML += `<span class="status subscription-inactive" title="Підписка неактивна або відсутня">Підписка не активна</span>`;
     }
 
-    if (userData.profile) {
-      // Перевіряємо, чи існує профіль
-      if (userData.profile.auto_renew_enabled) {
-        profileHTML += `<span class="status auto-renew-on" title="Автоподовження підписки увімкнено">Автоподовження 🔁</span>`;
-      } else {
-        profileHTML += `<span class="status auto-renew-off" title="Автоподовження підписки вимкнено">Автоподовження 🚫</span>`;
-      }
+    if (profile?.auto_renew_enabled) {
+      profileHTML += `<span class="status auto-renew-on" title="Автоподовження підписки увімкнено">Автоподовження 🔁</span>`;
+    } else {
+      profileHTML += `<span class="status auto-renew-off" title="Автоподовження підписки вимкнено">Автоподовження 🚫</span>`;
     }
 
     if (userData.is_suspended) {
@@ -1608,25 +1602,16 @@ async function loadProfileDetails(phone) {
     }
     profileHTML += `</div>`;
 
-    profileHTML += `<p><strong>Зареєстрував:</strong> <span class="profile-data">`;
-    if (userData.who_registered && userData.who_registered.phone) {
-      profileHTML += `${userData.who_registered.full_name || "(Ім'я не знайдено)"} (${userData.who_registered.phone})`;
-    } else {
-      profileHTML += `-`;
-    }
-    profileHTML += `</span></p>`;
+    // Бекенд більше не повертає 'who_registered', тому цей блок видалено.
+    // Інформація про тип реєстрації вже є вище.
 
-    if (userData.profile) {
-      const profile = userData.profile;
-
-      // --- ОНОВЛЕНИЙ БЛОК ДЛЯ ПОСИЛАНЬ ---
+    if (profile) {
       const telegramUsername = profile.telegram_link
         ? profile.telegram_link.replace(/^@/, '')
         : null;
       const instagramUsername = profile.instagram_link
         ? profile.instagram_link.replace(/^@/, '')
         : null;
-      // --- КІНЕЦЬ ОНОВЛЕНОГО БЛОКУ ---
 
       profileHTML += `
                 <p><strong>Повне ім'я:</strong> <span class="profile-data">${profile.full_name || '-'}</span></p>
@@ -1656,10 +1641,10 @@ async function loadProfileDetails(phone) {
       profileHTML += `<p style="margin-top: 15px;"><i>Профіль користувача ще не заповнено.</i></p>`;
     }
 
-    // Ось він, наш контейнер для кнопок
     profileHTML += `<div class="admin-actions">`;
 
-    const registrationType = userData.profile?.registration_type;
+    // Використовуємо registration_type з об'єкта profile
+    const registrationType = profile?.registration_type;
 
     if (registrationType === 'by_trainer') {
       profileHTML += `<button id="change-user-type-btn" class="admin-action-btn" data-current-type="by_trainer">Зробити "без тренера"</button>`;
@@ -1670,17 +1655,14 @@ async function loadProfileDetails(phone) {
     const currentAdminPhone = localStorage
       .getItem('admin_phone')
       ?.replace('+', '');
-    // Кнопка "Змінити пароль"
     if (phone !== currentAdminPhone) {
       profileHTML += `<button id="change-password-btn" class="admin-action-btn" title="Сгенерувати новий випадковий пароль для цього користувача">Змінити пароль</button>`;
     }
-    // Кнопка статусу "Самостійний"
     if (userData.is_independent) {
       profileHTML += `<button id="toggle-independent-btn" class="admin-action-btn suspend" title="Заборонити користувачу самостійно створювати тренування">Зробити звичайним</button>`;
     } else {
       profileHTML += `<button id="toggle-independent-btn" class="admin-action-btn activate" title="Дозволити користувачу самостійно створювати тренування">Зробити самостійним</button>`;
     }
-    // Кнопки призупинення/видалення
     if (!userData.is_admin) {
       if (userData.is_suspended) {
         profileHTML += `<button id="unsuspend-user-btn" class="admin-action-btn activate" title="Відновити доступ користувача до особистого кабінету">Відновити аккаунт</button>`;
@@ -1691,8 +1673,6 @@ async function loadProfileDetails(phone) {
     }
     profileHTML += `</div>`;
     profileHTML += `<div id="admin-action-message" style="margin-top: 10px; font-weight: bold;"></div>`;
-
-    // Додаємо наш новий контейнер для підписок
     profileHTML += `<div id="subscription-management-section"></div>`;
 
     detailsDiv.innerHTML = profileHTML;
@@ -1706,7 +1686,6 @@ async function loadProfileDetails(phone) {
       });
     }
 
-    // Прив'язуємо обробники до щойно створених кнопок
     const changePassBtn = detailsDiv.querySelector('#change-password-btn');
     if (changePassBtn)
       changePassBtn.addEventListener('click', () => changePassword(phone));
@@ -1731,7 +1710,6 @@ async function loadProfileDetails(phone) {
     const deleteBtn = detailsDiv.querySelector('#delete-user-btn');
     if (deleteBtn) deleteBtn.addEventListener('click', () => deleteUser(phone));
 
-    // Запускаємо завантаження підписок
     loadSubscriptionDetails(phone);
   } catch (error) {
     console.error(`Помилка завантаження профілю для ${phone}:`, error);
@@ -5525,12 +5503,21 @@ function renderAdminStats(stats) {
 
   let html = '<h3>Аналітика платформи Lily & Max sport 🚀</h3>';
 
+  // Перевіряємо, чи це статистика по конкретному тренеру
+  if (selectedUserPhone && usersCache) {
+    const selectedUser = usersCache.find((u) => u.phone === selectedUserPhone);
+    if (selectedUser && selectedUser.is_trainer) {
+      html += `<p style="font-size: 1.1em; color: #a5b4fc; margin-bottom: 15px;">Відображено статистику для тренера: <strong>${selectedUser.full_name || selectedUserPhone}</strong></p>`;
+    }
+  }
+
   // Блок 1: Загальна кількість
   html += `
         <h4 class="stats-header">Загальні показники</h4>
         <table class="stats-table">
             <tbody>
                 ${createRow('Всього зареєстровано користувачів', stats.total_registered_users, { valueClass: 'stats-value-total' })}
+                ${createRow('Нових користувачів (за 30 днів)', stats.new_users_last_30_days, { valueClass: 'stats-value-purple' })}
             </tbody>
         </table>
     `;
@@ -5541,9 +5528,7 @@ function renderAdminStats(stats) {
         <table class="stats-table">
             <tbody>
                 ${createRow('Всього з активною підпискою', stats.active_subscriptions.total, { valueClass: 'stats-value-total' })}
-                
-                ${createRow('Всього з автооновленням підписки', stats.active_subscriptions.with_auto_renew_enabled, { valueClass: 'stats-value-purple' })}
-                
+                ${createRow('...з них з автопоновленням', stats.active_subscriptions.with_auto_renew_enabled, { isSubItem: true, valueClass: 'stats-value-purple' })}
                 ${createRow('Користувачі "з тренером"', stats.active_subscriptions.breakdown.with_trainer, { isSubItem: true })}
                 ${createRow('Користувачі "з тренером" (самостійні)', stats.active_subscriptions.breakdown.with_trainer_independent, { isSubItem: true })}
                 ${createRow('Користувачі "без тренера"', stats.active_subscriptions.breakdown.without_trainer, { isSubItem: true })}
@@ -5564,60 +5549,19 @@ function renderAdminStats(stats) {
         </table>
     `;
 
-  // Блок 4: Статистика по тренеру (тільки якщо є дані)
-  if (stats.trainer_specific_stats) {
-    const trainerName =
-      usersCache.find((u) => u.phone === selectedUserPhone)?.full_name ||
-      selectedUserPhone;
-    html += `
-            <h4 class="stats-header">Статистика по тренеру: ${trainerName}</h4>
-            <table class="stats-table">
-                <tbody>
-                    ${createRow('Всього клієнтів', stats.trainer_specific_stats.total_clients, { valueClass: 'stats-value-total' })}
-                    ${createRow('З активною підпискою', stats.trainer_specific_stats.active_subscription_clients, { isSubItem: true })}
-                    ${createRow('...із них "самостійних"', stats.trainer_specific_stats.active_independent_clients, { isSubItem: true })}
-                    ${createRow('З неактивною підпискою', stats.trainer_specific_stats.inactive_subscription_clients, { isSubItem: true, valueClass: 'stats-value-red' })}
-                </tbody>
-            </table>
-        `;
-  }
-
-  // Блок 5: Середня тривалість підписки
+  // Блок 4: Статистика по тренуваннях
   html += `
-        <h4 class="stats-header">Середня тривалість підписки (утримання клієнтів)</h4>
+        <h4 class="stats-header">Активність по тренуваннях</h4>
         <table class="stats-table">
             <tbody>
-                ${createRow('Для всіх користувачів', `${stats.average_subscription_duration.all_users_days.toFixed(1)} днів`, { valueClass: 'stats-value-total' })}
-                ${createRow('"з тренером"', `${stats.average_subscription_duration.with_trainer_days.toFixed(1)} днів`, { isSubItem: true })}
-                ${createRow('"з тренером" (самостійні)', `${stats.average_subscription_duration.with_trainer_independent_days.toFixed(1)} днів`, { isSubItem: true })}
-                ${createRow('"без тренера"', `${stats.average_subscription_duration.without_trainer_days.toFixed(1)} днів`, { isSubItem: true })}
+                ${createRow('Всього виконано тренувань', stats.total_completed_trainings, { valueClass: 'stats-value-total' })}
+                ${createRow('Користувачів з планом від тренера', stats.users_with_trainer_plan, { isSubItem: true })}
+                ${createRow('Користувачів з планом від Gemini', stats.users_with_generated_plan, { isSubItem: true })}
             </tbody>
         </table>
     `;
 
-  // Блок 6: Статистика дій
-  html += `
-        <h4 class="stats-header">Активність користувачів (за останні 2 дні)</h4>
-        <table class="stats-table">
-            <tbody>
-                ${createRow('Використання Gemini для аналізу фідбеку', stats.feature_usage_last_2_days.feedback_analysis_users_last_2d, { valueClass: 'stats-value-red' })}
-                ${createRow('Використання Gemini для створення самостійного тренування', stats.feature_usage_last_2_days.self_generation_users_last_2d, { valueClass: 'stats-value-red' })}
-            </tbody>
-        </table>
-    `;
-
-  // Блок 7: Статистика генерацій Gemini
-  html += `
-        <h4 class="stats-header">Автоматичні генерації Gemini (за останні 24 години)</h4>
-        <table class="stats-table">
-            <tbody>
-                ${createRow('Згенеровано Планів тренувань', stats.generation_activity_last_24h.plans_generated_last_24h, { valueClass: 'stats-value-orange' })}
-                ${createRow('Згенеровано пакетів тренувань на тиждень', stats.generation_activity_last_24h.weekly_batches_generated_last_24h, { valueClass: 'stats-value-orange' })}
-            </tbody>
-        </table>
-    `;
-
-  html += `<p style="font-size: 0.8em; color: #888; margin-top: 10px;">*Примітка: Статистика по тренеру відображається, якщо у вкладці "Профілі" обрати користувача з роллю "Тренер".</p>`;
+  html += `<p style="font-size: 0.8em; color: #888; margin-top: 10px;">*Примітка: Щоб переглянути статистику по конкретному тренеру, оберіть його у вкладці "Профілі".</p>`;
 
   container.innerHTML = html;
 }
