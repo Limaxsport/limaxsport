@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="ua">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Admin</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/Limaxsport/limaxsport/admin/styles.css"
+    />
+  </head>
+  <body>
+    <!-- Оверлей з формою авторизації -->
+    <div id="login-overlay">
+      <form id="login-form">
+        <h2>Вхід до адмін-панелі (admin only):</h2>
+        <br />
+        <label for="phone">Номер телефону</label>
+        <input type="text" id="phone-login" name="phone" required />
+        <br />
+        <label for="password">Пароль</label>
+        <input type="password" id="password" name="password" required />
+        <br />
+        <label for="totp_code">Код</label>
+        <input type="text" id="totp_code" name="totp_code" required />
+        <br />
+        <button type="submit">Увійти</button>
+        <div id="login-response"></div>
+      </form>
+    </div>
+
+    <!-- Вкладки -->
+    <div id="admin-panel" class="container">
+      <div class="tabs">
+        <button class="tab-link" onclick="openTab(event, 'register')">
+          Реєстрація
+        </button>
+        <button class="tab-link" onclick="openTab(event, 'notifications')">
+          Повідомлення
+        </button>
+        <button class="tab-link" onclick="openTab(event, 'profiles')">
+          Профілі
+        </button>
+        <button class="tab-link" onclick="openTab(event, 'progress')">
+          Прогрес
+        </button>
+        <button class="tab-link" onclick="openTab(event, 'workouts')">
+          Тренування
+        </button>
+        <button class="tab-link" onclick="openTab(event, 'plans')">
+          Плани
+        </button>
+        <button class="tab-link" onclick="openTab(event, 'analytics')">
+          Аналітика
+        </button>
+        <button class="tab-link" onclick="openTab(event, 'actions')">
+          Дії
+        </button>
+        <button class="tab-link" onclick="openTab(event, 'logout')">
+          Вихід
+        </button>
+      </div>
+
+      <!-- Реєстрація користувачів -->
+      <div id="register" class="tab-content" style="display: none">
+        <form id="register-form">
+          <br />
+          <label for="phone">Номер телефону:</label>
+          <input type="text" id="phone-register" name="phone" required />
+
+          <label for="registration_type_register">Тип користувача:</label>
+          <select
+            id="registration_type_register"
+            name="registration_type"
+            required
+          >
+            <option value="by_trainer" selected>З тренером</option>
+            <option value="self">Без тренера</option>
+          </select>
+          <label class="checkbox-label" for="is_admin"
+            >Зробити адміністратором:</label
+          >
+          <input type="checkbox" id="is_admin" name="is_admin" />
+          <label class="checkbox-label" for="is_trainer"
+            >Зробити тренером:</label
+          >
+          <input type="checkbox" id="is_trainer" name="is_trainer" />
+          <br />
+          <button type="submit">Зареєструвати</button>
+        </form>
+        <div id="register-message"></div>
+      </div>
+
+      <!-- Додання/редагування повідомлень -->
+      <div id="notifications" class="tab-content" style="display: none">
+        <h2>Керування повідомленнями</h2>
+
+        <div class="form-section">
+          <h4 id="notification-form-title">Створити нове повідомлення</h4>
+          <form id="notification-form">
+            <input type="hidden" id="notification-id" name="id" />
+
+            <label for="notification-title">Заголовок:</label>
+            <input
+              type="text"
+              id="notification-title"
+              name="title"
+              required
+              minlength="3"
+            />
+
+            <label for="notification-text">Текст повідомлення:</label>
+            <textarea
+              id="notification-text"
+              name="text"
+              rows="5"
+              required
+              minlength="10"
+            ></textarea>
+
+            <div class="form-actions">
+              <button type="button" id="notification-submit-btn">
+                Опублікувати
+              </button>
+              <button
+                type="button"
+                id="notification-cancel-edit-btn"
+                style="display: none"
+              >
+                Скасувати
+              </button>
+            </div>
+            <div id="notification-status" class="status-message"></div>
+          </form>
+        </div>
+
+        <h4>Опубліковані повідомлення</h4>
+        <div id="notifications-list-container">
+          <p>Завантаження...</p>
+        </div>
+      </div>
+
+      <!-- Вкладка "Профілі" -->
+      <div id="profiles" class="tab-content" style="display: none">
+        <h2>Список користувачів</h2>
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Пошук клієнта"
+          style="margin-bottom: 10px; padding: 5px; width: 100%"
+        />
+        <ul id="user-list" style="list-style: none; padding: 0"></ul>
+
+        <div id="profile-details" style="display: none; margin-top: 20px"></div>
+      </div>
+
+      <!-- Вкладка "Прогрес" -->
+      <div id="progress" class="tab-content" style="display: none">
+        <div id="progress-details" style="display: none; margin-top: 20px">
+          <h3>Прогрес користувача:</h3>
+          <br />
+          <table id="progress-table-admin">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Вага (кг)</th>
+                <th>Груди (см)</th>
+                <th>Талія (см)</th>
+                <th>Живіт (см)</th>
+                <th>Стегна (см)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Вкладка "Тренування" -->
+      <div id="workouts" class="tab-content" style="display: none">
+        <div id="admin-workout-list-view">
+          <h2>
+            Тренування користувача:
+            <span id="admin-workout-list-username"
+              >(Оберіть користувача у вкладці "Профілі")</span
+            >
+          </h2>
+
+          <button
+            type="button"
+            id="show-add-training-form-btn"
+            style="margin-bottom: 15px; display: none"
+          >
+            + Додати нове тренування
+          </button>
+
+          <div
+            id="admin-workout-list-status"
+            class="status-message"
+            style="min-height: 1.5em"
+          ></div>
+
+          <div id="admin-workout-list"></div>
+          <div
+            id="admin-workout-load-more-container"
+            style="text-align: center; padding: 20px"
+          ></div>
+        </div>
+
+        <div id="admin-workout-form-view" style="display: none">
+          <h2>
+            Створення тренування для
+            <span id="selected-user-name">(Ім'я користувача)</span>
+          </h2>
+          <button type="button" id="cancel-add-training-btn">
+            < Назад до списку тренувань
+          </button>
+
+          <!-- ========== НОВИЙ БЛОК ДЛЯ GEMINI HELPER ========== -->
+          <div class="gemini-helper-container">
+            <button
+              type="button"
+              id="toggle-gemini-helper-btn"
+              class="admin-action-btn gemini-btn"
+            >
+              Допомога Gemini ✨
+            </button>
+            <!-- Цей спіннер буде показуватися під час генерації -->
+            <div
+              id="gemini-loader"
+              class="gemini-spinner"
+              style="display: none"
+            ></div>
+          </div>
+
+          <!-- Цей блок буде з'являтися та зникати -->
+          <div
+            id="gemini-input-section"
+            style="display: none; margin-top: 15px"
+          >
+            <label for="gemini-prompt-input"
+              >Опишіть, яке тренування ви хочете згенерувати:</label
+            >
+            <textarea
+              id="gemini-prompt-input"
+              class="admin-textarea"
+              placeholder="Наприклад: Тренування спини та біцепсу в тренажерному залі"
+            ></textarea>
+            <button
+              type="button"
+              id="generate-with-gemini-btn"
+              class="admin-action-btn"
+            >
+              Згенерувати
+            </button>
+            <div id="gemini-status" class="status-message"></div>
+          </div>
+          <!-- ========== КІНЕЦЬ НОВОГО БЛОКУ ========== -->
+
+          <form id="add-training-plan-form">
+            <input type="hidden" id="user-phone" name="phone" />
+            <label for="training-title">Назва тренування:</label>
+            <input type="text" id="training-title" name="title" required />
+            <label for="training-date">Дата проведення:</label>
+            <input type="date" id="training-date" name="date" required />
+            <label for="training-description"
+              >Загальний опис тренування (не обов'язково):</label
+            >
+            <textarea name="description" id="training-description"></textarea>
+            <h3>Вправи:</h3>
+            <div id="exercises-container"></div>
+            <button type="button" id="add-exercise-btn">+ Додати вправу</button>
+            <button type="submit">Зберегти тренування</button>
+            <button
+              type="button"
+              id="clear-workout-draft-btn"
+              style="display: none"
+            >
+              Очистити чернетку
+            </button>
+          </form>
+          <div id="training-plan-message" class="status-message"></div>
+        </div>
+
+        <div id="admin-workout-details-view" style="display: none">
+          <button type="button" id="admin-back-to-workout-list-btn">
+            < Назад до списку тренувань
+          </button>
+          <hr />
+
+          <div id="admin-workout-details-content">
+            <h3
+              id="admin-workout-details-title"
+              style="text-align: left; margin-bottom: 5px"
+            >
+              (Назва тренування)
+            </h3>
+            <p style="margin-bottom: 5px">
+              <strong>Дата:</strong>
+              <span id="admin-workout-details-date"></span>
+            </p>
+            <p style="margin-bottom: 15px">
+              <strong>Статус:</strong>
+              <span id="admin-workout-details-completion"></span>
+            </p>
+            <p><strong>Опис тренування:</strong></p>
+            <p
+              id="admin-workout-details-description"
+              style="
+                margin-left: 1em;
+                margin-bottom: 15px;
+                white-space: pre-wrap;
+              "
+            ></p>
+            <p>
+              <strong>Тривалість силової (хв.):</strong>
+              <span id="admin-workout-details-duration">-</span>
+            </p>
+            <p>
+              <strong>Складність:</strong>
+              <span id="admin-workout-details-difficulty"></span>
+            </p>
+            <p>
+              <strong>Тривалість кардіо (хв.):</strong>
+              <span id="admin-workout-details-cardio"></span>
+            </p>
+            <p>
+              <strong>Витрачено калорій:</strong>
+              <span id="admin-workout-details-calories"></span>
+            </p>
+            <h5>Відгук користувача:</h5>
+            <p
+              id="admin-workout-details-feedback"
+              style="white-space: pre-wrap"
+            ></p>
+
+            <div id="admin-ai-analysis-container" style="display: none">
+              <hr />
+              <h5>Аналіз тренування від Gemini:</h5>
+              <div id="admin-ai-analysis-text" class="ai-analysis-text"></div>
+            </div>
+            <hr />
+            <h4>Вправи:</h4>
+            <div id="admin-workout-details-exercises"></div>
+          </div>
+          <div id="admin-workout-details-status" class="status-message"></div>
+        </div>
+      </div>
+      <template id="exercise-template">
+        <fieldset class="exercise">
+          <legend>Вправа <span class="exercise-number"></span></legend>
+          <button type="button" class="select-gif-btn">Обрати GIF</button>
+          <div class="selected-gif-container" style="margin-top: 10px">
+            <img
+              class="selected-gif"
+              style="
+                display: none;
+                max-width: 270px;
+                height: auto;
+                object-fit: cover;
+              "
+            />
+          </div>
+          <div class="folder-selector" style="display: none; margin-top: 10px">
+            <div class="folder-buttons"></div>
+          </div>
+          <div
+            class="subfolder-selector"
+            style="display: none; margin-top: 10px"
+          >
+            <div class="subfolder-buttons"></div>
+          </div>
+          <div
+            class="gif-grid"
+            style="
+              display: none;
+              grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+              gap: 8px;
+              margin-top: 10px;
+            "
+          ></div>
+          <input type="hidden" name="gif_id[]" class="gif-id-input" />
+          <input type="hidden" class="original-gif-filename-input" />
+
+          <label for="order">Порядковий номер вправи:</label>
+          <select name="order[]" class="order-input">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+
+          <label for="name">Назва вправи:</label>
+          <textarea name="name[]" class="name-input" rows="1"></textarea>
+
+          <label for="description">Техніка виконання вправи:</label>
+          <textarea
+            name="description[]"
+            class="description-input"
+            rows="2"
+          ></textarea>
+
+          <label class="checkbox-label"
+            >Позначити суперсет з наступною вправою (за необхідністю):
+            <input
+              type="checkbox"
+              name="superset[]"
+              class="superset-input"
+              style="margin-left: 5px"
+            />
+          </label>
+
+          <label class="checkbox-label"
+            >Позначити акцент на цій вправі (за необхідністю):
+            <input
+              type="checkbox"
+              name="emphasis[]"
+              class="emphasis-input"
+              style="margin-left: 5px"
+            />
+          </label>
+
+          <div class="form-group">
+            <label for="all-weight-input"
+              >Загальна робоча вага (не обов'язково):</label
+            >
+            <!-- Тепер це поле для вводу зі списком підказок -->
+            <input
+              type="text"
+              list="all-weight-options"
+              class="all-weight admin-input"
+            />
+            <datalist id="all-weight-options">
+              <option value="легка"></option>
+              <option value="середня"></option>
+              <option value="вище середньої"></option>
+              <option value="важка"></option>
+              <option value="максимальна"></option>
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label>Діапазон робочих ваг (не обов'язково):</label>
+            від
+            <input
+              type="text"
+              list="range-options"
+              class="weight-range-from admin-input"
+            />
+            до
+            <input
+              type="text"
+              list="range-options"
+              class="weight-range-to admin-input"
+            />
+            <datalist id="range-options">
+              <option value="легких"></option>
+              <option value="середніх"></option>
+              <option value="вище середніх"></option>
+              <option value="важких"></option>
+              <option value="максимальних"></option>
+            </datalist>
+          </div>
+
+          <label for="sets">Кількість підходів:</label>
+          <select name="sets[]" class="sets-input">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+          <div class="sets-table-container"></div>
+
+          <label class="checkbox-label"
+            >Позначити загальну вагу для 2-х гантелей/кросоверів (за
+            необхідністю):
+            <input
+              type="checkbox"
+              name="total_weight[]"
+              class="total-weight-input"
+              style="margin-left: 5px"
+            />
+          </label>
+
+          <label class="checkbox-label"
+            >Позначити загальну кількість повторень для обох ніг/рук (за
+            необхідністю):
+            <input
+              type="checkbox"
+              name="total_reps[]"
+              class="total-reps-input"
+              style="margin-left: 5px"
+            />
+          </label>
+
+          <label for="rest_time"
+            >Час відпочинку між підходами (не обов'язково):</label
+          >
+          <div class="rest-time-container">
+            <select name="rest_time_minutes[]" class="rest-time-minutes">
+              <option value="0">00</option>
+              <option value="1">01</option>
+              <option value="2">02</option>
+              <option value="3">03</option>
+              <option value="4">04</option>
+              <option value="5">05</option>
+            </select>
+            :
+            <select name="rest_time_seconds[]" class="rest-time-seconds">
+              <option value="0">00</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50">50</option>
+            </select>
+            <span>(хв:сек)</span>
+          </div>
+        </fieldset>
+      </template>
+
+      <div id="plans" class="tab-content" style="display: none">
+        <p>
+          Будь ласка, оберіть користувача у вкладці "Профілі", щоб переглянути
+          його плани.
+        </p>
+      </div>
+
+      <div id="analytics" class="tab-content" style="display: none">
+        <p>Завантаження статистики...</p>
+      </div>
+
+      <!-- ===== ПОЧАТОК НОВОГО БЛОКУ ДЛЯ ВКЛАДКИ "ДІЇ" ===== -->
+      <div id="actions" class="tab-content" style="display: none">
+        <h3>Примусовий запуск планувальників</h3>
+        <p class="actions-description">
+          Цей розділ дозволяє вручну запустити нічні завдання. Використовуйте це
+          тільки у випадку, якщо ви впевнені, що автоматичний запуск не
+          спрацював або виникла помилка. Виконання може зайняти деякий час.
+        </p>
+
+        <div class="action-item">
+          <div class="action-info">
+            <h4>Генератор тижневих тренувань</h4>
+            <p>
+              Створює конкретні тренування на наступний тиждень для користувачів
+              "без тренера" на основі їх 30-денного плану.
+            </p>
+          </div>
+          <div class="action-controls">
+            <button class="action-btn" data-task="weekly">Запустити</button>
+            <div id="scheduler-status-weekly" class="action-status"></div>
+          </div>
+        </div>
+
+        <div class="action-item">
+          <div class="action-info">
+            <h4>Генератор 30-денних планів</h4>
+            <p>
+              Створює нові 30-денні плани для користувачів, у яких поточний план
+              добігає кінця.
+            </p>
+          </div>
+          <div class="action-controls">
+            <button class="action-btn" data-task="monthly">Запустити</button>
+            <div id="scheduler-status-monthly" class="action-status"></div>
+          </div>
+        </div>
+
+        <div class="action-item">
+          <div class="action-info">
+            <h4>Автопоновлення підписок</h4>
+            <p>
+              Перевіряє та поновлює підписки для користувачів, у яких увімкнено
+              цю опцію.
+            </p>
+          </div>
+          <div class="action-controls">
+            <button class="action-btn" data-task="renewal">Запустити</button>
+            <div id="scheduler-status-renewal" class="action-status"></div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== КІНЕЦЬ БЛОКУ "ДІЇ" ===== -->
+
+      <!-- Вкладка "Вихід" -->
+      <div id="logout" class="tab-content" style="display: none">
+        <p>Ви дійсно хочете вийти з панелі керування?</p>
+        <br />
+        <button id="confirm-logout">Вийти</button>
+      </div>
+    </div>
+
+    <div id="custom-confirm-overlay" class="modal-overlay"></div>
+
+    <div id="custom-confirm-modal" class="custom-modal">
+      <div class="custom-modal-content">
+        <p id="confirmationMessageText">Ви дійсно хочете виконати цю дію?</p>
+        <div class="custom-modal-buttons">
+          <button id="modalConfirmActionBtn" class="modal-confirm-action-btn">
+            Так
+          </button>
+          <button id="modalCancelActionBtn" class="modal-cancel-action-btn">
+            Ні
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="custom-confirm-modal-with-options" class="custom-modal">
+      <div class="custom-modal-content">
+        <p id="options-modal-text">Текст тут</p>
+        <select id="options-modal-select" class="form-select"></select>
+        <div class="custom-modal-buttons">
+          <button
+            id="options-modal-confirm-btn"
+            class="modal-confirm-action-btn"
+          >
+            Призначити
+          </button>
+          <button id="options-modal-cancel-btn" class="modal-cancel-action-btn">
+            Скасувати
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="log-modal-overlay" class="log-modal-overlay" style="display: none">
+      <div id="log-modal" class="log-modal">
+        <h3 id="log-modal-title">Результат виконання завдання</h3>
+        <p id="log-modal-message"></p>
+        <pre id="log-modal-content" class="log-modal-content"></pre>
+        <button id="log-modal-close" class="action-btn">OK</button>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/gh/Limaxsport/limaxsport/admin/script.js"></script>
+  </body>
+</html>

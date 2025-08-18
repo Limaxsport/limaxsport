@@ -1,0 +1,469 @@
+/* ==========================================================
+           === CSS ДЛЯ ВОРОНКИ РЕЄСТРАЦІЇ (v2.2) ===
+         ========================================================== */
+
+/* 1. Фон-оверлей */
+.funnel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: black; /* ЗМІНЕНО: Фон тепер повністю чорний */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px 0;
+  box-sizing: border-box;
+}
+
+/* Головне модальне вікно */
+.funnel-modal {
+  position: relative;
+  background: #1c1c1c;
+  /* ЗМІНЕНО: Ще більше зменшуємо нижній відступ */
+  padding: 25px 30px 15px 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 450px;
+  border: 1px solid rgb(113, 41, 218);
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+/* Стилі для скролбару модального вікна */
+.funnel-modal::-webkit-scrollbar {
+  width: 8px;
+}
+.funnel-modal::-webkit-scrollbar-track {
+  background: #333;
+}
+.funnel-modal::-webkit-scrollbar-thumb {
+  background: rgb(113, 41, 218);
+  border-radius: 4px;
+}
+.funnel-modal {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(113, 41, 218) #333;
+}
+
+/* 3. Заголовок (Header) */
+.funnel-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: 15px;
+  margin-bottom: 5px;
+}
+
+#funnel-step-title {
+  margin: 0;
+  font-size: 1.5em;
+  font-weight: bold;
+  color: rgb(113, 41, 218);
+  text-align: left;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+/* 2. Задаємо контрольовані відступи для підзаголовка */
+#funnel-step-subtitle {
+  display: none; /* Залишаємо прихованим за замовчуванням */
+  width: 100%;
+  text-align: right;
+  color: #daa520;
+  font-size: 0.9em;
+  font-weight: 500;
+
+  /* Ось ключові зміни: */
+  margin-top: -25px;
+  margin-bottom: 8px; /* Трохи більший відступ до прогрес-бару знизу */
+  padding: 0; /* Прибираємо внутрішні відступи, щоб уникнути сюрпризів */
+}
+
+/* Прогрес-бар (сіра "доріжка") */
+.funnel-progress-bar {
+  width: 100%;
+  height: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin-top: 0px;
+  margin-bottom: 25px;
+  /* overflow: hidden; -- ВИДАЛЕНО! Це дозволить світінню виходити за межі */
+}
+
+/* Зелена смужка, що заповнює прогрес-бар */
+.funnel-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(to right, #28a745, #90ee90);
+  border-radius: 6px;
+  transition: width 0.5s ease-in-out;
+  /* ДОДАНО: Вмикаємо анімацію на постійній основі */
+  animation: pulse-glow-green-bar 2s infinite ease-in-out;
+}
+
+/* Анімація світіння залишається без змін */
+@keyframes pulse-glow-green-bar {
+  0% {
+    box-shadow: 0 0 4px rgba(40, 167, 69, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 12px 3px rgba(40, 167, 69, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 4px rgba(40, 167, 69, 0.3);
+  }
+}
+
+/* 4. Контент (Content) */
+.funnel-content {
+  /* Цей блок не потребує стилів */
+}
+
+/* Опис кроку */
+.funnel-content p.step-description {
+  font-size: 0.9em;
+  color: #aaa;
+  margin-top: 0;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+/* 5. Навігація (Кнопки) - стилі залишаються без змін, включаючи фікс "залипання" */
+.funnel-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  padding-top: 10px;
+}
+
+.funnel-nav-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+  min-width: 120px;
+}
+
+#funnel-back-btn {
+  background-color: #444;
+  color: #ccc;
+}
+
+#funnel-next-btn {
+  background-color: rgb(113, 41, 218);
+  color: #fff;
+}
+#funnel-next-btn:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+  color: #999;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #funnel-back-btn:hover {
+    background-color: #555;
+  }
+  #funnel-next-btn:hover {
+    background-color: white;
+    color: rgb(113, 41, 218);
+  }
+}
+
+/* Повідомлення про статус */
+#funnel-status-message {
+  margin-top: 15px;
+  text-align: center;
+  min-height: 1.2em;
+}
+
+/* Стилі для навігації на останньому кроці */
+.funnel-modal.is-final-step .funnel-navigation {
+  justify-content: center; /* Центруємо вміст (кнопку) */
+}
+
+/* Ховаємо кнопку "Назад" на останньому кроці */
+.funnel-modal.is-final-step #funnel-back-btn {
+  display: none;
+}
+
+/* Центруємо блок з кнопками на першому кроці */
+.funnel-modal.is-first-step .funnel-navigation {
+  justify-content: center;
+}
+
+/* --- СТИЛІ ДЛЯ ПОЛІВ ВВОДУ (без змін) --- */
+.funnel-content label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #ccc;
+}
+
+.funnel-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgb(113, 41, 218);
+  color: white;
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 15px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  box-sizing: border-box;
+  border-radius: 0;
+  color-scheme: dark;
+}
+
+.funnel-content select.funnel-input {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="rgb(113, 41, 218)"><polygon points="0,0 10,0 5,5"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+
+.funnel-content select.funnel-input option {
+  background-color: black;
+  color: white;
+}
+
+.funnel-content select[multiple].funnel-input {
+  height: 150px;
+  appearance: none;
+  background-image: none;
+  background-color: #1a1a1a;
+  border: 1px solid rgb(113, 41, 218);
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.funnel-content textarea.funnel-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Прибираємо нижній відступ тільки в останнього поля вводу */
+.funnel-content .funnel-input:last-child {
+  margin-bottom: 0;
+}
+
+/* Повертаємо жирність для тегу <strong> всередині описів кроків */
+.funnel-content .step-description strong {
+  font-weight: 700; /* Стандартне значення для "жирного" */
+  color: #ffffff; /* Опціонально: робимо текст чисто білим для кращого акценту */
+}
+
+/* --- СТИЛІ: для списку проблем зі здоров'ям --- */
+
+/* Контейнер для списку */
+.funnel-content .health-problems-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 5px;
+  border: 1px solid #333; /* Додамо легку рамку, щоб візуально відокремити */
+  border-radius: 4px;
+  padding: 5px;
+}
+
+/* Стилі для опцій-чекбоксів */
+.funnel-content .health-problem-option {
+  display: block;
+  margin-bottom: 4px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  color: #ffffff;
+}
+.funnel-content .health-problem-option:hover {
+  background-color: #383838;
+}
+
+/* Стилі для самих чекбоксів (ідентичні попереднім) */
+.funnel-content .health-problem-option input[type='checkbox'] {
+  margin-right: 12px;
+  vertical-align: middle;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #333;
+  border: 1px solid rgb(113, 41, 218);
+  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  margin-bottom: 0;
+}
+.funnel-content .health-problem-option input[type='checkbox']:checked {
+  background-color: rgb(113, 41, 218);
+  border-color: rgb(93, 21, 198);
+}
+.funnel-content .health-problem-option input[type='checkbox']:checked::after {
+  content: '✔';
+  font-size: 16px;
+  color: #ffffff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+
+/* --- СТИЛІ для виключених вправ у воронці --- */
+
+/* Стиль для поля пошуку */
+.funnel-content .excluded-exercise-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 15px;
+  border: 1px solid rgb(113, 41, 218);
+  border-radius: 4px;
+  background-color: #333;
+  color: #fff;
+  font-size: 1em; /* У воронці можна зробити трохи меншим, якщо треба */
+  box-sizing: border-box;
+}
+.funnel-content .excluded-exercise-search-input:focus {
+  outline: none;
+  border-color: rgb(140, 70, 240);
+  box-shadow: 0 0 8px rgba(113, 41, 218, 0.6);
+}
+
+/* Робимо ОБИДВА контейнери відносними, щоб розмістити в них стрілку */
+.funnel-content .excluded-exercise-list-wrapper,
+.funnel-content .health-problems-list {
+  max-height: 200px; /* Трохи менше, ніж у профілі, щоб вмістилось у модалку */
+  overflow-y: auto;
+  padding-right: 5px;
+  position: relative;
+}
+
+/* Стилі для чекбоксів (один в один як у кабінеті) */
+.funnel-content .excluded-exercise-option {
+  display: block;
+  padding: 6px 10px; /* ЗМІНЕНО: суттєво зменшено вертикальний padding */
+  margin-top: 0; /* ДОДАНО: як ти і запропонував */
+  margin-bottom: 3px; /* ЗМІНЕНО: робимо мінімальним */
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  color: #ffffff;
+}
+.funnel-content .excluded-exercise-option:hover {
+  background-color: #383838;
+}
+
+.funnel-content .excluded-exercise-option input[type='checkbox'] {
+  margin-right: 12px;
+  vertical-align: middle;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #333;
+  border: 1px solid rgb(113, 41, 218);
+  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  margin-bottom: 0;
+}
+.funnel-content .excluded-exercise-option input[type='checkbox']:checked {
+  background-color: rgb(113, 41, 218);
+  border-color: rgb(93, 21, 198);
+}
+.funnel-content
+  .excluded-exercise-option
+  input[type='checkbox']:checked::after {
+  content: '✔';
+  font-size: 16px;
+  color: #ffffff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+
+/* Стиль для стрілки "прокрути вниз" для ОБОХ списків */
+.funnel-content .excluded-exercise-list-wrapper.is-scrollable::after,
+.funnel-content .health-problems-list.is-scrollable::after {
+  content: '▼';
+  position: absolute;
+  bottom: 5px;
+  right: 15px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1.2em;
+  animation: bounce 2s infinite ease-in-out;
+  pointer-events: none; /* Щоб стрілка не заважала клікати */
+}
+
+/* Анімація для стрілки, щоб привернути увагу */
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(-4px);
+  }
+}
+
+/* --- НОВІ СТИЛІ: Анімація завантаження для воронки (v2) --- */
+
+/* Клас для кнопки "Далі", коли вона в стані завантаження */
+#funnel-next-btn.loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Стиль самої анімації (спіннер) */
+.funnel-loader {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: funnel-spin 1s ease-in-out infinite;
+  margin-left: 10px; /* Відступ від тексту кнопки */
+}
+
+/* Анімація обертання */
+@keyframes funnel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- АДАПТАЦІЯ ДЛЯ МОБІЛЬНИХ ПРИСТРОЇВ (без змін) --- */
+@media (max-width: 600px) {
+  .funnel-modal {
+    /* ЗМІНЕНО: Зменшуємо нижній відступ також і тут */
+    padding: 20px 15px 10px 15px;
+  }
+
+  #funnel-step-title {
+    font-size: 1.2em;
+  }
+
+  .funnel-input {
+    font-size: 16px;
+  }
+}

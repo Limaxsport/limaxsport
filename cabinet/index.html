@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="ua">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Особистий кабінет</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/Limaxsport/limaxsport/cabinet/styles.css"
+    />
+  </head>
+  <body>
+    <div id="login-overlay">
+      <form id="login-form">
+        <h2>Вхід до особистого кабінету (тільки для клієнтів):</h2>
+        <br />
+        <label for="phone">Номер телефону</label>
+        <input
+          type="text"
+          id="phone"
+          name="phone"
+          placeholder="380 XX XXX XX XX"
+          required
+        />
+        <br />
+        <label for="password">Пароль</label>
+        <input type="password" id="password" name="password" required />
+        <br />
+        <button type="submit">Увійти</button>
+        <div id="login-response"></div>
+        <a href="#" id="forgot-password-link" class="forgot-password-link"
+          >Не пам'ятаєте пароль?</a
+        >
+      </form>
+    </div>
+
+    <div id="password-reset-overlay" style="display: none">
+      <!-- Форма 1: Запит на відновлення -->
+      <form id="forgot-password-form">
+        <h2>Відновлення пароля</h2>
+        <p class="form-description">
+          Введіть ваш email, і ми відправимо на нього листа для відновлення
+          вашого паролю.
+        </p>
+        <div class="form-row">
+          <label for="recovery-email">Email</label>
+          <input
+            type="email"
+            id="recovery-email"
+            name="recovery-email"
+            required
+          />
+        </div>
+        <div class="form-button-container">
+          <button type="submit">Відправити</button>
+          <button type="button" class="back-to-login-btn">
+            Назад до входу
+          </button>
+        </div>
+        <div id="forgot-password-response" class="status-message"></div>
+      </form>
+
+      <!-- Форма 2: Встановлення нового пароля -->
+      <form id="reset-password-form" style="display: none">
+        <h2>Введіть новий пароль</h2>
+        <input type="hidden" id="reset-token-input" name="reset-token" />
+        <div class="form-row">
+          <label for="reset-new-password"
+            >Новий пароль (мінімум 8 символів):</label
+          >
+          <input
+            type="password"
+            id="reset-new-password"
+            name="reset-new-password"
+            required
+            minlength="8"
+          />
+        </div>
+        <div class="form-row">
+          <label for="reset-confirm-password">Підтвердіть новий пароль:</label>
+          <input
+            type="password"
+            id="reset-confirm-password"
+            name="reset-confirm-password"
+            required
+            minlength="8"
+          />
+        </div>
+        <button type="submit">Зберегти</button>
+        <div id="reset-password-response" class="status-message"></div>
+      </form>
+    </div>
+
+    <div id="cabinet" class="container" style="display: none">
+      <div class="tabs">
+        <button
+          class="tab-link"
+          onclick="openTab(event, 'notifications')"
+          data-tab-name="notifications"
+          title="Повідомлення"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span
+            class="notification-badge"
+            id="notification-badge-id"
+            style="display: none"
+          ></span>
+        </button>
+        <button
+          class="tab-link"
+          onclick="openTab(event, 'subscription')"
+          data-tab-name="subscription"
+        >
+          Підписка
+        </button>
+        <button
+          class="tab-link"
+          onclick="openTab(event, 'plan')"
+          data-tab-name="plan"
+        >
+          План
+        </button>
+        <button
+          class="tab-link"
+          onclick="openTab(event, 'profile')"
+          data-tab-name="profile"
+        >
+          Профіль
+        </button>
+        <button
+          class="tab-link"
+          onclick="openTab(event, 'progress')"
+          data-tab-name="progress"
+        >
+          Прогрес
+        </button>
+        <button
+          class="tab-link"
+          onclick="openTab(event, 'ratings')"
+          data-tab-name="ratings"
+        >
+          Рейтинги
+        </button>
+        <button
+          class="tab-link"
+          onclick="openTab(event, 'workouts')"
+          data-tab-name="workouts"
+        >
+          Тренування
+        </button>
+        <button
+          class="tab-link"
+          onclick="openTab(event, 'logout')"
+          data-tab-name="logout"
+        >
+          Вихід
+        </button>
+      </div>
+
+      <div id="notifications" class="tab-content" style="display: none"></div>
+      <div
+        id="customConfirmationModal"
+        class="custom-modal"
+        style="display: none"
+      ></div>
+
+      <div id="subscription" class="tab-content" style="display: none">
+        <!-- Сюди JS буде вставляти інформацію про підписки -->
+      </div>
+
+      <div id="plan" class="tab-content" style="display: none">
+        <p>Завантаження вашого тренувального плану...</p>
+      </div>
+
+      <div id="profile" class="tab-content" style="display: none">
+        <div class="sub-tabs">
+          <button
+            class="sub-tab-link active"
+            onclick="openProfileSubTab(event, 'profile-view')"
+          >
+            Мій профіль
+          </button>
+          <button
+            class="sub-tab-link"
+            onclick="openProfileSubTab(event, 'profile-edit')"
+          >
+            Редагувати
+          </button>
+          <button
+            class="sub-tab-link"
+            onclick="openProfileSubTab(event, 'profile-community')"
+          >
+            Спільнота
+          </button>
+        </div>
+
+        <div id="profile-view" class="profile-sub-content active-sub-content">
+          <h4 class="profile-sub-content-title">Дані мого профілю</h4>
+          <div id="profile-view-data" class="profile-view-grid"></div>
+          <div
+            id="profile-view-empty-message"
+            style="
+              display: none;
+              text-align: center;
+              padding: 20px;
+              background-color: #222;
+              border-radius: 5px;
+              margin-top: 15px;
+            "
+          >
+            <p>Ваш профіль ще не заповнений.</p>
+            <button
+              class="button-secondary"
+              onclick="document.querySelector('.sub-tab-link[onclick*=\'profile-edit\']').click();"
+            >
+              Заповнити профіль
+            </button>
+          </div>
+        </div>
+
+        <div id="profile-edit" class="profile-sub-content">
+          <div class="form-section">
+            <h4 class="form-section-title">Особисті дані</h4>
+            <div class="form-grid">
+              <div>
+                <label for="full_name"
+                  >Прізвище та Ім'я (приватно, тільки для адмін. питань):</label
+                >
+                <input type="text" id="full_name_edit" />
+              </div>
+              <div>
+                <label for="display_name"
+                  >Публічне ім'я/псевдонім (відображено у рейтингах та
+                  спільноті):</label
+                >
+                <input type="text" id="display_name_edit" />
+              </div>
+              <div>
+                <label for="email_edit"
+                  >Email (приватно, для верифікації при зміні паролю):</label
+                >
+                <input
+                  type="email"
+                  id="email_edit"
+                  name="email_edit"
+                  placeholder="your.email@example.com"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4 class="form-section-title">
+              Соціальні мережі, мессенджери (для публічного профілю)
+            </h4>
+            <div class="form-grid">
+              <div>
+                <label for="instagram_link_edit"
+                  >Посилання на Instagram (необов'язково):</label
+                >
+                <input
+                  type="text"
+                  id="instagram_link_edit"
+                  placeholder="Наприклад, my_cool_insta"
+                />
+              </div>
+              <div>
+                <label for="telegram_link_edit"
+                  >Посилання на Telegram (необов'язково):</label
+                >
+                <input
+                  type="text"
+                  id="telegram_link_edit"
+                  placeholder="Наприклад, @MyTelegramNick"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4 class="form-section-title">Фізичні параметри</h4>
+            <div class="form-grid">
+              <div>
+                <label for="age_edit">Вік:</label>
+                <input type="number" id="age_edit" />
+              </div>
+              <div>
+                <!-- ВИПРАВЛЕНО: Назва та ID поля ваги -->
+                <label for="weight_edit">Вага (кг):</label>
+                <input type="number" id="weight_edit" step="0.1" />
+              </div>
+              <div>
+                <label for="height_edit">Зріст (см):</label>
+                <input type="number" id="height_edit" />
+              </div>
+              <!-- ДОДАНО: Нове поле для вибору статі -->
+              <div>
+                <label for="gender_edit"
+                  >Стать (для об'єктивного створення тренувань):</label
+                >
+                <select id="gender_edit">
+                  <option value="">Оберіть стать</option>
+                  <option value="male">Чоловіча</option>
+                  <option value="female">Жіноча</option>
+                  <option value="not_applicable">Не застосовується</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4 class="form-section-title">Цілі та Налаштування тренувань</h4>
+            <div class="form-grid">
+              <div>
+                <label for="goal">Ціль:</label>
+                <select id="goal_edit">
+                  <option value="">Оберіть ціль</option>
+                  <option value="lose weight">Схуднути</option>
+                  <option value="gain muscle mass">Набрати м'язову масу</option>
+                  <option value="maintain shape">Підтримувати форму</option>
+                </select>
+              </div>
+              <div>
+                <label for="daytime_activity"
+                  >Ваша щоденна активність (дім, робота, прогулянки):</label
+                >
+                <select id="daytime_activity_edit">
+                  <option value="">Оберіть рівень</option>
+                  <option value="low">Низька</option>
+                  <option value="average">Середня</option>
+                  <option value="high">Висока</option>
+                </select>
+              </div>
+              <div>
+                <label for="type_of_training">Бажаний вид тренувань:</label>
+                <select id="type_of_training_edit">
+                  <option value="">Оберіть вид</option>
+                  <option value="gym">Тренування в тренажерному залі</option>
+                  <option value="home">Домашні та вуличні тренування</option>
+                  <option value="both">Обидва варіанти</option>
+                </select>
+              </div>
+              <div>
+                <label for="level_of_training"
+                  >Рівень спортивної підготовки:</label
+                >
+                <select id="level_of_training_edit">
+                  <option value="">Оберіть рівень</option>
+                  <option value="low">Низький</option>
+                  <option value="average">Середній</option>
+                  <option value="high">Високий</option>
+                </select>
+              </div>
+              <div>
+                                   
+                <label for="training_days_per_week_edit"
+                  >Кількість тренувань на тиждень:</label
+                >
+                                   
+                <select id="training_days_per_week_edit">
+                                         
+                  <option value="">-- Оберіть --</option>
+                                         
+                  <option value="2">2</option>
+                                         
+                  <option value="3">3</option>
+                                         
+                  <option value="4">4</option>
+                                     
+                </select>
+                               
+              </div>
+                         
+            </div>
+                       
+            <div class="form-section">
+              <button
+                type="button"
+                id="toggleWeekdaysBtn_edit"
+                class="collapsible-toggle-btn"
+              >
+                Бажані дні тренувань <span class="toggle-arrow">▼</span>
+              </button>
+              <div
+                id="preferred_training_weekdays_edit_container"
+                class="collapsible-content"
+              >
+                <div class="checkbox-group-container">
+                  <label class="custom-checkbox-label"
+                    ><input
+                      type="checkbox"
+                      name="preferred_training_weekdays_edit"
+                      value="Пн"
+                    />
+                    Пн</label
+                  >
+                  <label class="custom-checkbox-label"
+                    ><input
+                      type="checkbox"
+                      name="preferred_training_weekdays_edit"
+                      value="Вт"
+                    />
+                    Вт</label
+                  >
+                  <label class="custom-checkbox-label"
+                    ><input
+                      type="checkbox"
+                      name="preferred_training_weekdays_edit"
+                      value="Ср"
+                    />
+                    Ср</label
+                  >
+                  <label class="custom-checkbox-label"
+                    ><input
+                      type="checkbox"
+                      name="preferred_training_weekdays_edit"
+                      value="Чт"
+                    />
+                    Чт</label
+                  >
+                  <label class="custom-checkbox-label"
+                    ><input
+                      type="checkbox"
+                      name="preferred_training_weekdays_edit"
+                      value="Пт"
+                    />
+                    Пт</label
+                  >
+                  <label class="custom-checkbox-label"
+                    ><input
+                      type="checkbox"
+                      name="preferred_training_weekdays_edit"
+                      value="Сб"
+                    />
+                    Сб</label
+                  >
+                  <label class="custom-checkbox-label"
+                    ><input
+                      type="checkbox"
+                      name="preferred_training_weekdays_edit"
+                      value="Нд"
+                    />
+                    Нд</label
+                  >
+                </div>
+              </div>
+              <small
+                id="weekdays-edit-hint"
+                class="form-hint"
+                style="color: #aaa; padding-left: 5px"
+              ></small>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4 class="form-section-title">Здоров'я та Обмеження</h4>
+            <div>
+              <label for="health_problems"
+                >Проблеми зі здоров'ям, які можуть вплинути на тренування
+                (обмеження на певні вправи):</label
+              >
+              <select id="health_problems_edit" multiple size="5">
+                <option value="" disabled>
+                  Виберіть проблемні зони (щоб вибрати кілька на ПК, затисніть
+                  CTRL):
+                </option>
+                <option value="knees">Колінні суглоби</option>
+                <option value="spine">Хребет (поперековий відділ)</option>
+                <option value="hips">Тазостегнові суглоби</option>
+                <option value="shoulder">Плечові суглоби</option>
+                <option value="heart">Серцево-судинна система</option>
+                <option value="breath">Захворювання дихальної системи</option>
+                <option value="other">Інше (вкажіть у пункті нижче)</option>
+              </select>
+            </div>
+            <div>
+              <label for="other_health_problems"
+                >Інші проблеми зі здоров'ям, які можуть вплинути на тренування,
+                а також на харчування:</label
+              >
+              <textarea id="other_health_problems_edit" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4 class="form-section-title">Харчування: Налаштування раціону</h4>
+            <div>
+              <label for="excluded_products"
+                >Вкажіть, які продукти необхідно виключити з раціону:</label
+              >
+              <select id="excluded_products_edit" multiple size="6">
+                <option value="" disabled>
+                  Виберіть небажані продукти (щоб вибрати кілька на ПК,
+                  затисніть CTRL):
+                </option>
+                <option value="milk">Молоко</option>
+                <option value="cottage_cheese">Творог</option>
+                <option value="yogurt">Йогурт</option>
+                <option value="sour_cream">Сметана</option>
+                <option value="cheese">Сир</option>
+                <option value="eggs">Яйця</option>
+                <option value="chicken">Курка</option>
+                <option value="turkey">Індичка</option>
+                <option value="pork">Свинина</option>
+                <option value="beef">Яловичина</option>
+                <option value="shank">Шинка</option>
+                <option value="offal">Субпродукти</option>
+                <option value="salted_fish">Солона риба</option>
+                <option value="cooked_fish">Риба приготовлена</option>
+                <option value="shrimps">Креветки</option>
+                <option value="squid">Кальмари</option>
+                <option value="caviar">Ікра</option>
+                <option value="cod_liver">Печінка тріски</option>
+                <option value="canned_fish">Консервована риба</option>
+                <option value="oatmeal">Вівсянка</option>
+                <option value="buckwheat">Гречка</option>
+                <option value="rice">Рис</option>
+                <option value="bulgur">Булгур</option>
+                <option value="pasta">Макарони</option>
+                <option value="spaghetti">Спагетті</option>
+                <option value="corn_grits">Кукурудзяна крупа</option>
+                <option value="quinoa">Кіноа</option>
+                <option value="couscous">Кускус</option>
+                <option value="semolina">Манна крупа</option>
+                <option value="pearl_barley">Перлівка</option>
+                <option value="millet">Пшоно</option>
+                <option value="barley_groats">Ячна крупа</option>
+                <option value="flakes">Пластівці</option>
+                <option value="potato">Картопля</option>
+                <option value="sweet_potato">Батат</option>
+                <option value="bread">Хліб</option>
+                <option value="pita">Лаваш</option>
+                <option value="tortilla">Тортілья</option>
+                <option value="breadsticks">Хлібці</option>
+                <option value="nuts">Горіхи</option>
+                <option value="peanut_butter">Арахісова паста</option>
+                <option value="peas">Горох</option>
+                <option value="lentils">Сочевиця</option>
+                <option value="beans">Квасоля</option>
+                <option value="butter">Масло вершкове</option>
+                <option value="olive">Оливки</option>
+                <option value="mushrooms">Гриби</option>
+                <option value="beet">Буряк</option>
+                <option value="onion">Цибуля</option>
+                <option value="tomatoes">Помідори (томатна паста)</option>
+                <option value="canned_vegetables">Консервовані овочі</option>
+                <option value="zucchini">Кабачки</option>
+                <option value="eggplants">Баклажани</option>
+                <option value="pumpkin">Гарбуз</option>
+                <option value="avocado">Авокадо</option>
+                <option value="banana">Банани</option>
+                <option value="apples">Яблука</option>
+                <option value="pears">Груші</option>
+                <option value="orange">Апельсини</option>
+                <option value="lemon">Лимони</option>
+                <option value="kiwi">Ківі</option>
+                <option value="strawberry">Полуниця</option>
+                <option value="dried_fruits">Сухофрукти</option>
+                <option value="jam">Варення/джем</option>
+                <option value="marshmallow">Зефір</option>
+                <option value="lukum">Лукум</option>
+                <option value="protein">Протеїн (спортпіт)</option>
+              </select>
+            </div>
+            <div>
+              <label for="other_excluded_products"
+                >Вкажіть додаткові продукти, які потрібно виключити з
+                раціону:</label
+              >
+              <textarea id="other_excluded_products_edit" rows="3"></textarea>
+            </div>
+            <div>
+              <label for="number_of_meals"
+                >Бажана кількість прийомів їжі на день:</label
+              >
+              <select id="number_of_meals_edit">
+                <option value="">Виберіть кількість</option>
+                <option value="two">2</option>
+                <option value="three">3</option>
+                <option value="four">4</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4 class="form-section-title">Налаштування Вправ</h4>
+            <div class="form-group">
+              <button
+                type="button"
+                id="toggleExcludedExercisesBtn_edit"
+                class="collapsible-toggle-btn"
+              >
+                Виключені вправи <span class="toggle-arrow">▼</span>
+              </button>
+              <div
+                id="excludedExercisesChecklistContainer_edit"
+                class="excluded-exercises-options-list collapsible-content"
+              >
+                <p>Завантаження доступних вправ для виключення...</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4 class="form-section-title">Зберегти зміни</h4>
+            <div style="margin-top: 10px">
+              <button id="update-profile-main-btn">Оновити профіль</button>
+            </div>
+          </div>
+          <div id="profile-update-status_edit"></div>
+          <div
+            class="form-section"
+            id="change-password-section"
+            style="margin-top: 30px"
+          >
+            <h4 class="form-section-title">Зміна паролю</h4>
+            <form id="change-password-form">
+              <div class="form-row">
+                <label for="old_password">Старий пароль:</label>
+                <input
+                  type="password"
+                  id="old_password"
+                  name="old_password"
+                  required
+                />
+              </div>
+              <div class="form-row">
+                <label for="new_password"
+                  >Новий пароль (мінімум 8 символів):</label
+                >
+                <input
+                  type="password"
+                  id="new_password"
+                  name="new_password"
+                  required
+                  minlength="8"
+                />
+              </div>
+              <div class="form-row">
+                <label for="confirm_new_password"
+                  >Підтвердіть новий пароль:</label
+                >
+                <input
+                  type="password"
+                  id="confirm_new_password"
+                  name="confirm_new_password"
+                  required
+                  minlength="8"
+                />
+              </div>
+              <button type="submit" id="change-password-btn">
+                Змінити пароль
+              </button>
+              <div
+                id="change-password-status"
+                class="status-message"
+                style="margin-top: 10px"
+              ></div>
+            </form>
+          </div>
+        </div>
+
+        <div id="profile-community" class="profile-sub-content">
+          <h4 class="profile-sub-content-title">Знайти користувачів</h4>
+          <div class="community-search-container">
+            <label for="user-search-input" class="visually-hidden"
+              >Пошук за ім'ям користувача</label
+            >
+            <input
+              type="search"
+              id="user-search-input"
+              placeholder="Введіть ім'я"
+            />
+            <button id="user-search-button" class="button-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                width="18"
+                height="18"
+              >
+                <path
+                  d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                />
+              </svg>
+            </button>
+          </div>
+          <div id="community-user-list-container">
+            <p>Завантаження списку користувачів...</p>
+          </div>
+          <div
+            id="community-selected-user-profile"
+            style="margin-top: 20px; display: none"
+          >
+            <p>Інформація про обраного користувача.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="progress" class="tab-content" style="display: none">
+        <h3>Додати запис прогресу</h3>
+        <br />
+        <form id="add-progress-form">
+          <div>
+            <label for="progress_weight">Вага (кг):</label>
+            <input type="number" id="progress_weight" step="0.1" />
+          </div>
+          <div>
+            <label for="progress_chest">Груди (см):</label>
+            <input type="number" id="progress_chest" />
+          </div>
+          <div>
+            <label for="progress_waist">Талія (см):</label>
+            <input type="number" id="progress_waist" />
+          </div>
+          <div>
+            <label for="progress_abdomen">Живіт (см):</label>
+            <input type="number" id="progress_abdomen" />
+          </div>
+          <div>
+            <label for="progress_hips">Стегна (см):</label>
+            <input type="number" id="progress_hips" />
+          </div>
+
+          <button type="button" id="add-progress">Оновити прогрес</button>
+          <div id="progress-add-status" style="margin-top: 10px"></div>
+        </form>
+
+        <hr style="border-color: #444; margin: 25px 0" />
+        <h6 style="text-align: center; color: gray; font-size: small">
+          <em
+            >Тренеру ваші дані прогресу доступні за повним ім'ям. У
+            загальнодоступних рейтингах та спільноті використовується ваше
+            публічне ім'я (яке за бажанням можна зробити анонімним).</em
+          >
+        </h6>
+
+        <hr style="border-color: #444; margin: 25px 0" />
+        <h3>Історія прогресу</h3>
+        <div id="progress-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Вага (кг)</th>
+                <th>Груди (см)</th>
+                <th>Талія (см)</th>
+                <th>Живіт (см)</th>
+                <th>Стегна (см)</th>
+              </tr>
+            </thead>
+            <tbody id="progress-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ▼▼▼ ПОЧАТОК КОДУ ДЛЯ ЗАМІНИ ▼▼▼ -->
+      <div id="ratings" class="tab-content" style="display: none">
+        <h3>Рейтинги користувачів</h3>
+
+        <!-- Контейнер для кнопок-підвкладок -->
+        <div class="sub-tabs ratings-sub-tabs">
+          <button
+            class="sub-tab-link active"
+            onclick="openRatingsSubTab(event, 'leaderboard-total')"
+          >
+            Найкращі ⭐️
+          </button>
+          <button
+            class="sub-tab-link"
+            onclick="openRatingsSubTab(event, 'leaderboard-weekly')"
+          >
+            Наполегливість
+          </button>
+          <button
+            class="sub-tab-link"
+            onclick="openRatingsSubTab(event, 'leaderboard-weight-loss')"
+          >
+            Схуднення 🔥
+          </button>
+          <button
+            class="sub-tab-link"
+            onclick="openRatingsSubTab(event, 'leaderboard-weight-gain')"
+          >
+            Набір маси
+          </button>
+          <button
+            class="sub-tab-link"
+            onclick="openRatingsSubTab(event, 'leaderboard-hip-thrust')"
+          >
+            Сідничний міст
+          </button>
+          <button
+            class="sub-tab-link"
+            onclick="openRatingsSubTab(event, 'leaderboard-pull-ups')"
+          >
+            Підтягування
+          </button>
+        </div>
+
+        <!-- Контейнери для контенту кожної підвкладки -->
+        <div
+          id="leaderboard-total"
+          class="leaderboard-sub-content active-sub-content"
+        >
+          <!-- Сюди JS завантажить рейтинг "Найкращі" -->
+        </div>
+        <div id="leaderboard-weekly" class="leaderboard-sub-content">
+          <!-- Сюди JS завантажить рейтинг "Наполегливість" -->
+        </div>
+        <div id="leaderboard-weight-loss" class="leaderboard-sub-content">
+          <!-- Сюди JS завантажить рейтинг "Схуднення" -->
+        </div>
+        <div id="leaderboard-weight-gain" class="leaderboard-sub-content">
+          <!-- Сюди JS завантажить рейтинг "Набір маси" -->
+        </div>
+        <div id="leaderboard-hip-thrust" class="leaderboard-sub-content">
+          <!-- Сюди JS завантажить рейтинг "Сідничний міст" -->
+        </div>
+        <div id="leaderboard-pull-ups" class="leaderboard-sub-content">
+          <!-- Сюди JS завантажить рейтинг "Підтягування" -->
+        </div>
+      </div>
+
+      <div id="workouts" class="tab-content" style="display: none">
+        <div id="workout-list-container">
+          <h3>Мої тренування:</h3>
+
+          <button
+            id="show-independent-workout-form-btn"
+            class="main-action-button"
+            style="display: none"
+          >
+            + Самостійне тренування
+          </button>
+
+          <div id="workout-list">
+            <!-- Сюди JS додає список тренувань -->
+          </div>
+
+          <div id="workout-list-status"></div>
+
+          <div
+            id="workout-load-more-container"
+            style="text-align: center; padding: 20px"
+          >
+            <!-- Сюди JS буде вставляти кнопку "Завантажити ще" -->
+          </div>
+        </div>
+
+        <div id="workout-form-container-user" style="display: none"></div>
+
+        <div id="workout-details-container" style="display: none">
+          <button id="back-to-workout-list" style="margin-bottom: 15px">
+            < Назад до списку тренувань
+          </button>
+          <h4 id="workout-details-title"><strong>Назва тренування</strong></h4>
+          <p><span id="workout-details-date"></span></p>
+          <p><span id="workout-details-description"></span></p>
+          <hr />
+          <h4>Вправи:</h4>
+          <div id="workout-details-exercises"></div>
+          <hr />
+
+          <div id="feedback-section"></div>
+
+          <button id="back-to-workout-list2" style="margin-bottom: 15px">
+            < Назад до списку тренувань
+          </button>
+          <div id="workout-details-status"></div>
+        </div>
+      </div>
+
+      <div id="custom-confirm-overlay" class="modal-overlay"></div>
+
+      <div id="custom-confirm-modal" class="custom-modal">
+        <div class="custom-modal-content">
+          <p id="confirmationMessageText">Ви дійсно хочете виконати цю дію?</p>
+          <div class="custom-modal-buttons">
+            <button id="modalConfirmActionBtn" class="modal-confirm-action-btn">
+              Так
+            </button>
+            <button id="modalCancelActionBtn" class="modal-cancel-action-btn">
+              Ні
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="restTimerModal" class="timer-modal" style="display: none">
+        <div class="timer-modal-content">
+          <button id="timer-minimize-btn" title="Згорнути">_</button>
+
+          <button id="timer-sound-toggle-btn" title="Вимкнути звук">
+            <span class="icon-sound-on">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+                ></path>
+              </svg>
+            </span>
+            <span class="icon-sound-off">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"
+                ></path>
+              </svg>
+            </span>
+          </button>
+
+          <h4 id="timer-status-text">ВІДПОЧИНОК</h4>
+          <div id="timer-display" class="timer-display">01:00</div>
+          <div class="timer-controls">
+            <button id="timer-restart-btn" class="timer-btn" title="Спочатку">
+              &#x21bb;
+            </button>
+            <button id="timer-close-btn" class="timer-btn" title="Закрити">
+              &times;
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="subscription-reminder-modal"
+        class="custom-modal"
+        style="display: none"
+      >
+        <div class="custom-modal-content">
+          <p id="reminder-modal-message">Текст нагадування буде тут.</p>
+
+          <div class="custom-modal-buttons">
+            <button id="reminder-modal-ok-btn" class="modal-cancel-action-btn">
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Модальне вікно для вибору днів тренувань -->
+      <div
+        id="day-selector-modal-overlay"
+        class="custom-modal-overlay"
+        style="display: none"
+      >
+        <div id="day-selector-modal" class="custom-modal">
+          <!-- Вміст буде генеруватися динамічно через JS -->
+        </div>
+      </div>
+
+      <!-- Модальне вікно для повідомлення про новий 30-денний план -->
+      <div
+        id="new-plan-notification-overlay"
+        class="custom-modal-overlay"
+        style="display: none"
+      >
+        <div id="new-plan-notification-modal" class="custom-modal">
+          <div class="custom-modal-content">
+            <p id="new-plan-notification-message">
+              Текст повідомлення буде тут.
+            </p>
+            <div class="custom-modal-buttons">
+              <button
+                id="new-plan-notification-ok-btn"
+                class="modal-confirm-action-btn"
+              >
+                Чудово!
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="logout" class="tab-content" style="display: none">
+        <p>Ви справді хочете вийти з особистого кабінету?</p>
+        <br />
+        <button id="confirm-logout">Вийти</button>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/gh/Limaxsport/limaxsport/cabinet/script.js"></script>
+  </body>
+</html>

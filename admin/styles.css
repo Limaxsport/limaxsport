@@ -1,0 +1,2896 @@
+/* === БАЗОВІ СТИЛІ ТА ТИПОГРАФІКА === */
+status body {
+  background-color: black;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.container {
+  /* Застосовується до #admin-panel */
+  max-width: 950px;
+  width: 95%;
+  margin: 20px auto;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+/* === Заголовки === */
+h1,
+h2 {
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: bold;
+  color: rgb(113, 41, 218);
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+h3 {
+  text-align: center;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: rgb(113, 41, 218);
+  margin-top: 25px;
+  margin-bottom: 15px;
+}
+h4 {
+  /* Зробимо h4 більш помітними для заголовків секцій */
+  color: #ccc;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 8px;
+  font-size: 1.1em;
+}
+h5,
+h6 {
+  color: #ccc;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+/* === ОСНОВНИЙ МАКЕТ АДМІН-ПАНЕЛІ === */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #333;
+}
+.tab-link {
+  background-color: rgb(113, 41, 218);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  cursor: pointer;
+  margin: 5px;
+  font-size: 15px;
+  min-width: 100px;
+  border-radius: 5px;
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    box-shadow 0.3s;
+  text-align: center;
+  font-weight: 500;
+}
+.tab-link:hover {
+  background-color: white;
+  color: rgb(113, 41, 218);
+  box-shadow: 0 0 8px rgba(113, 41, 218, 0.5);
+}
+.tab-link.active {
+  background-color: white;
+  color: rgb(113, 41, 218);
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+.tab-content {
+  display: none;
+  padding: 20px;
+  border: 1px solid rgb(113, 41, 218);
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 10px;
+  background-color: #101010;
+}
+
+/* --- Форми та Елементи вводу --- */
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9em;
+  color: #bbb; /* Світліший для кращого контрасту */
+  font-weight: 500;
+}
+label.checkbox-label {
+  display: inline-block;
+  margin-bottom: 15px;
+  margin-left: 5px;
+  vertical-align: middle;
+  font-weight: normal; /* Чекбокс-лейбли не жирні */
+  color: #ccc;
+}
+
+input[type='text'],
+input[type='password'],
+input[type='number'],
+input[type='email'],
+input[type='date'],
+select,
+textarea {
+  background: #1f1f1f; /* Темний фон для полів */
+  border: 1px solid #444; /* Рамка замість підкреслення */
+  color: white;
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 18px; /* Зменшив трохи */
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  box-sizing: border-box;
+  border-radius: 4px; /* Скруглення для полів */
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+input[type='text']:focus,
+input[type='password']:focus,
+input[type='number']:focus,
+input[type='email']:focus,
+input[type='date']:focus,
+select:focus,
+textarea:focus {
+  border-color: rgb(113, 41, 218);
+  box-shadow: 0 0 5px rgba(113, 41, 218, 0.5);
+  outline: none;
+}
+
+input[type='date'] {
+  color-scheme: dark;
+}
+input[type='checkbox'] {
+  margin-bottom: 15px;
+  vertical-align: middle;
+  width: auto;
+  accent-color: rgb(113, 41, 218);
+  margin-right: 3px; /* Відступ справа від чекбоксу */
+  transform: scale(1.1); /* Трохи більший чекбокс */
+}
+#search-input {
+  /* Поле пошуку */
+  padding: 8px 12px;
+  font-size: 14px;
+  margin-bottom: 15px; /* Більший відступ */
+}
+
+/* Випадаючі списки */
+select {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="rgb(113, 41, 218)"><polygon points="0,0 10,0 5,5"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+select option {
+  background-color: black;
+  color: white;
+}
+select option:checked {
+  background-color: rgb(113, 41, 218);
+  color: white;
+}
+select option:hover {
+  background-color: #5a2a8a;
+  color: white;
+}
+select[multiple] {
+  /* Мультиселект (якщо буде використовуватися) */
+  appearance: none;
+  background-image: none;
+  overflow-y: auto;
+  background-color: #1a1a1a;
+  border: 1px solid rgb(113, 41, 218);
+  border-radius: 5px;
+  padding: 10px;
+}
+
+/* Textarea */
+textarea {
+  resize: vertical;
+  min-height: 60px;
+  overflow: auto;
+}
+
+/* === Кнопки === */
+button {
+  background-color: rgb(113, 41, 218);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  min-width: 100px;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+  margin-top: 10px;
+  display: inline-block;
+}
+button:hover {
+  background-color: white;
+  color: rgb(113, 41, 218);
+}
+/* Кнопка виходу */
+#confirm-logout {
+  background-color: #dc3545;
+}
+#confirm-logout:hover {
+  background-color: white;
+  color: #dc3545;
+}
+
+/* Кнопки додавання вправи та збереження тренування */
+#add-exercise-btn {
+  background-color: black; /* Чорний фон */
+  color: white; /* Білий текст */
+  border: 2px solid rgb(113, 41, 218); /* Товщина=2px, Стиль=solid, Колір=фіолетовий */
+  margin-bottom: 10px;
+
+  /* Зберігаємо інші важливі стилі для кнопки */
+  padding: 10px 20px; /* Стандартні відступи */
+  border-radius: 10px; /* Скруглення кутів */
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  min-width: 100px;
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    border-color 0.3s; /* Додаємо border-color до transition */
+  margin-top: 10px;
+  display: inline-block;
+}
+
+/* Стиль при наведенні */
+#add-exercise-btn:hover {
+  background-color: white;
+  color: rgb(113, 41, 218);
+}
+
+#add-training-plan-form button[type='submit'] {
+  margin-top: 5px;
+}
+
+#clear-workout-draft-btn {
+  background-color: black; /* Чорний фон */
+  color: f03a17; /* Білий текст */
+  border: 2px solid rgb(240, 58, 23); /* Товщина=2px, Стиль=solid, Колір=красний */
+  margin-bottom: 10px;
+
+  /* Зберігаємо інші важливі стилі для кнопки */
+  padding: 10px 20px; /* Стандартні відступи */
+  border-radius: 10px; /* Скруглення кутів */
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  min-width: 100px;
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    border-color 0.3s; /* Додаємо border-color до transition */
+  margin-top: 10px;
+  display: inline-block;
+}
+
+/* Стиль при наведенні */
+#clear-workout-draft-btn:hover {
+  background-color: white;
+  color: rgb(240, 58, 23);
+}
+
+/* === НОВІ СТИЛІ: Контейнер для кнопок дій під профілем === */
+.admin-actions {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #333;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px; /* Відстань між кнопками */
+  justify-content: flex-start; /* Вирівнювання по лівому краю */
+}
+
+/* Спільний стиль для кнопок в цьому блоці */
+.admin-action-btn {
+  padding: 8px 15px;
+  font-size: 0.9em;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  font-weight: 500;
+  margin: 0; /* Прибираємо стандартний margin-top з button */
+}
+
+/* Кольори для різних дій */
+.admin-action-btn.suspend {
+  background-color: #ff8c69;
+}
+.admin-action-btn.suspend:hover {
+  background-color: white;
+  color: #ff8c69;
+  border-color: #ff8c69;
+}
+
+.admin-action-btn.activate {
+  background-color: #90ee90;
+  color: #111;
+}
+.admin-action-btn.activate:hover {
+  background-color: white;
+  color: #006400;
+  border-color: #90ee90;
+}
+
+.admin-action-btn.delete {
+  background-color: #dc3545;
+}
+.admin-action-btn.delete:hover {
+  background-color: white;
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+/* Новий стиль для кнопки зміни типу користувача */
+#change-user-type-btn {
+  background-color: #ccc; /* Світло-сірий фон */
+  color: #333; /* Темний текст */
+  border: 1px solid #bbb; /* Світло-сіра рамка */
+}
+
+/* Ефект при наведенні курсору */
+#change-user-type-btn:hover {
+  background-color: #bbb; /* Трохи темніший сірий */
+  color: #111;
+}
+
+/* Кнопка "Показати ще 10 тренувань" */
+.load-more-btn {
+  background-color: #444;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 5px;
+  border: 1px solid #666;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.load-more-btn:hover {
+  background-color: #555;
+}
+
+/* === Таблиці === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+th,
+td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid rgb(113, 41, 218);
+  vertical-align: middle;
+}
+th {
+  background-color: rgb(113, 41, 218);
+  color: white;
+}
+
+/* === Форма авторизації === */
+#login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+#login-form {
+  background: #1c1c1c;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  padding: 30px;
+  border-radius: 10px;
+  border: 1px solid rgb(113, 41, 218);
+  width: 90%;
+  max-width: 400px;
+  box-sizing: border-box;
+}
+#login-form label {
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #aaa;
+}
+#login-form button {
+  margin-top: 20px;
+  width: 100%;
+}
+#login-response {
+  margin-top: 15px;
+  color: #ffc107;
+  text-align: center;
+  min-height: 1em;
+}
+
+/* Статусні повідомлення */
+#register-message,
+#training-plan-message,
+#change_password-message {
+  margin-top: 15px;
+  color: white; /* Стандартний колір */
+  min-height: 1.2em;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* === СТИЛІ ДЛЯ МОДАЛЬНИХ ВІКОН АДМІН-ПАНЕЛІ === */
+
+/* 1. Фон (оверлей), який затемнює сторінку */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75); /* Трохи темніший фон для адмінки */
+  z-index: 1000;
+}
+
+/* 2. Контейнер самого модального вікна */
+.custom-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001; /* Має бути вище, ніж оверлей */
+  width: 90%;
+  max-width: 500px; /* Трохи ширше для адмінки */
+}
+
+/* 3. Вміст модального вікна (біла/темна плашка) */
+.custom-modal-content {
+  background-color: #2a2a2a; /* Темний фон, як у адмінки */
+  color: white;
+  padding: 25px;
+  border: 1px solid rgb(113, 41, 218); /* Фірмовий бордер */
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.custom-modal-content p {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.1em;
+  line-height: 1.5;
+}
+
+/* 4. Стиль для випадаючого списку (select) */
+.form-select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  background-color: #1c1c1c;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 5px;
+  font-size: 1em;
+}
+
+/* 5. Контейнер для кнопок */
+.custom-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+/* 6. Стилі для кнопок у модальному вікні */
+.custom-modal-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+}
+
+.custom-modal-buttons button:active {
+  transform: translateY(1px);
+}
+
+.modal-confirm-action-btn {
+  background-color: #28a745; /* Зелена для підтвердження */
+  color: white;
+}
+
+.modal-confirm-action-btn:hover {
+  background-color: #218838;
+}
+
+.modal-cancel-action-btn {
+  background-color: #555;
+  color: white;
+}
+
+.modal-cancel-action-btn:hover {
+  background-color: #444;
+}
+
+/* --- Вкладки "АДМІН-ПАНЕЛІ" --- */
+#admin-panel {
+  display: none; /* Ховаємо спочатку */
+  position: relative; /* Встановлює новий контекст накладення */
+  z-index: 100; /* Гарантує, що панель буде вище за все, окрім оверлея */
+}
+
+/* --- Вкладка "Реєстрація" (#register) --- */
+#register-form {
+  max-width: 400px; /* Обмежимо ширину форми */
+  margin: 0 auto; /* Центруємо */
+}
+
+/* ================================================== */
+/* == Вкладка "Повідомлення" - ФІНАЛЬНІ СТИЛІ v3.0 == */
+/* ================================================== */
+
+/* 1. Вирішуємо проблему з ВЕЛИКИМ ВІДСТУПОМ зверху */
+#notifications h2,
+#notifications h4 {
+  /* Прибираємо браузерні відступи за замовчуванням, які створюють порожнечу */
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+#notifications .form-section {
+  margin-top: 0; /* Гарантуємо відсутність зовнішнього відступу у самої форми */
+  padding: 20px;
+  background-color: #2c2c2c;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+/* Інші стилі для форми залишаються без змін */
+#notifications form input[type='text'],
+#notifications form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  background-color: #1e1e1e;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+}
+
+#notifications form .form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+#notifications-list-container {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* 2. Вирішуємо проблему з ІКОНКАМИ (положення та відступи) */
+
+/* Робимо картку повідомлення точкою відліку для позиціонування */
+.notification-admin-item {
+  position: relative; /* ВАЖЛИВО: для позиціонування кнопок */
+  background-color: #2a2a2e;
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 4px solid #7129da;
+}
+
+/* Контейнер для іконок - позиціонування у кутку картки */
+.notification-admin-actions {
+  position: absolute;
+  top: 8px; /* Відступ зверху, як просив */
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Відступ між кнопками, як у твоєму прикладі */
+}
+
+/* ЗАГАЛЬНИЙ стиль для кнопок редагування та видалення, адаптований з твого прикладу */
+.notification-admin-actions .edit-notification-btn,
+.notification-admin-actions .delete-notification-btn {
+  /* Скидаємо стилі за замовчуванням */
+  background-color: transparent;
+  border: none;
+  margin: 0;
+  padding: 2px; /* Невеликий внутрішній відступ */
+
+  /* Робимо кнопку гнучким контейнером для центрування іконки */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Встановлюємо МІНІМАЛЬНИЙ розмір, щоб вирішити проблему "великих прямокутників" */
+  min-width: 26px;
+  min-height: 26px;
+
+  /* Стилі для іконки всередині */
+  font-size: 1.2em; /* Розмір іконки */
+  line-height: 1; /* Прибираємо зайву висоту */
+  color: #aaa; /* однаковий сірий колір за замовчуванням */
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+@media (hover: hover) {
+  /* Ефекти при наведенні будуть працювати тільки на ПК */
+  .notification-admin-actions .edit-notification-btn:hover {
+    color: #6c75ff; /* Синій, як у прикладі */
+    transform: scale(1.15);
+  }
+
+  .notification-admin-actions .delete-notification-btn:hover {
+    color: #ff4d4f; /* Червоний для видалення */
+    transform: scale(1.15);
+  }
+}
+
+/* Заголовок повідомлення */
+.notification-admin-header {
+  /* ВАЖЛИВО: Додаємо відступ справа, щоб довгий текст не залазив під іконки */
+  margin-top: 5px;
+  padding-right: 65px;
+  margin-bottom: 10px;
+}
+
+.notification-admin-title {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.notification-admin-date {
+  font-size: 0.8em;
+  color: #aaa;
+  display: block;
+  margin-top: 5px;
+}
+
+.notification-admin-text {
+  white-space: pre-wrap;
+  color: #ddd;
+}
+// -- КІНЕЦЬ вкладки "Повідомлення" -- //
+
+/* === Вкладка "Профілі" === */
+#user-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 15px;
+  max-height: 400px; /* Обмеження висоти списку */
+  overflow-y: auto; /* Додаємо скрол */
+  border: 1px solid #444;
+  border-radius: 5px;
+}
+.user-item {
+  padding: 10px 15px;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.user-item:last-child {
+  border-bottom: none;
+}
+.user-item:hover {
+  background-color: #2a2a2a;
+}
+.user-item.selected {
+  /* Стиль для обраного користувача */
+  background-color: rgb(113, 41, 218);
+  color: white;
+  font-weight: bold;
+}
+.user-item.selected .user-phone {
+  /* Робимо телефон білим у виділеному */
+  color: white;
+}
+.user-name {
+  /* Можна додати стилі, якщо потрібно */
+}
+
+/* Червоний колір для імені у списку, якщо підписка неактивна */
+.user-item .user-name.subscription-inactive-name {
+  color: #ff6b6b; /* Яскраво-червоний */
+}
+.user-item.selected .user-name.subscription-inactive-name {
+  color: white; /* Повертаємо білий колір при виділенні, щоб було читабельно */
+}
+
+/* Помаранчевий колір для імені, якщо підписка скоро закінчиться */
+.user-item .user-name.subscription-expiring-soon-name {
+  color: #ffa500; /* Помаранчевий */
+  font-weight: bold; /* Можна зробити жирним для акценту */
+}
+
+/* Повертаємо білий колір для виділеного елемента, щоб було читабельно */
+.user-item.selected .user-name.subscription-expiring-soon-name {
+  color: white;
+}
+
+.user-phone {
+  color: #888; /* Сірий для номера телефону */
+  font-size: 0.9em;
+  margin-left: 5px;
+}
+
+/* --- Стилі для ПРЕФІКСІВ --- */
+.user-item .role-prefix {
+  font-weight: bold;
+  flex-shrink: 0; /* Щоб префікси не стискалися */
+}
+
+.user-item .admin-prefix {
+  color: #ffd700; /* Золотий */
+}
+
+.user-item .trainer-prefix {
+  color: #87cefa; /* Світло-блакитний */
+}
+
+.user-item .independent-prefix {
+  color: #28a745; /* Насичений зелений */
+}
+
+.user-item .self-prefix {
+  color: #28a745; /* Такий самий зелений, як у 'independent' */
+}
+
+.user-item .suspended-prefix {
+  font-weight: bold; /* Робимо жирним */
+  color: #ff4d4d; /* Яскраво-червоний колір */
+  /* Можна додати невеликий відступ, якщо пробілу в JS недостатньо */
+  /* margin-right: 0.2em; */
+}
+
+#profile-details {
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px dashed rgb(113, 41, 218);
+}
+#profile-details h3 {
+  text-align: left; /* Вирівнюємо заголовок деталей зліва */
+  margin-bottom: 15px;
+}
+#profile-details p {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+#profile-details p strong {
+  display: inline-block;
+  width: 200px; /* Фіксована ширина для назв полів */
+  color: #ccc;
+}
+.profile-data {
+  color: white; /* Робимо дані білими */
+}
+
+/* --- Стилі для посилань у профілі користувача --- */
+.profile-data a {
+  color: #8ab4f8; /* Світло-синій, як у таблиці аналітики */
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.profile-data a:hover {
+  color: #a1c9fa; /* Світліший при наведенні */
+  text-decoration: none;
+}
+
+/* Додаткові стилі для позначок ролей/статусу в деталях профілю (якщо потрібно) */
+.user-roles-status {
+  margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.user-roles-status .role,
+.user-roles-status .status {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+.user-roles-status .role.admin {
+  background-color: #ffd700;
+  color: #333;
+}
+.user-roles-status .role.trainer {
+  background-color: #87cefa;
+  color: #111;
+}
+.user-roles-status .role.user {
+  background-color: #ccc;
+  color: #333;
+}
+.user-roles-status .status.active {
+  background-color: lightgreen;
+  color: #003300;
+}
+.user-roles-status .status.suspended {
+  background-color: #ff8c69;
+  color: #501000;
+}
+.user-roles-status .role.independent {
+  background-color: #28a745;
+  color: white;
+}
+.user-roles-status .status.subscription-active {
+  background-color: #007bff;
+  color: white;
+}
+.user-roles-status .status.subscription-inactive {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* --- Стилі для статусу автоподовження --- */
+.status.auto-renew-on {
+  background-color: rgba(76, 175, 80, 0.2); /* Світло-зелений фон */
+  color: #66bb6a; /* Зелений текст */
+  border: 1px solid #4caf50;
+}
+
+.status.auto-renew-off {
+  background-color: rgba(158, 158, 158, 0.15); /* Сірий фон */
+  color: #bdbdbd; /* Сірий текст */
+  border: 1px solid #616161;
+}
+
+/* === НОВІ СТИЛІ: Керування підписками === */
+#subscription-management-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed rgb(113, 41, 218);
+}
+
+.subscription-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 30px; /* Відступ після списку */
+}
+
+.subscription-item {
+  background-color: #1f1f1f;
+  border: 1px solid #444;
+  border-left-width: 5px; /* Товста лінія зліва для статусу */
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* Кольорове кодування статусів */
+.subscription-item.status-active {
+  border-left-color: lightgreen;
+}
+.subscription-item.status-cancelled {
+  border-left-color: #ff8c69;
+}
+.subscription-item.status-expired {
+  border-left-color: #6c757d;
+}
+.subscription-item.status-pending_payment {
+  border-left-color: #ffc107;
+}
+
+.subscription-info {
+  font-size: 0.95em;
+  line-height: 1.6;
+}
+.subscription-info strong {
+  color: #ccc;
+}
+
+.subscription-actions button {
+  margin: 0; /* Прибираємо стандартні відступи */
+  min-width: 110px;
+}
+
+/* Форма додавання нової підписки */
+.subscription-form {
+  background-color: #1f1f1f;
+  padding: 20px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end; /* Вирівнюємо елементи по нижньому краю */
+}
+
+.subscription-form .form-group {
+  flex: 1; /* Дозволяє полям розтягуватись */
+  min-width: 200px; /* Мінімальна ширина для полів */
+}
+
+.subscription-form label {
+  font-size: 0.85em;
+}
+
+.subscription-form select,
+.subscription-form input[type='date'] {
+  margin-bottom: 0; /* Прибираємо відступ для елементів у формі */
+}
+
+.subscription-form button[type='submit'] {
+  flex-shrink: 0; /* Забороняємо кнопці стискатись */
+  margin: 0;
+}
+
+#add-subscription-message {
+  width: 100%;
+  margin-top: 15px;
+  font-weight: bold;
+  text-align: center;
+  min-height: 1em;
+}
+
+/* === Вкладка "Прогрес" === */
+#progress-details {
+  margin-top: 0; /* Прибираємо зайвий відступ */
+}
+#progress-details h3 {
+  text-align: left;
+}
+#progress-table-admin {
+  /* Можна додати специфічні стилі для таблиці прогресу адмінки */
+}
+
+/* === Вкладка "Тренування" === */
+#workouts h2 {
+  /* Заголовок вкладки */
+  font-size: 1.4em; /* Трохи більший */
+  text-align: left;
+}
+
+#add-training-plan-form {
+  /* Стилі для самої форми */
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* Відстань між елементами форми */
+}
+
+/* ========== СТИЛІ ДЛЯ GEMINI HELPER ========== */
+
+/* Контейнер для кнопки та спіннера */
+.gemini-helper-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  /* ЗМЕНШЕНО ВІДСТУП ЗВЕРХУ */
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+/* Стиль для головної кнопки */
+.gemini-btn {
+  background: linear-gradient(45deg, #4285f4, #9b72cb);
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* Секція, що розгортається */
+#gemini-input-section {
+  //margin-top: 5px;
+  /* ДОДАНО ВІДСТУП ЗНИЗУ, щоб відсунути "Назву тренування" */
+  margin-bottom: 20px;
+}
+
+/* Поле для вводу промпту */
+#gemini-prompt-input {
+  width: 100%;
+  min-height: 60px;
+  margin-bottom: 10px;
+}
+
+/* Анімація спіннера */
+.gemini-spinner {
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-left-color: #4285f4;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  animation: gemini-spin 1s linear infinite;
+}
+
+@keyframes gemini-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Стиль для підсвічування таблиці, заповненої на основі переваг */
+.preference-based-table {
+  background-color: rgba(46, 139, 87, 0.15); /* Напівпрозорий зелений фон */
+  border: 1px solid seagreen;
+  border-radius: 5px;
+  padding: 5px;
+  margin-top: 10px;
+}
+// --- КІНЕЦЬ стилей GEMINI HELPER ---
+
+/* Блок однієї вправи */
+.exercise {
+  border: 1px solid #444; /* Темніша рамка */
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  background-color: #1a1a1a; /* Фон для блоку */
+  position: relative;
+}
+.exercise legend {
+  color: rgb(113, 41, 218);
+  font-weight: bold;
+  font-size: 1.2em; /* Більший шрифт легенди */
+  padding: 0 10px; /* Відступи навколо тексту легенди */
+}
+
+/* Вибір GIF */
+.select-gif-btn {
+  background-color: rgb(113, 41, 218);
+  font-size: 0.9em;
+}
+.select-gif-btn:hover {
+  background-color: white;
+  color: rgb(113, 41, 218);
+}
+.folder-selector,
+.subfolder-selector {
+  background-color: #222;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+.folder-buttons,
+.subfolder-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.folder-buttons button,
+.subfolder-buttons button {
+  background-color: #555;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.folder-buttons button:hover,
+.subfolder-buttons button:hover {
+  background-color: #777;
+}
+.folder-buttons button.active,
+.subfolder-buttons button.active {
+  /* Стиль активної кнопки папки */
+  background-color: rgb(113, 41, 218);
+  box-shadow: 0 0 5px rgb(113, 41, 218);
+}
+.gif-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+  background-color: #252525;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.grid-cell {
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px; /* Узгоджено з існуючими стилями */
+  overflow: hidden; /* Ховаємо все, що виходить за межі заокруглених кутів */
+  background-color: #222; /* Ледь помітний фон для комірки */
+}
+
+/* Додайте цей новий клас для стилізації назви */
+.gif-name-label {
+  background-color: rgb(113, 41, 218); /* Фіолетовий фон, як ви хотіли */
+  color: #ffffff; /* Білий колір тексту */
+  font-weight: bold; /* Жирний шрифт */
+  text-align: center; /* Текст по центру */
+  padding: 8px 5px; /* Внутрішні відступи для краси */
+  font-size: 0.9em; /* Трохи менший розмір шрифту */
+  flex-shrink: 0; /* Забороняємо контейнеру стискатися */
+}
+
+/* Контейнер для КОЖНОГО елемента сітки */
+.gif-item {
+  position: relative; /* Встановлюємо контекст для позиціонування */
+  aspect-ratio: 9 / 16;
+  cursor: pointer;
+  background-color: #333; /* Фон на випадок затримок */
+  overflow: hidden; /* Ховаємо все, що виходить за межі */
+  flex-grow: 1;
+}
+
+/* Спільні стилі для ОБОХ зображень (PNG і GIF) */
+.gif-item img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px; /* Рамку переносимо на сам .gif-item */
+  transition: opacity 0.3s ease;
+}
+
+.gif-item:hover {
+  box-shadow: 0 0 0 2px rgb(113, 41, 218); /* Ефект рамки тепер через тінь */
+}
+
+/* Порядок шарів (z-index) */
+.gif-full {
+  z-index: 1;
+  opacity: 0;
+}
+.gif-preview {
+  z-index: 2;
+}
+
+/* Коли GIF завантажено */
+.gif-item.is-loaded .gif-full {
+  opacity: 1;
+}
+.gif-item.is-loaded .gif-preview {
+  opacity: 0;
+}
+
+/* --- ВИРІШЕННЯ ПРОБЛЕМИ №1: НАДІЙНИЙ ОВЕРЛЕЙ --- */
+/* Створюємо напівпрозорий шар поверх зображень під час завантаження */
+.gif-item.loading::after {
+  content: ''; /* Обов'язково для псевдо-елементів */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Напівпрозорий чорний */
+  z-index: 3; /* Поверх зображень */
+}
+
+/* Анімація завантаження (кружечок) */
+.loader {
+  display: none; /* Сховано за замовчуванням */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 4px solid #555;
+  border-top-color: rgb(113, 41, 218);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 4; /* Поверх оверлею */
+}
+
+.gif-item.loading .loader {
+  display: block; /* Показуємо при завантаженні */
+}
+
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* --- ВИРІШЕННЯ ПРОБЛЕМИ №2: ПОЗИЦІОНУВАННЯ ПОВІДОМЛЕННЯ --- */
+.slow-load-message {
+  position: absolute; /* Позиціонуємо відносно .gif-item */
+  bottom: 10px; /* Відступ від нижнього краю */
+  left: 50%;
+  transform: translateX(-50%); /* Центруємо по горизонталі */
+  width: 90%; /* Ширина, трохи менша за контейнер */
+
+  background-color: rgba(255, 193, 7, 0.9); /* Жовтуватий фон, як ви хотіли */
+  color: #000; /* Чорний текст для кращої читабельності */
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.7em;
+  font-weight: bold;
+  text-align: center;
+  box-sizing: border-box;
+  z-index: 5; /* Поверх абсолютно всього */
+}
+
+/* ---- ВАШІ СТИЛІ ДЛЯ ОБРАНОГО GIF (без змін) ---- */
+.selected-gif-container {
+  margin-top: 15px;
+  text-align: center;
+}
+.selected-gif {
+  max-width: 270px;
+  height: auto;
+  object-fit: cover;
+  border: 2px solid rgb(113, 41, 218);
+  border-radius: 5px;
+}
+
+/* Поля всередині вправи */
+.exercise label {
+  margin-top: 15px; /* Відступ над лейблом */
+  margin-bottom: 3px; /* Менший відступ під лейблом */
+  font-weight: bold; /* Жирні лейбли */
+  color: #ddd;
+}
+.exercise input[type='text'],
+.exercise input[type='number'],
+.exercise textarea,
+.exercise select {
+  background: #2a2a2a; /* Фон для полів */
+  border: 1px solid #555; /* Рамка */
+  border-radius: 4px;
+  color: white;
+  padding: 8px; /* Зменшений падінг */
+  margin-bottom: 10px; /* Зменшений відступ */
+}
+.exercise textarea {
+  /* Textarea всередині вправи */
+  min-height: 60px;
+}
+.exercise input[type='checkbox'] {
+  /* Чекбокси всередині вправи */
+  width: auto;
+  margin-right: 5px;
+  margin-bottom: 10px; /* Спільний відступ */
+}
+/* Стилі для flex-контейнерів, що містять поля all_weight та weight_rainge */
+/* Цей блок залишається майже без змін, бо він стилізує батьківські div */
+.exercise .form-group {
+  display: flex;
+  gap: 10px;
+  align-items: center; /* Вирівнювання */
+  margin-bottom: 10px;
+}
+
+/* Стиль для тексту "від", "до", ":" */
+.exercise .form-group span,
+.exercise .form-group label {
+  /* Додаємо label для кращої сумісності */
+  color: #ccc;
+}
+
+/* ОНОВЛЕНО: Тепер ми стилізуємо INPUT, а не SELECT.
+  Ми використовуємо селектор по атрибуту, щоб застосувати стилі до всіх інпутів,
+  які мають список підказок (datalist).
+*/
+.exercise .form-group input[list] {
+  width: auto; /* Авто ширина */
+  flex-grow: 1; /* Дозволяємо рости */
+  margin-bottom: 0; /* Прибираємо нижній відступ у flex-контейнері */
+
+  /* Додаємо базові стилі, щоб інпути виглядали як селекти */
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 8px;
+  font-family: inherit; /* Успадковуємо шрифт */
+  font-size: 1em; /* Успадковуємо розмір шрифту */
+}
+.exercise .rest-time-container {
+  display: flex;
+  gap: 10px;
+  align-items: center; /* Вирівнювання */
+  margin-bottom: 10px;
+}
+.exercise .rest-time-container span {
+  /* Текст "від", "до", ":" */
+  color: #ccc;
+}
+.exercise .rest-time-container select {
+  width: auto; /* Авто ширина для селектів */
+  flex-grow: 1; /* Дозволяємо рости */
+  margin-bottom: 0; /* Прибираємо нижній відступ у flex */
+}
+
+/* Таблиця підходів/повторень/ваги в адмінці */
+.sets-table-container {
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+.admin-sets-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px; /* Відстань між рядками */
+}
+.admin-sets-table th {
+  background-color: #333; /* Темний фон заголовків */
+  font-size: 0.9em;
+  padding: 6px 8px;
+  text-align: center;
+  border-bottom: 1px solid rgb(113, 41, 218);
+}
+.admin-sets-table td {
+  padding: 4px;
+  text-align: center;
+  border-bottom: 1px solid #444;
+}
+.admin-sets-table td:first-child {
+  /* Номер підходу */
+  color: #ccc;
+  width: 20%;
+}
+.admin-sets-table select {
+  /* Селекти в таблиці */
+  width: 90%; /* Ширина селекту в комірці */
+  padding: 4px;
+  font-size: 0.95em;
+  margin: 0 auto; /* Центруємо селект */
+  display: block;
+  background-color: #2a2a2a;
+  border-color: #555;
+}
+
+// Підсвітка червонем контейнеру вправи, якщо є виключена вправа (при копіюванні)
+.copied-exercise-is-excluded {
+  background-color: #4d1f1f !important; /* Темно-червоний фон, щоб перебити інші стилі */
+  border: 1px solid #8c3a3a !important; /* Темніша червона рамка */
+}
+
+/* --- Загальні стилі для нових блоків --- */
+#admin-workout-list-view,
+#admin-workout-form-view,
+#admin-workout-details-view {
+  padding-top: 10px;
+  margin-bottom: 20px; /* Додав загальний відступ знизу */
+}
+
+/* Стиль для імені користувача в заголовках */
+#admin-workout-list-username,
+#selected-user-name {
+  color: rgb(113, 41, 218);
+  font-weight: bold; /* Додав жирність */
+}
+
+/* Статусні повідомлення (уніфіковано зі стилем особистого кабінету) */
+/* Використовуємо ID з адмінки, але стилі зі зразка */
+#admin-workout-list-status,
+#admin-workout-details-status,
+#training-plan-message {
+  /* Додав сюди статус форми */
+  margin-top: 15px;
+  color: #aaa;
+  min-height: 1.2em;
+  text-align: center;
+  font-style: italic; /* Курсив для статусів */
+}
+/* Можна залишити для інших статусів, якщо вони використовуються */
+#register-message,
+#change_password-message {
+  margin-top: 15px;
+  min-height: 1.2em;
+  text-align: center;
+  font-weight: bold;
+  font-style: italic;
+  color: white; /* Зберігаємо білий для цих специфічних */
+}
+
+/* --- Стилі для Блоку Списку Тренувань (Адаптовано) --- */
+#admin-workout-list-view h2 {
+  text-align: left;
+  font-size: 1.3em;
+  margin-bottom: 15px;
+}
+
+/* Кнопка "+ Додати" */
+#show-add-training-form-btn {
+  background-color: rgb(113, 41, 218);
+  color: white;
+  border: 1px solid rgb(113, 41, 218); /* Додав бордер для консистенції */
+  margin-bottom: 20px;
+  padding: 6px 12px; /* Уніфікував падінг */
+  font-size: 0.9em; /* Уніфікував розмір */
+  border-radius: 5px; /* Додав скруглення */
+  transition:
+    background-color 0.3s,
+    color 0.3s; /* Додав перехід */
+  cursor: pointer; /* Додав курсор */
+}
+#show-add-training-form-btn:hover {
+  background-color: white;
+  color: rgb(113, 41, 218);
+}
+
+/* Контейнер списку */
+#admin-workout-list {
+  padding: 0; /* Зі стилю особистого кабінету */
+}
+
+/* Елемент списку тренувань (Адаптовано) */
+.admin-workout-list-item {
+  background-color: #1f1f1f;
+  border: 1px solid rgb(113, 41, 218);
+  border-radius: 5px;
+  padding: 15px; /* Загальний відступ */
+  /* ВАЖЛИВО: Повертаємо відступ СПРАВА для індикаторів/кнопки */
+  padding-right: 40px; /* Збільшуємо правий відступ (підберіть значення) */
+  padding-left: 15px; /* Лівий відступ звичайний */
+  padding-bottom: 30px;
+  margin-bottom: 10px;
+  /* cursor: pointer; - прибрано, клікабельний .workout-list-content */
+  transition: background-color 0.3s;
+  position: relative; /* Необхідно для абсолютного позиціонування дочірніх */
+  min-height: 60px;
+}
+.admin-workout-list-item:hover {
+  background-color: #2f2f2f;
+}
+
+/* Стиль для виконаного тренування (лінія зліва) */
+.admin-workout-list-item.completed {
+  border-left: 5px solid lightgreen;
+  padding-left: 10px;
+}
+
+/* Для списку тренувань в адмінці */
+.admin-workout-list-item.admin-plan-contains-excluded {
+  border-left: 5px solid #d9534f; /* Червона лінія */
+  padding-left: 10px; /* Відступ, як для .completed */
+}
+/* Якщо план і виконаний, і містить виключену - зелений пріоритетніший */
+.admin-workout-list-item.completed.admin-plan-contains-excluded {
+  border-left: 5px solid lightgreen;
+}
+
+/* НОВИЙ Контейнер для індикаторів (ВЕРХНІЙ ПРАВИЙ КУТ) */
+.admin-workout-list-item .list-item-indicators-top-right {
+  position: absolute;
+  top: 10px; /* Відступ зверху */
+  right: 10px; /* Відступ СПРАВА */
+  display: flex; /* Розміщуємо іконки поруч */
+  align-items: center; /* Вирівнюємо по вертикалі */
+  gap: 8px; /* Проміжок між іконками */
+  line-height: 1;
+}
+
+/* Індикатор виконання (ЗАБИРАЄМО позиціонування) */
+.admin-workout-list-item .completion-indicator {
+  font-size: 1.4em;
+  color: lightgreen;
+  font-weight: bold;
+}
+
+/* Індикатор наявності відгуку (ЗАБИРАЄМО позиціонування) */
+.admin-workout-list-item .feedback-indicator {
+  font-size: 1.2em;
+  color: #ffc107;
+  cursor: help;
+}
+
+/* --- НОВІ/ОНОВЛЕНІ СТИЛІ ДЛЯ НИЖНІХ КНОПОК ДІЙ --- */
+
+/* Контейнер для кнопок "Редагувати", Копіювати" */
+.admin-workout-list-item .workout-list-actions {
+  position: absolute;
+  bottom: 8px; /* Відступ знизу */
+  right: 8px; /* Відступ справа */
+  display: flex; /* Розміщуємо кнопки в ряд */
+  align-items: center; /* Вирівнюємо по вертикалі */
+  gap: 8px; /* Проміжок між кнопками */
+}
+
+/* Загальні стилі для кнопок дій (редагування та КОПІЮВАННЯ) всередині .workout-list-actions */
+.admin-workout-list-item .workout-list-actions .edit-plan-btn,
+.admin-workout-list-item .workout-list-actions .copy-plan-btn {
+  /* <--- ДОДАНО КЛАС КНОПКИ КОПІЮВАННЯ */
+  background-color: transparent;
+  border: none;
+  padding: 2px;
+  border-radius: 4px;
+  font-size: 1.3em; /* Розмір іконки */
+  line-height: 1; /* Для кращого вирівнювання іконки */
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    transform 0.2s; /* Плавні переходи */
+
+  /* Для кращої клікабельної області */
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Стиль для кнопки редагування */
+/* (колір за замовчуванням для кнопки редагування можна додати, якщо потрібно, або він успадковується) */
+/* Наприклад:
+.admin-workout-list-item .workout-list-actions .edit-plan-btn {
+    color: #aaa; // Або інший колір за замовчуванням
+}
+*/
+
+.admin-workout-list-item .workout-list-actions .edit-plan-btn:hover {
+  color: #6c75ff; /* Синій (або інший) при наведенні */
+  transform: scale(1.1);
+}
+
+/* --- НОВІ СТИЛІ для кнопки копіювання --- */
+.admin-workout-list-item .workout-list-actions .copy-plan-btn {
+  color: #aaa; /* Сірий колір іконки за замовчуванням, аналогічно іншим */
+  /* або оберіть інший колір, наприклад, зелений для "позитивної" дії */
+  /* color: #5cb85c; */
+}
+
+.admin-workout-list-item .workout-list-actions .copy-plan-btn:hover {
+  color: #5bc0de; /* Світло-синій (інформаційний) при наведенні, або інший на ваш вибір */
+  /* наприклад, зелений: color: #4cae4c; */
+  transform: scale(1.1);
+}
+/* --- Кінець нових стилів для кнопки копіювання --- */
+
+/* --- Стилі для кнопки видалення вправи (з попередньої відповіді, для повноти) --- */
+/* Контейнер вправи у формі або деталях має бути position: relative */
+.exercise-item-in-form, /* Клас для вправи у формі створення/редагування */
+.exercise-item.readonly /* Клас для вправи у деталях перегляду */ {
+  position: relative;
+}
+
+.delete-exercise-btn {
+  position: absolute;
+  top: 5px;
+  right: 20px;
+  background-color: transparent !important; /* !important, якщо є конфлікти */
+  border: none;
+  padding: 0;
+  font-size: 1.3em; /* Розмір іконки */
+  line-height: 1; /* Для кращого вирівнювання іконки */
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    transform 0.2s; /* Плавні переходи */
+
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10; /* Щоб кнопка була поверх іншого контенту, якщо потрібно */
+}
+
+.delete-exercise-btn:hover {
+  color: #ff4d4d; /* Яскраво-червоний при наведенні */
+  transform: scale(1.2); /* Легке збільшення */
+}
+
+/* Основний контент (як було, без margin-left) */
+.admin-workout-list-item .workout-list-content {
+  cursor: pointer;
+}
+
+/* Вміст елемента списку (Адаптовано) */
+.admin-workout-list-item .workout-list-date {
+  font-weight: bold;
+  color: rgb(113, 41, 218);
+  display: inline;
+}
+.admin-workout-list-item .workout-list-title {
+  font-weight: bold;
+  margin-left: 5px;
+  display: inline;
+}
+.admin-workout-list-item .workout-list-desc {
+  display: block;
+  font-size: 0.9em;
+  color: #aaa;
+  margin-top: 5px;
+}
+
+/* --- Стилі для Блоку Форми Створення (Залишаємо специфічними, кнопки уніфікуємо) --- */
+#admin-workout-form-view h2 {
+  /* Можна стилізувати заголовок форми */
+  font-size: 1.3em;
+  margin-bottom: 15px;
+}
+#add-training-plan-form {
+  /* Можна додати стилі для самої форми */
+}
+#cancel-add-training-btn {
+  /* Кнопка скасування */
+  background-color: #6c757d; /* Сірий */
+  color: white; /* Білий текст */
+  border: 1px solid #6c757d;
+  padding: 6px 12px; /* Уніфікував падінг */
+  font-size: 0.9em; /* Уніфікував розмір */
+  border-radius: 5px; /* Додав скруглення */
+  transition:
+    background-color 0.3s,
+    color 0.3s; /* Додав перехід */
+  cursor: pointer; /* Додав курсор */
+  margin-bottom: 30px !important;
+}
+#cancel-add-training-btn:hover {
+  background-color: #5a6268;
+  border-color: #5a6268;
+  color: white;
+}
+/* Стиль для кнопки збереження (за замовчуванням для <button type=submit>) */
+#add-training-plan-form button[type='submit'] {
+  background-color: rgb(113, 41, 218); /* Фіолетовий */
+  color: white;
+  border: 1px solid rgb(113, 41, 218);
+  padding: 10px 20px;
+  font-size: 1.1em;
+  border-radius: 10px;
+  transition:
+    background-color 0.3s,
+    color 0.3s; /* Додав перехід */
+  cursor: pointer;
+}
+#add-training-plan-form button[type='submit']:hover {
+  background-color: white;
+  color: rgb(113, 41, 218);
+}
+
+#add-training-plan-form hr {
+  /* Лінії у формі */
+  border: none;
+  border-top: 1px dashed;
+  color: rgb(113, 41, 218); /* Стиль з особистого кабінету */
+  margin: 25px 0;
+  clear: both;
+}
+#add-training-plan-form h3 {
+  /* Заголовок "Вправи" */
+  text-align: left;
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+/* Стилі для елементів форми (fieldset.exercise, .gif-grid, .folder-selector etc.) */
+/* Тут потрібно перенести або адаптувати стилі з особистого кабінету, */
+/* якщо вони є, або залишити специфічні стилі адмінки для форми */
+
+/* --- Стилі для Блоку Деталей Тренування (Адаптовано) --- */
+/* Це наш новий flex-контейнер */
+#admin-workout-details-exercises .exercise-main-content {
+  display: flex;
+  flex-direction: row; /* Горизонтально */
+  align-items: flex-start;
+  gap: 20px; /* Відстань між колонками */
+  margin-top: 15px; /* Відступ після заголовка */
+}
+
+/* Права колонка (з деталями) */
+#admin-workout-details-exercises .exercise-details-content {
+  flex: 1; /* Дозволяємо рости і займати весь вільний простір */
+}
+
+#admin-workout-details-view h3 {
+  /* Заголовок (назва тренування) */
+  text-align: left;
+  font-size: 1.4em;
+  margin-bottom: 10px;
+}
+#admin-workout-details-view p {
+  margin-bottom: 10px;
+  line-height: 1.5;
+  display: flex; /* Робимо параграф flex-контейнером */
+  align-items: baseline; /* Вирівнюємо текст мітки та значення по базовій лінії */
+  flex-wrap: wrap; /* Можна додати, якщо хочете дозволити перенос на дуже малих екранах */
+}
+/* Назви полів (як в особистому кабінеті) */
+#admin-workout-details-view p strong {
+  color: #ccc;
+  /* min-width: 150px; - прибираємо, може заважати */
+  margin-right: 5px; /* Додаємо відступ після назви */
+}
+#admin-workout-details-completion {
+  /* Статус виконання */
+  font-weight: bold;
+}
+/* --- ФІНАЛЬНІ СТИЛІ ДЛЯ ДЕТАЛЕЙ ТРЕНУВАННЯ В АДМІНЦІ --- */
+
+/* Застосовуємо єдиний стиль до всіх текстових блоків */
+#admin-workout-details-description,
+#admin-workout-details-feedback,
+#admin-ai-analysis-text {
+  background-color: #1f1f2c; /* Трохи інший фон для кращого вигляду */
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-top: 5px;
+  white-space: pre-wrap;
+  border: 1px solid #333;
+  line-height: 1.6;
+  color: #e0e0e0;
+}
+
+/* Стилізуємо заголовок для блоку аналізу, щоб візуально його виділити */
+#admin-ai-analysis-container h5 {
+  color: #a993ff;
+  margin-top: 20px;
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #4a4a6a;
+}
+
+/* Невеликий відступ для нових полів "кардіо" та "калорії" */
+#admin-workout-details-cardio,
+#admin-workout-details-calories {
+  padding-left: 5px;
+}
+
+/* Кнопка Назад (Адаптовано) */
+#admin-back-to-workout-list-btn {
+  background-color: #444;
+  color: white; /* Додав колір тексту */
+  border: 1px solid #444; /* Додав бордер */
+  margin-bottom: 20px;
+  padding: 6px 12px;
+  font-size: 0.9em;
+  border-radius: 5px; /* Додав скруглення */
+  transition:
+    background-color 0.3s,
+    color 0.3s; /* Додав перехід */
+  cursor: pointer; /* Додав курсор */
+  /* min-width: auto; - зазвичай не потрібно */
+}
+#admin-back-to-workout-list-btn:hover {
+  background-color: #666;
+  color: white;
+}
+
+#admin-workout-details-view hr {
+  /* Розділювач (як в особистому кабінеті) */
+  border: none;
+  border-top: 1px dashed;
+  color: rgb(113, 41, 218);
+  margin: 25px 0;
+  clear: both;
+}
+#admin-workout-details-view h4 {
+  /* Заголовок "Вправи" */
+  text-align: left;
+  color: rgb(113, 41, 218);
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* Для деталей тренування в адмінці - наявність виключених вправ*/
+.exercise-item.admin-exercise-excluded-by-user {
+  background-color: #4d1f1f !important; /* Темно-червоний фон, щоб перебити інші стилі */
+  border: 1px solid #8c3a3a !important; /* Темніша червона рамка */
+}
+.exercise-item.admin-exercise-excluded-by-user .exercise-name,
+.exercise-item.admin-exercise-excluded-by-user .exercise-order,
+.exercise-item.admin-exercise-excluded-by-user p,
+.exercise-item.admin-exercise-excluded-by-user span,
+.exercise-item.admin-exercise-excluded-by-user h6 strong {
+  color: #f0c9c9 !important; /* Світліший текст */
+}
+
+/* Стилі для read-only вправ (Адаптовано з особистого кабінету) */
+/* Використовуємо ті ж класи, що генерує JS */
+#admin-workout-details-exercises .exercise-item {
+  /* Базовий стиль */
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-bottom: 10px;
+  border: 1px solid #444;
+}
+#admin-workout-details-exercises .exercise-item.readonly {
+  /* Відмінності для readonly */
+  background-color: #222; /* Трохи інший фон */
+  border-color: #555;
+}
+/* Прибираємо ховер-ефекти для .readonly */
+#admin-workout-details-exercises .exercise-item.readonly:hover {
+  background-color: #222;
+}
+
+/* Заголовок вправи (номер + назва) */
+#admin-workout-details-exercises .exercise-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+#admin-workout-details-exercises .exercise-order {
+  /* Номер */
+  color: white;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+#admin-workout-details-exercises .exercise-name {
+  /* Назва */
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: white;
+}
+
+/* Суперсет */
+#admin-workout-details-exercises .exercise-superset {
+  display: block;
+  color: #ffc83d;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  text-align: left;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+#admin-workout-details-exercises .exercise-superset strong {
+  color: inherit;
+}
+
+/* Акцент */
+#admin-workout-details-exercises .exercise-emphasis {
+  display: block;
+  color: rgb(113, 41, 218); /* Колір зі зразка */
+  margin-top: 15px;
+  margin-bottom: 10px;
+  text-align: left;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+#admin-workout-details-exercises .exercise-emphasis strong {
+  color: inherit;
+}
+
+/* GIF */
+#admin-workout-details-exercises .exercise-gif {
+  display: block;
+  height: auto;
+  margin: 15px 0;
+  border-radius: 5px;
+  border: 1px solid #555;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Головний контейнер, який ми створюємо для кожного GIF через JS */
+#admin-workout-details-exercises .gif-container-wrapper {
+  position: relative;
+  max-width: 100%;
+  width: 270px; /* Можна задати фіксовану ширину для узгодженості */
+  flex: 0 0 270px; /* Не рости, не стискатись, базова ширина 270px */
+  aspect-ratio: 9 / 16;
+  background-color: #333;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid #555;
+}
+
+/* Спільні стилі для ОБОХ зображень (PNG і GIF) всередині контейнера */
+#admin-workout-details-exercises .gif-container-wrapper img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+/* Порядок шарів (z-index) і видимість */
+#admin-workout-details-exercises .gif-full-view {
+  z-index: 1;
+  opacity: 0;
+}
+#admin-workout-details-exercises .gif-preview-view {
+  z-index: 2;
+}
+
+/* Коли GIF завантажено, міняємо прозорість */
+#admin-workout-details-exercises
+  .gif-container-wrapper.is-loaded
+  .gif-full-view {
+  opacity: 1;
+}
+#admin-workout-details-exercises
+  .gif-container-wrapper.is-loaded
+  .gif-preview-view {
+  opacity: 0;
+}
+
+/* Стан завантаження: оверлей */
+#admin-workout-details-exercises .gif-container-wrapper.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 3;
+  border-radius: 5px; /* Важливо для заокруглення оверлею */
+}
+
+/* Стан завантаження: анімація (кружечок) */
+#admin-workout-details-exercises .gif-container-wrapper .loader {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 4px solid #555;
+  border-top-color: rgb(113, 41, 218);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 4;
+}
+
+#admin-workout-details-exercises .gif-container-wrapper.loading .loader {
+  display: block;
+}
+
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Стан завантаження: повідомлення про повільний інтернет */
+#admin-workout-details-exercises .gif-container-wrapper .slow-load-message {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  background-color: rgba(255, 193, 7, 0.9);
+  color: #000;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.7em;
+  font-weight: bold;
+  text-align: center;
+  box-sizing: border-box;
+  z-index: 5;
+}
+
+/* Опис вправи */
+#admin-workout-details-exercises .exercise-description {
+  margin-bottom: 10px;
+  line-height: 1.6;
+  text-align: justify;
+}
+#admin-workout-details-exercises .exercise-description strong {
+  display: block;
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: white;
+  text-align: left;
+}
+
+/* Загальна робоча вага */
+#admin-workout-details-exercises .exercise-all-weight {
+  margin-bottom: 10px;
+  color: #ccc;
+  display: inline;
+}
+#admin-workout-details-exercises .exercise-all-weight strong {
+  font-size: 1em;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
+/* Діапазон ваги */
+#admin-workout-details-exercises .exercise-weight-range {
+  margin-bottom: 10px;
+  color: #ccc;
+  display: inline;
+}
+#admin-workout-details-exercises .exercise-weight-range strong {
+  font-size: 1em;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
+/* Таблиця підходів (Read-only) */
+/* Використовуємо .admin-sets-table.readonly, але стилі беремо з .exercise-sets-table */
+.admin-sets-table.readonly {
+  width: 100%;
+  table-layout: fixed; /* ДУЖЕ ВАЖЛИВО для рівномірного розподілу */
+  margin-top: 10px;
+  border-collapse: separate;
+  border-spacing: 0 5px; /* Відступи між рядками */
+  font-size: 0.95em;
+  text-align: center;
+  background-color: #1a1a1a; /* Фон як у exercise-item */
+  border: 1px solid #444; /* Рамка як у exercise-item */
+  border-radius: 8px; /* Скруглення як у exercise-item */
+  padding: 10px; /* Внутрішні відступи */
+}
+.admin-sets-table.readonly th {
+  /* Заголовок таблиці */
+  background-color: transparent; /* Прибираємо фон адмінки */
+  color: #ccc; /* Світлий колір */
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #444; /* Лінія під заголовком */
+  font-size: 0.9em; /* Менший шрифт */
+  font-weight: bold;
+}
+.admin-sets-table.readonly td {
+  padding: 8px 5px;
+  text-align: center;
+  border-bottom: 1px solid #444; /* Лінія між рядками */
+  vertical-align: middle;
+}
+.admin-sets-table.readonly tr:last-child td {
+  border-bottom: none; /* Прибираємо лінію у останнього рядка */
+}
+
+/* Застосовуємо стилі до TH, що має клас pref-col */
+.admin-sets-table.readonly th.pref-col {
+  background-color: rgba(144, 238, 144, 0.1); /* Ваш бажаний фон */
+  border-left: 1px solid rgba(144, 238, 144, 0.3);
+  border-right: 1px solid rgba(144, 238, 144, 0.3);
+  /* color: #вашколіртексту; -- якщо потрібно змінити колір тексту для цих заголовків */
+}
+
+/* Застосовуємо стилі до TD, що має клас pref-col-val */
+.admin-sets-table.readonly td.pref-col-val {
+  background-color: rgba(144, 238, 144, 0.1); /* Ваш бажаний фон */
+  color: lightgreen; /* Ваш бажаний колір тексту */
+  border-left: 1px solid rgba(144, 238, 144, 0.3);
+  border-right: 1px solid rgba(144, 238, 144, 0.3);
+}
+
+/* Текст загальної ваги */
+#admin-workout-details-exercises .total-weight-text {
+  display: block;
+  font-size: 0.95em;
+  color: #aaa;
+  margin-bottom: 10px;
+  margin-top: 5px; /* Додав відступ зверху */
+  font-style: italic;
+}
+
+/* Текст загальної кількості повторень */
+#admin-workout-details-exercises .total-reps-text {
+  display: block;
+  font-size: 0.95em;
+  color: #aaa;
+  margin-bottom: 10px;
+  margin-top: 5px; /* Додав відступ зверху */
+  font-style: italic;
+}
+
+/* Текст відпочинку */
+#admin-workout-details-exercises p .exercise-rest-time {
+  font-weight: bold;
+  color: #ccc;
+  margin-top: 5px;
+  display: inline;
+}
+#admin-workout-details-exercises p .exercise-rest-time strong {
+  font-size: 1em;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
+/* ========================================================== */
+/* === СТИЛІ: для вкладки "Плани" === */
+/* ========================================================== */
+
+/* Головний контейнер для контенту одного плану */
+.plan-sub-content {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 20px 25px;
+  border: 1px solid #444;
+  position: relative;
+}
+
+/* Блоки для вступного та заключного тексту */
+.plan-intro-text,
+.plan-conclusion-text {
+  color: #ddd;
+  line-height: 1.6;
+  font-size: 0.95em;
+  text-align: justify;
+  background-color: #222;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 25px;
+}
+
+.plan-conclusion-text {
+  margin-top: 25px;
+  margin-bottom: 0;
+}
+
+/* Заголовки секцій всередині плану */
+.profile-section-title {
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #444;
+  font-size: 1.1em;
+  color: #e0e0e0;
+}
+
+/* Обгортка для скролу таблиці */
+.table-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Таблиця з розкладом тренувань (ОНОВЛЕНО - вирівнювання зліва, без margin) */
+.plan-schedule-table {
+  width: auto;
+  min-width: 50%;
+  margin: 0; /* Прибирає всі margin */
+  table-layout: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  background-color: black;
+  border: 1px solid #555;
+  border-radius: 6px;
+  overflow: hidden;
+  color: #e0e0e0;
+}
+
+.plan-schedule-table th {
+  background-color: rgba(113, 41, 218, 0.4);
+  color: #f0f0f0;
+  text-align: center;
+  padding: 12px 10px;
+  border-bottom: 2px solid #555;
+  font-weight: bold;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.plan-schedule-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #404046;
+  vertical-align: middle;
+}
+
+.plan-schedule-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Стилі для першої колонки (№) */
+.plan-schedule-table th:first-child,
+.plan-schedule-table td:first-child {
+  text-align: center;
+  width: 50px; /* Фіксована вузька ширина для номера */
+}
+
+/* Стилі для другої колонки (Назва тренування) */
+.plan-schedule-table th:nth-child(2),
+.plan-schedule-table td:nth-child(2) {
+  width: auto; /* Автоматично займає весь вільний простір */
+  word-break: break-word; /* Дозволяє переносити довгі назви */
+  white-space: normal; /* Дозволяємо стандартний перенос слів */
+}
+
+/* Бейдж для назви тренування (замість типу) */
+.workout-title-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+/* Різні кольори для різних типів */
+.workout-title-badge.type-split {
+  background-color: rgba(92, 155, 224, 0.2);
+  color: #8ab4f8;
+}
+.workout-title-badge.type-fullbody {
+  background-color: rgba(102, 187, 106, 0.2);
+  color: #81c784;
+}
+.workout-title-badge.type-circuit {
+  background-color: rgba(239, 83, 80, 0.2);
+  color: #e57373;
+}
+.workout-title-badge.type-cardio {
+  background-color: rgba(38, 198, 218, 0.2);
+  color: #4dd0e1;
+}
+.workout-title-badge.type-default {
+  background-color: rgba(142, 110, 224, 0.2);
+  color: #b39ddb;
+}
+
+/* --- СТИЛІ ДЛЯ ПІДВКЛАДОК В АДМІН-ПАНЕЛІ --- */
+#plans .sub-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  border-bottom: 2px solid rgb(113, 41, 218);
+}
+#plans .sub-tab-link {
+  background-color: transparent;
+  color: #ccc;
+  border: none;
+  padding: 10px 18px;
+  cursor: pointer;
+  font-size: 0.95em;
+  font-family: 'Montserrat', sans-serif;
+  border-radius: 5px 5px 0 0;
+  margin-right: 5px;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+  border-bottom: 2px solid transparent;
+  position: relative;
+  top: 2px;
+}
+#plans .sub-tab-link:hover {
+  background-color: #2a2a2a;
+  color: white;
+}
+#plans .sub-tab-link.active {
+  background-color: black;
+  color: rgb(113, 41, 218);
+  font-weight: bold;
+  border: 2px solid rgb(113, 41, 218);
+  border-bottom: 2px solid black;
+}
+#plans .plan-sub-content {
+  display: none;
+  padding-top: 15px;
+}
+#plans .plan-sub-content[style*='block'] {
+  display: block;
+}
+#plans .profile-sub-content-title {
+  font-size: 1.2em;
+  color: #e0e0e0;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #444;
+  text-align: left;
+}
+/* --- Кінець вкладки "Плани" --- */
+
+/* --- СТИЛІ ДЛЯ ВКЛАДКИ "АНАЛІТИКА" (ОНОВЛЕНО) --- */
+#analytics h3 {
+  margin-top: 0;
+  margin-bottom: 25px;
+  padding-bottom: 0; /* Прибрали відступ знизу */
+  /* border-bottom: 1px solid #444; -- ЛІНІЮ ВИДАЛЕНО */
+}
+
+#analytics h4.stats-header {
+  margin-top: 30px;
+  margin-bottom: 15px;
+  padding-bottom: 0; /* Прибрали відступ знизу */
+  /* border-bottom: 1px solid #444; -- ЛІНІЮ ВИДАЛЕНО */
+  font-size: 1.1em;
+  color: #e0e0e0;
+}
+#analytics h4.stats-header:first-of-type {
+  margin-top: 0;
+}
+
+.stats-table {
+  width: auto;
+  min-width: 60%;
+  margin: 0;
+  table-layout: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  background-color: black;
+  border: 1px solid #555;
+  border-radius: 6px;
+  overflow: hidden;
+  color: #e0e0e0;
+}
+
+.stats-table th {
+  background-color: rgba(113, 41, 218, 0.4);
+  color: #f0f0f0;
+  text-align: left;
+  padding: 12px 15px;
+  border-bottom: 2px solid #555;
+  font-weight: bold;
+}
+
+.stats-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #404046;
+  vertical-align: middle;
+}
+.stats-table tr:last-child td {
+  border-bottom: none;
+}
+.stats-table td:first-child {
+  color: #ccc;
+}
+.stats-value {
+  font-weight: bold;
+  color: #8ab4f8; /* Світло-синій для акценту */
+  font-size: 1.1em;
+  text-align: right;
+}
+
+/* ===== ОНОВЛЕНІ ТА НОВІ КЛАСИ ДЛЯ КОЛЬОРІВ ===== */
+.stats-value.stats-value-total {
+  color: #28a745; /* Темно-зелений */
+}
+.stats-value.stats-value-red {
+  color: #e57373; /* Червоний */
+}
+.stats-value.stats-value-orange {
+  color: #ff9800; /* Помаранчевий */
+}
+.stats-value.stats-value-purple {
+  color: #b39ddb; /* Фіолетовий */
+}
+
+.stats-table .sub-item td:first-child {
+  padding-left: 35px;
+  font-style: italic;
+  color: #aaa;
+}
+/* --- КІНЕЦЬ СТИЛІВ ДЛЯ ВКЛАДКИ "АНАЛІТИКА" --- */
+
+/* --- СТИЛІ ДЛЯ ВКЛАДКИ "ДІЇ" --- */
+#actions .actions-description {
+  margin-bottom: 30px;
+  color: #ccc;
+  line-height: 1.6;
+  font-size: 0.95em;
+  max-width: 800px;
+}
+
+.action-item {
+  background-color: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.action-info {
+  flex: 1;
+  min-width: 300px;
+  padding-right: 20px;
+}
+
+.action-info h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #e0e0e0;
+}
+
+.action-info p {
+  margin: 0;
+  color: #aaa;
+  font-size: 0.9em;
+}
+
+.action-controls {
+  text-align: right;
+  min-width: 200px;
+}
+
+.action-btn {
+  background-color: #5a32a3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  min-width: 120px; /* Щоб кнопка не стрибала в розмірі */
+}
+
+.action-btn:hover {
+  background-color: #7141b8;
+  color: white;
+}
+
+.action-btn:disabled {
+  background-color: #444;
+  cursor: not-allowed;
+}
+
+.action-status {
+  margin-top: 10px;
+  font-size: 0.9em;
+  min-height: 1.2em;
+  font-weight: bold;
+}
+
+/* --- СТИЛІ ДЛЯ МОДАЛЬНОГО ВІКНА ЛОГІВ --- */
+.log-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.log-modal {
+  background-color: #1e1e1e;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 25px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+}
+
+.log-modal h3 {
+  margin-top: 0;
+  color: #e0e0e0;
+}
+
+.log-modal p {
+  color: #ccc;
+  font-weight: bold;
+}
+
+.log-modal-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: #111;
+  border: 1px solid #444;
+  border-radius: 5px;
+  padding: 15px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #ddd;
+  margin-top: 10px;
+}
+
+#log-modal-close {
+  margin-top: 20px;
+  align-self: flex-end; /* Кнопка буде справа */
+  min-width: 100px;
+}
+/* === КІНЕЦЬ вкладки "ДІЇ" === */
+
+/* === Адаптивність === */
+@media (max-width: 768px) {
+  /* Планшети і менше */
+  .container {
+    width: 98%;
+  }
+  #profile-details p strong {
+    width: 150px;
+  } /* Зменшуємо ширину лейблів профілю */
+  .gif-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 5px;
+  } /* Більше GIF */
+}
+
+@media (max-width: 600px) {
+  /* Мобільні */
+  .container {
+    width: 100%;
+    margin: 5px auto;
+    padding: 2px;
+  }
+  .tab-content {
+    padding: 10px;
+  }
+  h1,
+  h2,
+  h3 {
+    font-size: 1.2em;
+  }
+
+  .tab-link {
+    font-size: 14px;
+    padding: 8px 10px; /* Ще менші падінги */
+    min-width: auto;
+  }
+  .tab-content {
+    padding: 15px;
+  }
+
+  input[type='text'],
+  input[type='password'],
+  input[type='number'],
+  input[type='email'],
+  input[type='date'],
+  select,
+  textarea,
+  button {
+    font-size: 14px;
+  }
+  label {
+    font-size: 0.9em;
+  }
+
+  table,
+  #progress-table-admin {
+    /* Таблиці прогресу */
+    font-size: 8px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  table th,
+  table td {
+    white-space: normal;
+  }
+
+  #user-list {
+    max-height: 300px;
+  }
+  .user-item {
+    padding: 8px 10px;
+  }
+
+  #profile-details p {
+    flex-direction: column; /* Ставимо мітку над значенням */
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  #profile-details p strong {
+    width: auto; /* Авто-ширина */
+    margin-bottom: 3px;
+  }
+  .admin-actions {
+    flex-direction: column; /* Кнопки одна під одною */
+    align-items: stretch; /* Розтягуємо на всю ширину */
+  }
+  .admin-action-btn {
+    width: 100%;
+    text-align: center;
+  }
+  .subscription-item {
+    flex-direction: column; /* Ставимо кнопку під інформацією */
+    align-items: flex-start; /* Вирівнюємо по лівому краю */
+  }
+  .subscription-actions {
+    width: 100%;
+    margin-top: 10px;
+  }
+  .subscription-actions button {
+    width: 100%; /* Кнопка на всю ширину */
+  }
+  .subscription-form {
+    flex-direction: column;
+    align-items: stretch; /* Елементи на всю ширину */
+    gap: 15px;
+  }
+  .subscription-form .form-group {
+    min-width: 100%;
+  }
+
+  /* Тренування на мобільних */
+  /* Блок однієї вправи */
+  .exercise {
+    display: block;
+    padding: 5px;
+    margin-bottom: 15px;
+    overflow-x: hidden !important; /* Спробуємо примусово сховати горизонтальний оверфлоу */
+    box-sizing: border-box; /* Додамо про всяк випадок */
+    width: 100%; /* Явно вкажемо ширину */
+  }
+
+  .exercise legend {
+    font-size: 1.1em; /* Трохи більший заголовок вправи */
+  }
+
+  /* Перенос довгих лейблів */
+  .exercise label {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.9em;
+  }
+
+  /* Поля вводу всередині вправи */
+  .exercise input[type='text'],
+  .exercise input[type='number'],
+  .exercise textarea,
+  .exercise select {
+    padding: 6px 8px; /* Менші падінги */
+    font-size: 13px; /* Менший шрифт полів */
+  }
+  .exercise textarea {
+    min-height: 40px; /* Менша мінімальна висота */
+  }
+
+  /* Тут ми робимо так, щоб контейнери могли переносити елементи на новий рядок,
+      якщо їм не вистачає місця - all_weight та weight-rainge
+    */
+  .exercise .form-group {
+    flex-wrap: wrap;
+    gap: 5px 10px;
+  }
+
+  /* ОНОВЛЕНО: Застосовуємо стилі до інпутів для адаптивності:
+       all_weight та weight-rainge
+    */
+  .exercise .form-group input[list],
+  .exercise .rest-time-container select {
+    flex: 1 1 120px; /* Дозволяємо рости, стискатися, базова ширина 120px */
+    min-width: 100px;
+  }
+
+  /* Адаптуємо flex-контейнер (Час відпочинку) */
+  .exercise .rest-time-container {
+    display: flex;
+    flex-wrap: wrap; /* Примусовий перенос */
+    gap: 5px 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .exercise .rest-time-container select {
+    flex: 1; /* Дамо трохи більше місця */
+    min-width: 60px;
+  }
+
+  /* Сітка GIF */
+  .gif-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) !important; /* ЧІТКО 2 КОЛОНКИ! */
+    gap: 8px; /* Збільшив відстань */
+    width: 100%; /* На всю ширину */
+    margin-top: 10px;
+    padding: 5px; /* Додамо невеликий падінг */
+    box-sizing: border-box;
+    background-color: #252525; /* Залишаємо фон */
+    border-radius: 5px;
+  }
+  .gif-grid img {
+    /* Зображення в сітці */
+    width: 100%; /* На всю ширину колонки */
+    height: auto;
+    aspect-ratio: 9 / 16; /* Зберігаємо пропорції */
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  .gif-grid div span {
+    /* Текст під GIF */
+    font-size: 0.75em;
+  }
+
+  /* Обраний GIF */
+  .selected-gif {
+    max-width: 100%; /* Адаптивний розмір */
+    width: 250px; /* Але не більше за певну ширину */
+    height: auto;
+    display: block; /* Центрування через margin: auto */
+    margin: 10px auto;
+  }
+
+  /* Таблиця підходів */
+  .admin-sets-table {
+    display: block !important; /* Примусово блочна */
+    width: 100% !important;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-sizing: border-box; /* Додамо */
+    text-align: center;
+  }
+  .admin-sets-table thead,
+  .admin-sets-table tbody,
+  .admin-sets-table tr {
+    text-align: center;
+    display: block !important;
+  }
+
+  .admin-sets-table th,
+  .admin-sets-table td {
+    white-space: normal; /* Дозволяємо перенос тексту */
+    padding: 5px 3px;
+    text-align: center;
+    min-width: 70px;
+    display: inline-block; /* В рядок */
+    box-sizing: border-box; /* Додамо */
+    vertical-align: middle; /* Додамо вирівнювання */
+  }
+  .admin-sets-table th {
+    text-align: center;
+    font-size: 1em;
+  }
+  .admin-sets-table td:first-child {
+    text-align: center;
+    width: calc(30% - 10px);
+  }
+  .admin-sets-table select {
+    text-align: center;
+    width: 80%;
+    padding: 5px 3px;
+    font-size: 0.9em;
+  }
+
+  /* Список тренувань адмінки на мобільних */
+  .admin-workout-list-item {
+    padding: 12px; /* Зменшуємо падінг */
+    padding-right: 40px; /* Залишаємо більше місця для індикаторів */
+    padding-bottom: 5px;
+  }
+  .admin-workout-list-item .workout-list-date,
+  .admin-workout-list-item .workout-list-title {
+    display: block; /* З нового рядка */
+    margin-left: 0;
+    white-space: normal;
+  }
+  .admin-workout-list-item .workout-list-title {
+    margin-top: 4px;
+    font-size: 1.1em;
+  }
+  .admin-workout-list-item .workout-list-desc {
+    margin-top: 8px;
+    font-size: 0.85em;
+  }
+  /* Індикатори на мобільних */
+  .admin-workout-list-item .completion-indicator {
+    top: 6px;
+    right: 8px;
+    font-size: 1.3em; /* Трохи менше */
+  }
+  .admin-workout-list-item .feedback-indicator {
+    bottom: 6px;
+    right: 8px;
+    font-size: 1em; /* Трохи менше */
+  }
+  .admin-workout-list-item .workout-list-actions {
+    position: static; /* Скасовуємо абсолютне позиціонування, кнопки стають частиною потоку документа */
+    width: 100%; /* Контейнер кнопок займає всю доступну ширину */
+    margin-top: 3px; /* Додаємо відступ зверху, щоб відокремити від тексту */
+    margin-bottom: 5px; /* Додаємо невеликий відступ знизу */
+    /* Вирівнювання кнопок */
+    display: flex; /* Залишаємо flex для вирівнювання самих кнопок */
+    justify-content: flex-end; /* <--- ЗМІНЕНО: Притискаємо кнопки до правого краю */
+
+    /* Відступ між кнопками (якщо потрібно змінити для мобільних) */
+    gap: 15px; /* <--- ЗБІЛЬШЕНО ВІДСТУП (наприклад, до 12px, або оберіть інше значення) */
+    /* Якщо 8px з десктопних стилів вас влаштовує, цей рядок можна не додавати, він успадкується */
+
+    /* Скидаємо властивості, що використовувались для абсолютного позиціонування */
+    bottom: auto;
+    right: auto;
+    left: auto; /* Додатково скидаємо left для повноти */
+  }
+
+  /* Деталі тренувань адмінки на мобільних */
+  #admin-workout-details-exercises .exercise-main-content {
+    flex-direction: column; /* На малих екранах ставимо колонки одну під одною */
+    gap: 15px; /* Зменшуємо відстань */
+  }
+  #admin-workout-details-exercises .exercise-item {
+    display: block; /* Переконуємось, що flex вимкнено */
+    padding: 10px;
+  }
+  #admin-workout-details-exercises .gif-container-wrapper {
+    flex-basis: auto; /* Скидаємо фіксовану ширину */
+    width: 100%; /* Робимо на всю ширину */
+    max-width: 300px; /* Але не більше за певну ширину */
+    margin: 0 auto 15px auto; /* Центруємо і додаємо відступ знизу */
+  }
+  /* Права колонка (Деталі) */
+  #admin-workout-details-exercises .exercise-details-content {
+    width: 100%; /* ВАЖЛИВО: Вказуємо займати всю доступну ширину */
+    min-width: 0; /* Класичний трюк для flex-елементів, щоб вони могли стискатись */
+  }
+
+  .admin-sets-table.readonly {
+    /* Таблиця підходів на мобільних */
+    font-size: 0.7em; /* Ще трохи менший шрифт */
+    vertical-align: middle;
+    table-layout: fixed;
+  }
+  .admin-sets-table.readonly td {
+    word-break: break-word;
+    vertical-align: middle;
+  }
+  .admin-sets-table.readonly th {
+    /* Встановлюємо максимальну ширину для колонки.
+            Підберіть значення, яке вам підходить (напр. 50px, 65px). */
+    max-width: 5px;
+
+    /* Додаткові властивості для кращого переносу */
+    white-space: normal; /* Дозволяє перенос тексту */
+    word-wrap: break-word; /* Дозволяє розривати слова */
+    vertical-align: middle;
+  }
+
+  /* Кнопки навігації на всю ширину */
+  #show-add-training-form-btn,
+  #cancel-add-training-btn,
+  #admin-back-to-workout-list-btn,
+  #add-training-plan-form button[type='submit'] {
+    /* Додав кнопку збереження */
+    padding: 10px 15px; /* Збільшив падінг */
+    font-size: 1em; /* Стандартний розмір */
+    width: 100%;
+    margin-bottom: 10px;
+    box-sizing: border-box; /* Щоб падінг не впливав на ширину */
+  }
+  #cancel-add-training-btn {
+    margin-right: 0; /* Прибираємо відступ справа на моб */
+  }
+}
+
+/* === Автозаповнення (залишаємо як було) === */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: white !important;
+  -webkit-box-shadow: 0 0 0px 1000px black inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+input:-moz-autofill {
+  color: white !important;
+  background-color: black !important;
+  filter: none;
+}
