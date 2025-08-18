@@ -1076,7 +1076,7 @@ async function handleRegisterSubmit(event) {
 
   try {
     const { data } = await fetchWithAuth(
-      '/register',
+      '/admin/users/register',
       {
         method: 'POST',
         body: JSON.stringify(requestBody), // Відправляємо оновлений об'єкт
@@ -1318,7 +1318,7 @@ async function loadUserList() {
       console.log('[loadUserList] Кеш порожній. Запит до API...');
 
       // <<< ВИПРАВЛЕНО: Отримуємо об'єкт і беремо з нього поле .data
-      const response = await fetchWithAuth('/admin/users');
+      const response = await fetchWithAuth('/admin/users/');
       usersCache = response.data; // Зберігаємо в кеш саме масив користувачів
 
       console.log('[loadUserList] Дані отримано з API:', usersCache);
@@ -1991,7 +1991,7 @@ async function deleteUser(phone) {
   displayStatus(messageDivId, 'Видалення користувача...');
   try {
     const { data: response } = await fetchWithAuth(
-      `/admin/users/${phone}/delete`,
+      `/admin/users/${phone}`,
       { method: 'DELETE' },
       messageDivId
     );
@@ -2341,7 +2341,7 @@ async function loadAdminWorkoutList(phone, isLoadMore = false) {
 
   try {
     const { data: plans, headers } = await fetchWithAuth(
-      `/admin/users/${phone}/training_plans?skip=${skip}&limit=${WORKOUTS_PER_PAGE}`,
+      `/admin/users/${phone}/training-plans?skip=${skip}&limit=${WORKOUTS_PER_PAGE}`,
       {},
       adminWorkoutListStatusId
     );
