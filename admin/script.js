@@ -2080,7 +2080,7 @@ async function loadSubscriptionDetails(phone) {
   try {
     // Завантажуємо дані та викликаємо функцію, яка малює HTML
     const { data: subscriptions } = await fetchWithAuth(
-      `/admin/users/${phone}/subscriptions` // <-- ВИПРАВЛЕНО: Правильний шлях
+      `/admin/subscriptions/${phone}`
     );
 
     // Передаємо телефон у функцію відображення, він може знадобитися
@@ -2232,7 +2232,7 @@ async function handleAddSubscription(event, phone) {
 
   try {
     await fetchWithAuth(
-      `/admin/users/${phone}/subscriptions`, // <-- ВИПРАВЛЕНО: Правильний шлях
+      `/admin/subscriptions/${phone}`,
       {
         method: 'POST',
         body: JSON.stringify(subscriptionData),
@@ -2259,7 +2259,7 @@ async function handleAddSubscription(event, phone) {
  */
 async function handleUpdateSubscriptionStatus(event, phone) {
   const button = event.target;
-  const subId = button.dataset.subId;
+  const subscription_id = button.dataset.subscription_id;
   const newStatus = button.dataset.newStatus;
   const actionText = newStatus === 'active' ? 'АКТИВУВАТИ' : 'СКАСУВАТИ';
 
@@ -2270,7 +2270,7 @@ async function handleUpdateSubscriptionStatus(event, phone) {
 
   try {
     await fetchWithAuth(
-      `/admin/users/${phone}/subscriptions/${subId}`, // <-- ВИПРАВЛЕНО: Правильний шлях
+      `/admin/subscriptions/${subscription_id}`,
       {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
@@ -2287,7 +2287,10 @@ async function handleUpdateSubscriptionStatus(event, phone) {
     // Оновлюємо список, щоб побачити зміни
     loadSubscriptionDetails(phone);
   } catch (error) {
-    console.error(`Помилка оновлення статусу підписки ${subId}:`, error);
+    console.error(
+      `Помилка оновлення статусу підписки ${subscription_id}:`,
+      error
+    );
   }
 }
 
