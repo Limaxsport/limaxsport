@@ -1317,7 +1317,7 @@ async function loadUserList() {
     if (!usersCache) {
       console.log('[loadUserList] Кеш порожній. Запит до API...');
 
-      const response = await fetchWithAuth('/admin/users');
+      const response = await fetchWithAuth('/admin/users/list');
       usersCache = response.data; // Зберігаємо в кеш саме масив користувачів
 
       console.log('[loadUserList] Дані отримано з API:', usersCache);
