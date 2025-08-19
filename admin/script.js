@@ -1317,8 +1317,7 @@ async function loadUserList() {
     if (!usersCache) {
       console.log('[loadUserList] Кеш порожній. Запит до API...');
 
-      // <<< ВИПРАВЛЕНО: Отримуємо об'єкт і беремо з нього поле .data
-      const response = await fetchWithAuth('/admin/users/');
+      const response = await fetchWithAuth('/admin/users'); // <-- ВИПРАВЛЕНО: Прибираємо слеш, щоб відповідати логам
       usersCache = response.data; // Зберігаємо в кеш саме масив користувачів
 
       console.log('[loadUserList] Дані отримано з API:', usersCache);
@@ -1830,7 +1829,7 @@ async function changePassword(phone) {
   try {
     // Використовуємо fetchWithAuth
     const { data } = await fetchWithAuth(
-      `/admin/profiles/${phone}/reset-password`,
+      `/admin/users/${phone}/reset-password`,
       {
         method: 'POST',
       },
@@ -1991,7 +1990,7 @@ async function deleteUser(phone) {
   displayStatus(messageDivId, 'Видалення користувача...');
   try {
     const { data: response } = await fetchWithAuth(
-      `/admin/users/${phone}`,
+      `/admin/users/${phone}/delete`,
       { method: 'DELETE' },
       messageDivId
     );
@@ -2081,7 +2080,7 @@ async function loadSubscriptionDetails(phone) {
   try {
     // Завантажуємо дані та викликаємо функцію, яка малює HTML
     const { data: subscriptions } = await fetchWithAuth(
-      `/admin/users/${phone}/subscriptions`
+      `/admin/users/${phone}/subscriptions` // <-- ВИПРАВЛЕНО: Правильний шлях
     );
 
     // Передаємо телефон у функцію відображення, він може знадобитися
@@ -2233,7 +2232,7 @@ async function handleAddSubscription(event, phone) {
 
   try {
     await fetchWithAuth(
-      `/admin/users/${phone}/subscriptions`,
+      `/admin/users/${phone}/subscriptions`, // <-- ВИПРАВЛЕНО: Правильний шлях
       {
         method: 'POST',
         body: JSON.stringify(subscriptionData),
@@ -2271,7 +2270,7 @@ async function handleUpdateSubscriptionStatus(event, phone) {
 
   try {
     await fetchWithAuth(
-      `/admin/users/${phone}/subscriptions/${subId}`,
+      `/admin/users/${phone}/subscriptions/${subId}`, // <-- ВИПРАВЛЕНО: Правильний шлях
       {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
@@ -2341,7 +2340,7 @@ async function loadAdminWorkoutList(phone, isLoadMore = false) {
 
   try {
     const { data: plans, headers } = await fetchWithAuth(
-      `/admin/users/${phone}/training-plans?skip=${skip}&limit=${WORKOUTS_PER_PAGE}`,
+      `/admin/users/${phone}/training-plans?skip=${skip}&limit=${WORKOUTS_PER_PAGE}`, // <-- ВИПРАВЛЕНО: Правильний шлях
       {},
       adminWorkoutListStatusId
     );
@@ -2685,7 +2684,7 @@ async function showAdminWorkoutDetails(planId, userPhone) {
 
   try {
     const { data: plan } = await fetchWithAuth(
-      `/admin/training_plans/${planId}`,
+      `/admin/training-plans/${planId}`, // <-- ВИПРАВЛЕНО: Правильний шлях
       {},
       adminWorkoutDetailsStatusId
     );
@@ -3236,7 +3235,7 @@ async function loadWorkoutForEditing(planId, userPhone) {
   );
   try {
     const { data: planData } = await fetchWithAuth(
-      `/admin/training_plans/${planId}`,
+      `/admin/training-plans/${planId}`, // <-- ВИПРАВЛЕНО: Правильний шлях
       {},
       statusDivId
     );
@@ -4539,13 +4538,13 @@ async function handleTrainingPlanSubmit(event) {
     isCopyModeActive && !currentEditingPlanId && workoutToCopyData;
 
   let requestMethod = 'POST';
-  let requestUrl = `/admin/users/${selectedUserPhone}/training_plans`;
+  let requestUrl = `/admin/users/${selectedUserPhone}/training-plans`;
   let successMessage = 'Тренування успішно СТВОРЕНО! Дякую за вашу роботу =)';
 
   if (currentEditingPlanId) {
     // Редагування існуючого плану
     requestMethod = 'PUT';
-    requestUrl = `/admin/users/${selectedUserPhone}/training_plans/${currentEditingPlanId}`;
+    requestUrl = `/admin/users/${selectedUserPhone}/training-plans/${currentEditingPlanId}`; // <-- ВИПРАВЛЕНО: Правильний шлях
     successMessage = `Тренування ID: ${currentEditingPlanId} успішно ОНОВЛЕНО! Подякував =)`;
     console.log(
       `Режим: Оновлення існуючого плану ID: ${currentEditingPlanId}. URL: ${requestUrl}`
@@ -4639,7 +4638,7 @@ async function handleInitiateCopyWorkout(planId, sourceUserPhone) {
 
   try {
     const { data: planDetails } = await fetchWithAuth(
-      `/admin/training_plans/${planId}`
+      `/admin/training-plans/${planId}` // <-- ВИПРАВЛЕНО: Правильний шлях
     ); // Отримуємо повні дані плану
     if (planDetails) {
       workoutToCopyData = { ...planDetails }; // Створюємо копію об'єкта
@@ -4703,7 +4702,7 @@ async function deleteExerciseFromPlan(planId, exerciseId, userPhone) {
 
   try {
     const { data: response } = await fetchWithAuth(
-      `/admin/training_plans/${planId}/exercises/${exerciseId}`,
+      `/admin/training-plans/${planId}/exercises/${exerciseId}`, // <-- ВИПРАВЛЕНО: Правильний шлях
       {
         method: 'DELETE',
       },
@@ -5236,7 +5235,7 @@ async function handleGeminiGeneration() {
 
   try {
     const { data: generatedWorkout } = await fetchWithAuth(
-      '/api/ai/generate-workout',
+      '/admin/ai/generate-workout', // <-- ВИПРАВЛЕНО: Правильний шлях
       {
         method: 'POST',
         body: JSON.stringify(requestBody),
