@@ -1758,7 +1758,7 @@ async function handleChangeUserTypeClick(phone, currentType) {
     displayStatus(messageDivId, 'Завантаження списку тренерів...');
     try {
       // Отримуємо список тренерів з нового ендпоінту
-      const { data: trainers } = await fetchWithAuth('/admin/trainers');
+      const { data: trainers } = await fetchWithAuth('/admin/users/trainers');
       if (!trainers || trainers.length === 0) {
         alert("Помилка: Не знайдено жодного користувача з роллю 'Тренер'.");
         displayStatus(messageDivId, '', false);
