@@ -2270,8 +2270,9 @@ async function handleUpdateSubscriptionStatus(button, phone) {
   displayStatus(messageDivId, 'Оновлення статусу...');
 
   try {
+    // --- ВИПРАВЛЕНО: URL тепер включає і телефон, і ID підписки ---
     await fetchWithAuth(
-      `/admin/subscriptions/${subId}`,
+      `/admin/subscriptions/${phone}/${subId}`,
       {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
