@@ -2261,7 +2261,7 @@ async function handleAddSubscription(event, phone) {
  */
 async function handleUpdateSubscriptionStatus(event, phone) {
   const button = event.target;
-  const subscription_id = button.dataset.subscription_id;
+  const subscription_id = button.dataset.subId;
   const newStatus = button.dataset.newStatus;
   const actionText = newStatus === 'active' ? 'АКТИВУВАТИ' : 'СКАСУВАТИ';
 
