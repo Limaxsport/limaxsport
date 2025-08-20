@@ -2261,7 +2261,7 @@ async function handleAddSubscription(event, phone) {
  */
 async function handleUpdateSubscriptionStatus(event, phone) {
   const button = event.target;
-  const subscription_id = button.dataset.subId;
+  const subId = button.dataset.subId;
   const newStatus = button.dataset.newStatus;
   const actionText = newStatus === 'active' ? 'АКТИВУВАТИ' : 'СКАСУВАТИ';
 
@@ -2272,7 +2272,7 @@ async function handleUpdateSubscriptionStatus(event, phone) {
 
   try {
     await fetchWithAuth(
-      `/admin/subscriptions/${subscription_id}`,
+      `/admin/subscriptions/${subId}`,
       {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
@@ -2289,10 +2289,7 @@ async function handleUpdateSubscriptionStatus(event, phone) {
     // Оновлюємо список, щоб побачити зміни
     loadSubscriptionDetails(phone);
   } catch (error) {
-    console.error(
-      `Помилка оновлення статусу підписки ${subscription_id}:`,
-      error
-    );
+    console.error(`Помилка оновлення статусу підписки ${subId}:`, error);
   }
 }
 
