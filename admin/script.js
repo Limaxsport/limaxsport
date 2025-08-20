@@ -2680,6 +2680,7 @@ async function showAdminWorkoutDetails(planId, userPhone) {
   listView.style.display = 'none';
   formView.style.display = 'none';
   detailsView.style.display = 'block';
+  detailsView.scrollIntoView({ behavior: 'smooth', block: 'start' });
   detailsContent.style.visibility = 'hidden';
   exercisesContainer.innerHTML = '';
   displayStatus(adminWorkoutDetailsStatusId, 'Завантаження деталей...');
@@ -5504,21 +5505,12 @@ function renderAdminStats(stats) {
 
   let html = '<h3>Аналітика платформи Lily & Max sport 🚀</h3>';
 
-  // Перевіряємо, чи це статистика по конкретному тренеру
-  if (selectedUserPhone && usersCache) {
-    const selectedUser = usersCache.find((u) => u.phone === selectedUserPhone);
-    if (selectedUser && selectedUser.is_trainer) {
-      html += `<p style="font-size: 1.1em; color: #a5b4fc; margin-bottom: 15px;">Відображено статистику для тренера: <strong>${selectedUser.full_name || selectedUserPhone}</strong></p>`;
-    }
-  }
-
   // Блок 1: Загальна кількість
   html += `
         <h4 class="stats-header">Загальні показники</h4>
         <table class="stats-table">
             <tbody>
                 ${createRow('Всього зареєстровано користувачів', stats.total_registered_users, { valueClass: 'stats-value-total' })}
-                ${createRow('Нових користувачів (за 30 днів)', stats.new_users_last_30_days, { valueClass: 'stats-value-purple' })}
             </tbody>
         </table>
     `;
@@ -5529,7 +5521,9 @@ function renderAdminStats(stats) {
         <table class="stats-table">
             <tbody>
                 ${createRow('Всього з активною підпискою', stats.active_subscriptions.total, { valueClass: 'stats-value-total' })}
-                ${createRow('...з них з автопоновленням', stats.active_subscriptions.with_auto_renew_enabled, { isSubItem: true, valueClass: 'stats-value-purple' })}
+                
+                ${createRow('Всього з автооновленням підписки', stats.active_subscriptions.with_auto_renew_enabled, { valueClass: 'stats-value-purple' })}
+                
                 ${createRow('Користувачі "з тренером"', stats.active_subscriptions.breakdown.with_trainer, { isSubItem: true })}
                 ${createRow('Користувачі "з тренером" (самостійні)', stats.active_subscriptions.breakdown.with_trainer_independent, { isSubItem: true })}
                 ${createRow('Користувачі "без тренера"', stats.active_subscriptions.breakdown.without_trainer, { isSubItem: true })}
@@ -5550,19 +5544,60 @@ function renderAdminStats(stats) {
         </table>
     `;
 
-  // Блок 4: Статистика по тренуваннях
+  // Блок 4: Статистика по тренеру (тільки якщо є дані)
+  if (stats.trainer_specific_stats) {
+    const trainerName =
+      usersCache.find((u) => u.phone === selectedUserPhone)?.full_name ||
+      selectedUserPhone;
+    html += `
+            <h4 class="stats-header">Статистика по тренеру: ${trainerName}</h4>
+            <table class="stats-table">
+                <tbody>
+                    ${createRow('Всього клієнтів', stats.trainer_specific_stats.total_clients, { valueClass: 'stats-value-total' })}
+                    ${createRow('З активною підпискою', stats.trainer_specific_stats.active_subscription_clients, { isSubItem: true })}
+                    ${createRow('...із них "самостійних"', stats.trainer_specific_stats.active_independent_clients, { isSubItem: true })}
+                    ${createRow('З неактивною підпискою', stats.trainer_specific_stats.inactive_subscription_clients, { isSubItem: true, valueClass: 'stats-value-red' })}
+                </tbody>
+            </table>
+        `;
+  }
+
+  // Блок 5: Середня тривалість підписки
   html += `
-        <h4 class="stats-header">Активність по тренуваннях</h4>
+        <h4 class="stats-header">Середня тривалість підписки (утримання клієнтів)</h4>
         <table class="stats-table">
             <tbody>
-                ${createRow('Всього виконано тренувань', stats.total_completed_trainings, { valueClass: 'stats-value-total' })}
-                ${createRow('Користувачів з планом від тренера', stats.users_with_trainer_plan, { isSubItem: true })}
-                ${createRow('Користувачів з планом від Gemini', stats.users_with_generated_plan, { isSubItem: true })}
+                ${createRow('Для всіх користувачів', `${stats.average_subscription_duration.all_users_days.toFixed(1)} днів`, { valueClass: 'stats-value-total' })}
+                ${createRow('"з тренером"', `${stats.average_subscription_duration.with_trainer_days.toFixed(1)} днів`, { isSubItem: true })}
+                ${createRow('"з тренером" (самостійні)', `${stats.average_subscription_duration.with_trainer_independent_days.toFixed(1)} днів`, { isSubItem: true })}
+                ${createRow('"без тренера"', `${stats.average_subscription_duration.without_trainer_days.toFixed(1)} днів`, { isSubItem: true })}
             </tbody>
         </table>
     `;
 
-  html += `<p style="font-size: 0.8em; color: #888; margin-top: 10px;">*Примітка: Щоб переглянути статистику по конкретному тренеру, оберіть його у вкладці "Профілі".</p>`;
+  // Блок 6: Статистика дій
+  html += `
+        <h4 class="stats-header">Активність користувачів (за останні 2 дні)</h4>
+        <table class="stats-table">
+            <tbody>
+                ${createRow('Використання Gemini для аналізу фідбеку', stats.feature_usage_last_2_days.feedback_analysis_users_last_2d, { valueClass: 'stats-value-red' })}
+                ${createRow('Використання Gemini для створення самостійного тренування', stats.feature_usage_last_2_days.self_generation_users_last_2d, { valueClass: 'stats-value-red' })}
+            </tbody>
+        </table>
+    `;
+
+  // Блок 7: Статистика генерацій Gemini
+  html += `
+        <h4 class="stats-header">Автоматичні генерації Gemini (за останні 24 години)</h4>
+        <table class="stats-table">
+            <tbody>
+                ${createRow('Згенеровано Планів тренувань', stats.generation_activity_last_24h.plans_generated_last_24h, { valueClass: 'stats-value-orange' })}
+                ${createRow('Згенеровано пакетів тренувань на тиждень', stats.generation_activity_last_24h.weekly_batches_generated_last_24h, { valueClass: 'stats-value-orange' })}
+            </tbody>
+        </table>
+    `;
+
+  html += `<p style="font-size: 0.8em; color: #888; margin-top: 10px;">*Примітка: Статистика по тренеру відображається, якщо у вкладці "Профілі" обрати користувача з роллю "Тренер".</p>`;
 
   container.innerHTML = html;
 }
