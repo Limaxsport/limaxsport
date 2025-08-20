@@ -2256,11 +2256,10 @@ async function handleAddSubscription(event, phone) {
 
 /**
  * Обробляє зміну статусу існуючої підписки.
- * @param {Event} event - Подія кліку на кнопку.
+ * @param {HTMLButtonElement} button - Елемент кнопки, на яку натиснули.
  * @param {string} phone - Телефон користувача.
  */
-async function handleUpdateSubscriptionStatus(event, phone) {
-  const button = event.target;
+async function handleUpdateSubscriptionStatus(button, phone) {
   const subId = button.dataset.subId;
   const newStatus = button.dataset.newStatus;
   const actionText = newStatus === 'active' ? 'АКТИВУВАТИ' : 'СКАСУВАТИ';
@@ -5712,15 +5711,20 @@ function attachAdminPanelListeners() {
   const profileDetailsContainer = document.getElementById('profile-details');
   if (profileDetailsContainer) {
     profileDetailsContainer.addEventListener('click', (event) => {
-      const target = event.target;
+      // --- ПОЧАТОК ЗМІН ---
+      // Використовуємо .closest(), щоб гарантовано знайти кнопку,
+      // навіть якщо клік був по тексту всередині неї.
+      const button = event.target.closest('.subscription-actions button');
 
       // Делегування для кнопок "Скасувати/Активувати" підписку
-      if (target.matches('.subscription-actions button')) {
+      if (button) {
         if (selectedUserPhone) {
-          // Переконуємось, що знаємо для якого юзера
-          handleUpdateSubscriptionStatus(event, selectedUserPhone);
+          // Передаємо в обробник сам елемент кнопки, а не всю подію.
+          // Це робить функцію handleUpdateSubscriptionStatus більш надійною.
+          handleUpdateSubscriptionStatus(button, selectedUserPhone);
         }
       }
+      // --- КІНЕЦЬ ЗМІН ---
     });
 
     // Делегування для форми додавання підписки
