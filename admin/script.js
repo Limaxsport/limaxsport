@@ -5505,9 +5505,18 @@ function renderAdminStats(stats) {
 
   let html = '<h3>Аналітика платформи Lily & Max sport 🚀</h3>';
 
-  // Блок 1: Загальна кількість
+  // Визначаємо, чи це статистика по тренеру, перевіряючи глобальний стан
+  let headerText = 'Загальні показники платформи';
+  if (selectedUserPhone && usersCache) {
+    const selectedUser = usersCache.find((u) => u.phone === selectedUserPhone);
+    if (selectedUser && selectedUser.is_trainer) {
+      headerText = `Показники тренера: ${selectedUser.full_name || selectedUser.phone}`;
+    }
+  }
+
+  // Блок 1: Загальна кількість (з динамічним заголовком)
   html += `
-        <h4 class="stats-header">Загальні показники</h4>
+        <h4 class="stats-header">${headerText}</h4>
         <table class="stats-table">
             <tbody>
                 ${createRow('Всього зареєстровано користувачів', stats.total_registered_users, { valueClass: 'stats-value-total' })}
@@ -5544,25 +5553,7 @@ function renderAdminStats(stats) {
         </table>
     `;
 
-  // Блок 4: Статистика по тренеру (тільки якщо є дані)
-  if (stats.trainer_specific_stats) {
-    const trainerName =
-      usersCache.find((u) => u.phone === selectedUserPhone)?.full_name ||
-      selectedUserPhone;
-    html += `
-            <h4 class="stats-header">Статистика по тренеру: ${trainerName}</h4>
-            <table class="stats-table">
-                <tbody>
-                    ${createRow('Всього клієнтів', stats.trainer_specific_stats.total_clients, { valueClass: 'stats-value-total' })}
-                    ${createRow('З активною підпискою', stats.trainer_specific_stats.active_subscription_clients, { isSubItem: true })}
-                    ${createRow('...із них "самостійних"', stats.trainer_specific_stats.active_independent_clients, { isSubItem: true })}
-                    ${createRow('З неактивною підпискою', stats.trainer_specific_stats.inactive_subscription_clients, { isSubItem: true, valueClass: 'stats-value-red' })}
-                </tbody>
-            </table>
-        `;
-  }
-
-  // Блок 5: Середня тривалість підписки
+  // Блок 4: Середня тривалість підписки
   html += `
         <h4 class="stats-header">Середня тривалість підписки (утримання клієнтів)</h4>
         <table class="stats-table">
@@ -5575,7 +5566,7 @@ function renderAdminStats(stats) {
         </table>
     `;
 
-  // Блок 6: Статистика дій
+  // Блок 5: Статистика дій
   html += `
         <h4 class="stats-header">Активність користувачів (за останні 2 дні)</h4>
         <table class="stats-table">
@@ -5586,7 +5577,7 @@ function renderAdminStats(stats) {
         </table>
     `;
 
-  // Блок 7: Статистика генерацій Gemini
+  // Блок 6: Статистика генерацій Gemini
   html += `
         <h4 class="stats-header">Автоматичні генерації Gemini (за останні 24 години)</h4>
         <table class="stats-table">
