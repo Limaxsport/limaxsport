@@ -1110,7 +1110,7 @@ function showDaySelectorModal(planToSchedule, userProfile) {
 
       // 2. Відправляємо запит на генерацію у фоновому режимі
       fetchWithAuth(
-        `${baseURL}/api/plans/${planToSchedule.id}/schedule-and-generate`,
+        `${baseURL}/plans/${planToSchedule.id}/schedule-and-generate`,
         {
           method: 'POST',
           body: JSON.stringify({ preferred_days: selectedDays }),
@@ -2054,7 +2054,9 @@ async function checkInitialSubscriptionAndRedirect(forceRedirect = true) {
     return;
   }
   try {
-    const { response } = await fetchWithAuth(`${baseURL}/progress?limit=1`);
+    const { response } = await fetchWithAuth(
+      `${baseURL}/profile/progress?limit=1`
+    );
     const hasActiveSub = response.ok;
     updateTabAccessibility(hasActiveSub);
     if (forceRedirect && !hasActiveSub) {
@@ -2096,7 +2098,7 @@ async function loadAndDisplayWorkoutPlans() {
   try {
     // Просто запитуємо плани. Інформація про підписку тут більше не потрібна.
     const { data: plans, response } = await fetchWithAuth(
-      `${baseURL}/api/my-workout-plans`
+      `${baseURL}/my-workout-plans`
     );
 
     if (!response.ok) {
@@ -2323,7 +2325,7 @@ async function submitPlanEdit(planId) {
 
   try {
     const { data: newPlan, response } = await fetchWithAuth(
-      `${baseURL}/api/edit-workout-plan/${planId}`,
+      `${baseURL}/edit-workout-plan/${planId}`,
       {
         method: 'POST',
         body: JSON.stringify({ user_feedback: feedbackText }),
@@ -2490,7 +2492,7 @@ async function loadAndRenderExcludedExercisesForEditForm() {
   try {
     // Отримуємо доступні для виключення GIF
     const { data: availableGifObjects, response: availableResponse } =
-      await fetchWithAuth(`${baseURL}/users/available-gif-names-for-exclusion`);
+      await fetchWithAuth(`${baseURL}/profile//excluded-exercises/available`);
     if (!availableResponse.ok) {
       // У data може бути детальна помилка
       throw new Error(
@@ -2505,7 +2507,7 @@ async function loadAndRenderExcludedExercisesForEditForm() {
 
     // Отримуємо вже виключені користувачем GIF
     const { data: userExcludedGifNames, response: userExcludedResponse } =
-      await fetchWithAuth(`${baseURL}/users/excluded-exercises`);
+      await fetchWithAuth(`${baseURL}/profile/excluded-exercises`);
     if (!userExcludedResponse.ok) {
       throw new Error(
         userExcludedGifNames?.detail ||
@@ -2601,7 +2603,7 @@ function renderExcludedExercisesChecklistInEditForm(
 
       try {
         let endpointMethod = isChecked ? 'POST' : 'DELETE';
-        await fetchWithAuth(`${baseURL}/users/excluded-exercises`, {
+        await fetchWithAuth(`${baseURL}/profile/excluded-exercises`, {
           method: endpointMethod,
           body: JSON.stringify({ gif_name: name }),
         });
@@ -2655,7 +2657,9 @@ function renderExcludedExercisesChecklistInEditForm(
 async function fetchCurrentProfileDataOnce() {
   //console.log("Запит даних профілю з сервера...");
   try {
-    const { data, response } = await fetchWithAuth(`${baseURL}/profile`);
+    const { data, response } = await fetchWithAuth(
+      `${baseURL}/profile/my-profile`
+    );
     if (response.status === 404) {
       //console.log("Профіль не знайдено на сервері (404).");
       return null; // Профіль ще не створено
@@ -3125,10 +3129,13 @@ if (updateProfileMainButton) {
     };
 
     try {
-      const { data, response } = await fetchWithAuth(`${baseURL}/profile`, {
-        method: 'PUT',
-        body: JSON.stringify(profileData),
-      });
+      const { data, response } = await fetchWithAuth(
+        `${baseURL}/profile/my-profile`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(profileData),
+        }
+      );
 
       if (!response.ok) {
         // Використовуємо 'data', де вже є розпарсена помилка з fetchWithAuth
@@ -3864,7 +3871,9 @@ async function loadProgressData() {
 
   try {
     // Використовуємо fetchWithAuth
-    const { data, response } = await fetchWithAuth(`${baseURL}/progress`);
+    const { data, response } = await fetchWithAuth(
+      `${baseURL}/profile/progress`
+    );
 
     // Перевірка відповіді (fetchWithAuth вже обробив 401)
     if (!response.ok) {
@@ -3929,10 +3938,13 @@ if (addProgressButton) {
 
     try {
       // Використовуємо fetchWithAuth
-      const { data, response } = await fetchWithAuth(`${baseURL}/progress`, {
-        method: 'POST',
-        body: JSON.stringify(progressData),
-      });
+      const { data, response } = await fetchWithAuth(
+        `${baseURL}/profile/progress`,
+        {
+          method: 'POST',
+          body: JSON.stringify(progressData),
+        }
+      );
 
       // Перевірка відповіді (fetchWithAuth вже обробив 401)
       if (!response.ok) {
