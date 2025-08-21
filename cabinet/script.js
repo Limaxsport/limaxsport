@@ -4849,7 +4849,7 @@ async function showWorkoutDetails(planId) {
     let userExcludedGifNamesCurrent = [];
     try {
       const { data: userExcludedGifNames, response: excludedResponse } =
-        await fetchWithAuth(`${baseURL}/users/excluded-exercises`);
+        await fetchWithAuth(`${baseURL}/profile/excluded-exercises`);
       if (excludedResponse.ok) {
         userExcludedGifNamesCurrent = userExcludedGifNames || [];
       }
