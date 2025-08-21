@@ -3524,39 +3524,17 @@ async function displayPublicUserProfile(displayName) {
   profileDisplayContainer.style.display = 'block'; // Робимо видимим
 
   try {
-    // --- ЗМІНА: Використовуємо Promise.all для паралельних запитів ---
-    const [profileResponse, progressResponse] = await Promise.all([
-      fetchWithAuth(
-        `${baseURL}/community/users/${encodeURIComponent(displayName)}`
-      ),
-      fetchWithAuth(
-        `${baseURL}/profile/progress/${encodeURIComponent(displayName)}`
-      ), // Новий запит для прогресу
-    ]);
-
-    const { data: userData, response: userResponse } = profileResponse;
-    const { data: progressData, response: progressDataResponse } =
-      progressResponse;
-
-    if (!userResponse.ok) {
+    const { data: userData, response } = await fetchWithAuth(
+      `${baseURL}/community/users/${encodeURIComponent(displayName)}`
+    );
+    if (!response.ok) {
       // Використовуємо userData, де вже є розпарсена помилка
-      let errorMessage = userData?.detail || `Помилка: ${userResponse.status}`;
-      if (userResponse.status === 404) {
+      let errorMessage = userData?.detail || `Помилка: ${response.status}`;
+      if (response.status === 404) {
         errorMessage = `Профіль користувача "${displayName}" не знайдено або недоступний.`;
       }
       throw new Error(errorMessage);
     }
-
-    // Додаємо дані про прогрес до основного об'єкта користувача
-    if (progressDataResponse.ok) {
-      userData.progress_list = progressData;
-    } else {
-      console.warn(
-        `Не вдалося завантажити історію прогресу для ${displayName}.`
-      );
-      userData.progress_list = []; // Встановлюємо порожній масив
-    }
-    // --- КІНЕЦЬ ЗМІНИ ---
 
     renderPublicUserProfile(userData, profileDisplayContainer);
 
