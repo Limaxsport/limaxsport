@@ -8563,9 +8563,9 @@ async function runInitialChecksAndModals() {
           { data: plansData },
           { response: subResponse },
         ] = await Promise.all([
-          fetchWithAuth(`${baseURL}/profile`),
-          fetchWithAuth(`${baseURL}/api/my-workout-plans`),
-          fetchWithAuth(`${baseURL}/progress?limit=1`),
+          fetchWithAuth(`${baseURL}/profile/my-profile`),
+          fetchWithAuth(`${baseURL}/my-workout-plans`),
+          fetchWithAuth(`${baseURL}/profile/progress?limit=1`),
         ]);
 
         const hasActiveSub = subResponse.ok;
