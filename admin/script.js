@@ -1283,6 +1283,10 @@ async function handleNotificationFormSubmit(event) {
   try {
     await fetchWithAuth(url, {
       method: method,
+      // Додаємо заголовок, щоб бекенд знав, що ми надсилаємо JSON
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ title, text }),
     });
 
