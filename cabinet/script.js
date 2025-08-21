@@ -5533,24 +5533,63 @@ async function handleFeedbackAndAIAnalysis(event) {
       body: JSON.stringify(feedbackData),
     });
 
-    // Крок 2: "Вогонь і забули" - відправляємо запит на аналіз, НЕ чекаючи відповіді
-    fetchWithAuth(`${baseURL}/training_plans/${planId}/ai-feedback`, {
-      method: 'POST',
-    });
+    // Крок 2: Відправляємо запит на аналіз і ЧЕКАЄМО на відповідь, щоб обробити помилки
+    const { data: aiResponseData, response: aiResponse } = await fetchWithAuth(
+      `${baseURL}/training_plans/${planId}/ai-feedback`,
+      {
+        method: 'POST',
+      }
+    );
 
-    // Крок 3: Запускаємо перевірку результату у фоні
+    // Якщо відповідь не успішна, викидаємо помилку
+    if (!aiResponse.ok) {
+      const error = new Error(
+        aiResponseData.detail || `Помилка сервера: ${aiResponse.status}`
+      );
+      error.status = aiResponse.status; // Додаємо статус до об'єкта помилки
+      throw error;
+    }
+
+    // Крок 3: Запускаємо перевірку результату у фоні (тільки якщо запит на аналіз був успішним)
     startPollingForAIAnalysis(planId);
   } catch (error) {
-    // Ця помилка може виникнути тільки якщо не вдалося зберегти фідбек
-    console.error('Помилка під час відправки фідбеку:', error);
+    // Обробляємо помилки як від збереження фідбеку, так і від запуску аналізу
+    console.error(
+      'Помилка під час відправки фідбеку або запуску аналізу:',
+      error
+    );
     displayStatus(
       feedbackStatusDiv.id,
-      `Помилка збереження відгуку: ${error.message}`,
+      `Помилка: ${error.message}`,
       true,
       10000
     );
-    button.disabled = false; // Повертаємо кнопку для повторної спроби
-    button.style.display = 'inline-flex';
+
+    // Якщо помилка 429, то кнопка залишається прихованою.
+    // Для інших помилок - повертаємо її.
+    if (error.status === 429) {
+      // Показуємо користувачу повідомлення про денний ліміт
+      displayStatus(
+        feedbackStatusDiv.id,
+        'Ви вже отримали аналіз сьогодні. Новий аналіз буде доступний для наступного тренування завтра.',
+        true, // Показуємо як помилку (червоним кольором)
+        10000 // Повідомлення зникне через 10 секунд
+      );
+      // Кнопка "Надіслати" залишається прихованою, що є правильною поведінкою.
+    } else {
+      // Для всіх інших помилок показуємо стандартне повідомлення
+      displayStatus(
+        feedbackStatusDiv.id,
+        `Помилка: ${error.message}`,
+        true,
+        10000
+      );
+      // І повертаємо кнопку, щоб користувач міг спробувати ще раз
+      button.disabled = false;
+      button.style.display = 'inline-flex';
+    }
+    // --- КІНЕЦЬ ЗМІН ---
+
     if (loader) loader.style.display = 'none';
   }
 }
@@ -7022,7 +7061,7 @@ async function handleDuplicateWorkout(planId) {
 // --- Кінець блоку створення самостійного тренування --- //
 
 // ========================================================================
-// === НОВИЙ БЛОК: ЛОГІКА GEMINI ДЛЯ КОРИСТУВАЧА ===
+// === ЛОГІКА GEMINI ДЛЯ КОРИСТУВАЧА ===
 // ========================================================================
 
 /**
