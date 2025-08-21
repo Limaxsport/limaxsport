@@ -1268,6 +1268,19 @@ async function handleNotificationFormSubmit(event) {
   const title = form.elements['title'].value;
   const text = form.elements['text'].value;
 
+  const validationErrors = [];
+  if (title.length <= 3) {
+    validationErrors.push('Заголовок має містити більше 3 символів.');
+  }
+  if (text.length <= 10) {
+    validationErrors.push('Текст повідомлення має містити більше 10 символів.');
+  }
+
+  if (validationErrors.length > 0) {
+    displayStatus(statusDivId, validationErrors.join('\n'), true, 6000);
+    return; // Зупиняємо виконання, якщо є помилки
+  }
+
   const isEditing = !!id;
   const url = isEditing
     ? `/admin/notifications/${id}`
