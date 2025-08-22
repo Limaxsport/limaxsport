@@ -899,7 +899,7 @@ function pollForPlanAndRedirect() {
     try {
       // Використовуємо fetchWithAuth, оскільки токени вже встановлені
       const { data: plans, response } = await fetchWithAuth(
-        `${baseURL}/api/my-workout-plans`
+        `${baseURL}/my-workout-plans`
       );
 
       // Якщо запит успішний і масив планів не порожній
@@ -1009,7 +1009,7 @@ async function funnel_loadAndRenderExcludedExercises(userExcludedNames = []) {
     }
 
     const { data: exercises, response } = await fetchWithAuth(
-      `${baseURL}/api/gifs/names-by-creator/${creatorPhone}`
+      `${baseURL}/gifs/names-by-creator/${creatorPhone}`
     );
     if (!response.ok) {
       throw new Error(
