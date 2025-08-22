@@ -8585,6 +8585,31 @@ function initializePasswordRecovery() {
 async function runInitialChecksAndModals() {
   if (!isAuthorized()) return;
 
+  // Переконуємось, що дані профілю завантажені, бо вони нам потрібні
+  if (!currentUserProfileData) {
+    try {
+      currentUserProfileData = await fetchCurrentProfileDataOnce();
+    } catch (error) {
+      console.error(
+        'Не вдалося завантажити профіль для початкових перевірок:',
+        error
+      );
+      // Якщо профіль не завантажився, не можемо продовжувати безпечно
+      return;
+    }
+  }
+
+  // Якщо користувач зареєструвався самостійно, ми НЕ запускаємо перевірки модальних вікон.
+  // Всі вкладки для нього вже правильно налаштовані в `updatePlanTabVisibility`.
+  // Йому потрібно спочатку оплатити підписку.
+  if (
+    currentUserProfileData &&
+    currentUserProfileData.registration_type === 'self'
+  ) {
+    // console.log("Користувач 'self-registered'. Пропускаємо початкові модальні вікна.");
+    return; // Просто виходимо з функції
+  }
+
   let attempts = 0;
   const maxAttempts = 10;
   const checkInterval = 500;
