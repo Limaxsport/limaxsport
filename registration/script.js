@@ -54,12 +54,7 @@ async function fetchWithAuth(url, options = {}) {
   }
 }
 
-// --- ЧАСТИНА 2: ЛОГІКА ВОРОНКИ ---
-
-const MALE_ADMIN_PHONE = '380505687804';
-const FEMALE_ADMIN_PHONE = '380663962022';
-
-// --- НОВИЙ БЛОК: Менеджер таймерів для повільного з'єднання ---
+// Менеджер таймерів для повільного з'єднання ---
 const loadingTimerManager = {
   timerId: null,
   element: null,
