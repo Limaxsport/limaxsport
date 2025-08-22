@@ -7192,7 +7192,7 @@ async function handleUserGeminiGeneration() {
 
   try {
     const { data: generatedWorkout, response } = await fetchWithAuth(
-      `${baseURL}/api/user/ai/generate-workout`,
+      `${baseURL}/ai/generate-workout`,
       {
         method: 'POST',
         body: JSON.stringify(requestBody),
