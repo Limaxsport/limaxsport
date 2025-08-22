@@ -7237,12 +7237,23 @@ async function handleUserGeminiGeneration() {
     displayStatus(statusDiv.id, `Помилка: ${error.message}`, true, 10000);
 
     if (error.status === 429) {
+      // Показуємо користувачу повідомлення про ліміт
+      displayStatus(
+        statusDiv.id,
+        'Ви вже використали свою спробу генерації. Наступна буде доступна через 5 днів.',
+        true, // Показуємо як помилку
+        10000 // Повідомлення зникне через 10 секунд
+      );
+      // Ховаємо секцію вводу, оскільки вона більше не потрібна
       if (inputSection) inputSection.style.display = 'none';
     } else {
+      // Для всіх інших помилок показуємо стандартне повідомлення
+      displayStatus(statusDiv.id, `Помилка: ${error.message}`, true, 10000);
+      // І залишаємо секцію вводу видимою, щоб користувач міг спробувати ще раз
       if (inputSection) inputSection.style.display = 'block';
     }
   } finally {
-    // ВАЖЛИВО: Завжди очищуємо таймер, незалежно від результату
+    // Завжди очищуємо таймер, незалежно від результату
     clearTimeout(longProcessTimer);
 
     // Розблоковуємо UI
