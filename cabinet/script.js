@@ -738,30 +738,30 @@ function updateVisibility() {
 }
 
 /**
- * ОНОВЛЕНО (v2): Керує доступністю вкладок, використовуючи атрибут data-tab-name.
+ * ОНОВЛЕНО (v3): Керує доступністю вкладок, враховуючи тип реєстрації користувача.
  * @param {boolean} hasActiveSubscription - Прапорець, що вказує на наявність активної підписки.
+ * @param {object|null} userProfile - Об'єкт профілю користувача для перевірки типу реєстрації.
  */
-function updateTabAccessibility(hasActiveSubscription) {
+function updateTabAccessibility(hasActiveSubscription, userProfile = null) {
   const allTabs = document.querySelectorAll('.tab-link');
-  // Вкладки, які мають бути доступні ЗАВЖДИ
-  const alwaysAllowedTabs = ['subscription', 'plan', 'logout']; // Тепер використовуємо прості імена
+
+  // Визначаємо, які вкладки доступні для користувача БЕЗ підписки
+  let allowedTabsWithoutSub = ['subscription', 'logout']; // Базовий набір
+  if (userProfile && userProfile.registration_type === 'self') {
+    // Якщо самостійна реєстрація, додаємо доступ до Плану та Профілю
+    allowedTabsWithoutSub = ['plan', 'subscription', 'profile', 'logout'];
+  }
 
   allTabs.forEach((tab) => {
-    // --- ПОЧАТОК ЗМІН: Новий, надійний спосіб ідентифікації ---
     const tabName = tab.dataset.tabName;
-    // --- КІНЕЦЬ ЗМІН ---
-
-    if (!tabName) {
-      // Пропускаємо елементи без data-tab-name, щоб уникнути помилок
-      return;
-    }
+    if (!tabName) return;
 
     if (hasActiveSubscription) {
       // Якщо підписка є, робимо ВСІ вкладки активними
       tab.classList.remove('tab-disabled');
     } else {
       // Якщо підписки немає, перевіряємо, чи входить вкладка до списку дозволених
-      if (alwaysAllowedTabs.includes(tabName)) {
+      if (allowedTabsWithoutSub.includes(tabName)) {
         tab.classList.remove('tab-disabled'); // Дозволена
       } else {
         tab.classList.add('tab-disabled'); // Недозволена - блокуємо
@@ -2061,37 +2061,58 @@ async function handleAutoRenewalToggle(event) {
   }
 }
 
+/**
+ * ОНОВЛЕНО v3: Перевіряє наявність активної підписки через спеціалізований ендпоінт.
+ * @param {boolean} forceRedirect - Чи потрібно примусово перенаправляти на вкладку "Підписка", якщо її немає.
+ * @returns {Promise<boolean>} - Повертає true, якщо є активна підписка, інакше false.
+ */
 async function checkInitialSubscriptionAndRedirect(forceRedirect = true) {
   if (!isAuthorized()) {
-    updateTabAccessibility(false);
-    return;
+    updateTabAccessibility(false, null); // Передаємо null, бо профіль невідомий
+    return false;
   }
+
+  let hasActiveSub = false;
+  let userProfile = null; // Змінна для зберігання профілю
+
   try {
-    const { response } = await fetchWithAuth(
-      `${baseURL}/profile/progress?limit=1`
-    );
-    const hasActiveSub = response.ok;
-    updateTabAccessibility(hasActiveSub);
-    if (forceRedirect && !hasActiveSub) {
-      const subscriptionTabButton = document.querySelector(
-        '.tab-link[data-tab-name="subscription"]'
+    // Завантажуємо і підписку, і профіль одночасно
+    const [subResult, profileResult] = await Promise.all([
+      fetchWithAuth(`${baseURL}/api/my-subscriptions`),
+      fetchCurrentProfileDataOnce(), // Використовуємо кешовану функцію
+    ]);
+
+    const { data: subscriptions, response: subResponse } = subResult;
+    userProfile = profileResult; // Зберігаємо профіль
+    currentUserProfileData = userProfile; // Оновлюємо глобальний кеш
+
+    if (subResponse.ok && Array.isArray(subscriptions)) {
+      const now = new Date();
+      hasActiveSub = subscriptions.some(
+        (sub) => sub.status === 'active' && new Date(sub.end_date) > now
       );
-      if (subscriptionTabButton) {
-        openTab({ currentTarget: subscriptionTabButton }, 'subscription');
-      }
     }
   } catch (error) {
-    console.error('Помилка під час перевірки підписки:', error.message);
-    updateTabAccessibility(false);
-    if (forceRedirect) {
-      const subscriptionTabButton = document.querySelector(
-        '.tab-link[data-tab-name="subscription"]'
-      );
-      if (subscriptionTabButton) {
-        openTab({ currentTarget: subscriptionTabButton }, 'subscription');
-      }
+    console.error(
+      'Помилка під час перевірки підписки або профілю:',
+      error.message
+    );
+    hasActiveSub = false;
+  }
+
+  // Оновлюємо доступність вкладок, передаючи ОБИДВА параметри
+  updateTabAccessibility(hasActiveSub, userProfile);
+
+  if (forceRedirect && !hasActiveSub) {
+    const subscriptionTabButton = document.querySelector(
+      '.tab-link[data-tab-name="subscription"]'
+    );
+    if (subscriptionTabButton) {
+      openTab({ currentTarget: subscriptionTabButton }, 'subscription');
     }
   }
+
+  return hasActiveSub;
 }
 // КІНЕЦЬ вкладки "ПІДПИСКА"
 
@@ -8580,12 +8601,13 @@ function initializePasswordRecovery() {
 }
 
 /**
- * ОНОВЛЕНО v4: Головна функція-оркестратор з перевіркою статусу генерації.
+ * ОНОВЛЕНО v5: Функція-оркестратор ТІЛЬКИ для користувачів, зареєстрованих тренером.
+ * Перевіряє нагадування про підписку та сповіщення про новий план.
  */
 async function runInitialChecksAndModals() {
   if (!isAuthorized()) return;
 
-  // Переконуємось, що дані профілю завантажені, бо вони нам потрібні
+  // Переконуємось, що дані профілю завантажені
   if (!currentUserProfileData) {
     try {
       currentUserProfileData = await fetchCurrentProfileDataOnce();
@@ -8594,116 +8616,64 @@ async function runInitialChecksAndModals() {
         'Не вдалося завантажити профіль для початкових перевірок:',
         error
       );
-      // Якщо профіль не завантажився, не можемо продовжувати безпечно
       return;
     }
   }
 
-  // Якщо користувач зареєструвався самостійно, ми НЕ запускаємо перевірки модальних вікон.
-  // Всі вкладки для нього вже правильно налаштовані в `updatePlanTabVisibility`.
-  // Йому потрібно спочатку оплатити підписку.
+  // Якщо користувач зареєструвався самостійно, для нього ця логіка не потрібна.
   if (
     currentUserProfileData &&
     currentUserProfileData.registration_type === 'self'
   ) {
-    // console.log("Користувач 'self-registered'. Пропускаємо початкові модальні вікна.");
-    return; // Просто виходимо з функції
+    return; // Просто виходимо
   }
 
-  let attempts = 0;
-  const maxAttempts = 10;
-  const checkInterval = 500;
+  // --- ПОЧАТОК НОВОЇ, СПРОЩЕНОЇ ЛОГІКИ ---
+  try {
+    // 1. Перевіряємо, чи потрібно показати нагадування про закінчення підписки
+    await checkAndShowSubscriptionReminder();
 
-  const performChecks = async () => {
-    const daySelectorOverlay = document.getElementById(
-      'day-selector-modal-overlay'
+    // 2. Перевіряємо, чи є новий план від тренера, про який треба сповістити
+    const { data: plansData, response } = await fetchWithAuth(
+      `${baseURL}/my-workout-plans`
     );
-    const newPlanOverlay = document.getElementById(
-      'new-plan-notification-overlay'
-    );
-
-    if (daySelectorOverlay && newPlanOverlay) {
-      try {
-        const [
-          { data: profileData },
-          { data: plansData },
-          { response: subResponse },
-        ] = await Promise.all([
-          fetchWithAuth(`${baseURL}/profile/my-profile`),
-          fetchWithAuth(`${baseURL}/my-workout-plans`),
-          fetchWithAuth(`${baseURL}/profile/progress?limit=1`),
-        ]);
-
-        const hasActiveSub = subResponse.ok;
-        currentUserProfileData = profileData;
-
-        await checkAndShowSubscriptionReminder();
-
-        if (profileData && profileData.registration_type === 'self') {
-          const plans = plansData || [];
-
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-          const newestPlan = plans.sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
-          )[0];
-
-          if (
-            newestPlan &&
-            new Date(newestPlan.created_at) > thirtyDaysAgo &&
-            !localStorage.getItem(`plan_notified_${newestPlan.id}`)
-          ) {
-            const oldestPlan = plans.sort(
-              (a, b) => new Date(a.created_at) - new Date(b.created_at)
-            )[0];
-            if (newestPlan.id !== oldestPlan.id) {
-              await showNewPlanNotificationModal();
-              localStorage.setItem(`plan_notified_${newestPlan.id}`, 'true');
-            }
-          }
-
-          // --- ОСНОВНА ЗМІНА ТУТ ---
-          let planToSchedule = plans.find((p) => !p.are_workouts_generated);
-
-          if (planToSchedule) {
-            const generationTimestamp = localStorage.getItem(
-              `generation_in_progress_${planToSchedule.id}`
-            );
-            const tenMinutes = 10 * 60 * 1000; // 10 хвилин
-
-            // Якщо мітка існує і вона не старіша за 10 хвилин, ми не показуємо вікно
-            if (
-              generationTimestamp &&
-              Date.now() - generationTimestamp < tenMinutes
-            ) {
-              console.log(
-                `Генерація тренувань для плану ${planToSchedule.id} вже в процесі. Модальне вікно не буде показано.`
-              );
-              planToSchedule = null; // "Скасовуємо" показ вікна
-            }
-          }
-          // --- КІНЕЦЬ ЗМІНИ ---
-
-          if (hasActiveSub && planToSchedule) {
-            await showDaySelectorModal(planToSchedule, profileData);
-          }
-        }
-      } catch (error) {
-        console.error('Помилка під час початкових перевірок:', error);
-      }
-    } else {
-      attempts++;
-      if (attempts < maxAttempts) {
-        setTimeout(performChecks, checkInterval);
-      } else {
-        console.error(
-          'Не вдалося знайти HTML-елементи для модальних вікон після кількох спроб.'
-        );
-      }
+    if (!response.ok) {
+      // Не критична помилка, просто логуємо і продовжуємо
+      console.warn('Не вдалося завантажити плани для перевірки сповіщень.');
+      return;
     }
-  };
 
-  performChecks();
+    const plans = plansData || [];
+    if (plans.length < 2) {
+      // Якщо планів менше двох, то нового точно немає
+      return;
+    }
+
+    // Знаходимо найновіший план
+    const newestPlan = plans.sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    )[0];
+
+    // Перевіряємо, чи він створений нещодавно і чи ми про нього ще не сповіщали
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    if (
+      newestPlan &&
+      new Date(newestPlan.created_at) > thirtyDaysAgo &&
+      !localStorage.getItem(`plan_notified_${newestPlan.id}`)
+    ) {
+      // Показуємо модальне вікно і зберігаємо мітку, що сповіщення було показано
+      await showNewPlanNotificationModal();
+      localStorage.setItem(`plan_notified_${newestPlan.id}`, 'true');
+    }
+  } catch (error) {
+    console.error(
+      'Помилка під час початкових перевірок для користувача тренера:',
+      error
+    );
+  }
+  // --- КІНЕЦЬ НОВОЇ ЛОГІКИ ---
 }
 
 /**
