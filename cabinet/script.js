@@ -1907,20 +1907,35 @@ function displaySubscriptions(subscriptions, userData) {
   if (!container) return;
 
   let activeSubscription = null;
-  const historySubscriptions = [];
-  (subscriptions || []).forEach((sub) => {
-    const endDate = new Date(sub.end_date);
-    if (sub.status === 'active' && endDate > new Date()) {
-      if (
-        !activeSubscription ||
-        endDate > new Date(activeSubscription.end_date)
-      ) {
-        activeSubscription = sub;
-      }
-    } else {
-      historySubscriptions.push(sub);
-    }
+
+  const now = new Date(); // ВИПРАВЛЕНО: Визначаємо поточний час
+  const allSubs = subscriptions || []; // ВИПРАВЛЕНО: Визначаємо allSubs з параметра функції
+
+  // 1. Знаходимо ОДНУ дійсно активну підписку.
+  // Сортуємо, щоб знайти ту, що закінчується найпізніше.
+  activeSubscription = allSubs
+    .filter((sub) => sub.status === 'active' && new Date(sub.end_date) > now)
+    .sort((a, b) => new Date(b.end_date) - new Date(a.end_date))[0];
+
+  // 2. Формуємо історію:
+  // - Виключаємо активну підписку (якщо вона є).
+  // - Виключаємо підписки, що очікують оплати.
+  // - Сортуємо за датою початку (новіші перші).
+  // - Беремо тільки перші 10 записів.
+  const historyCandidates = allSubs.filter((sub) => {
+    const isTheActiveOne =
+      activeSubscription && sub.id === activeSubscription.id;
+    const isPending = sub.status === 'pending_payment';
+    return !isTheActiveOne && !isPending;
   });
+
+  // Сортуємо за датою початку, щоб найновіші були першими
+  historyCandidates.sort(
+    (a, b) => new Date(b.start_date) - new Date(a.start_date)
+  );
+
+  // Обрізаємо історію до 10 записів
+  const finalHistory = historyCandidates.slice(0, 10);
 
   let finalHtml = '';
   const isFirstPaymentScenario =
@@ -1973,14 +1988,12 @@ function displaySubscriptions(subscriptions, userData) {
         `;
   }
 
-  if (historySubscriptions.length > 0) {
-    historySubscriptions.sort(
-      (a, b) => new Date(b.start_date) - new Date(a.start_date)
-    );
+  if (finalHistory.length > 0) {
+    // Сортування вже не потрібне, ми зробили його раніше
     finalHtml += '<div class="profile-section">';
     finalHtml += '<h5 class="profile-section-title">Історія підписок</h5>';
     finalHtml += '<ul class="subscription-list-user">';
-    historySubscriptions.forEach((sub) => {
+    finalHistory.forEach((sub) => {
       const startDate = new Date(sub.start_date).toLocaleDateString('uk-UA');
       const endDate = new Date(sub.end_date).toLocaleDateString('uk-UA');
       const statusTranslations = {
