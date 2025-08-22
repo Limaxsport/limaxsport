@@ -1009,7 +1009,7 @@ async function funnel_loadAndRenderExcludedExercises(userExcludedNames = []) {
     }
 
     const { data: exercises, response } = await fetchWithAuth(
-      `${baseURL}/gifs/names-by-creator/${creatorPhone}`
+      `${baseURL}/registration/exercises`
     );
     if (!response.ok) {
       throw new Error(
