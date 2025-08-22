@@ -993,23 +993,24 @@ async function funnel_loadAndRenderExcludedExercises(userExcludedNames = []) {
     const genderChoice = funnelManager.state.registrationData.gender;
     const preferredGender =
       funnelManager.state.registrationData.preferred_exercise_gender;
-    let creatorPhone = null;
+    let exerciseGenderForApi = null;
 
-    if (genderChoice === 'male' || preferredGender === 'male') {
-      creatorPhone = MALE_ADMIN_PHONE;
-    } else if (genderChoice === 'female' || preferredGender === 'female') {
-      creatorPhone = FEMALE_ADMIN_PHONE;
+    if (genderChoice === 'male' || genderChoice === 'female') {
+      exerciseGenderForApi = genderChoice;
+    } else if (genderChoice === 'not_applicable') {
+      exerciseGenderForApi = preferredGender;
     }
 
-    if (!creatorPhone) {
+    // Якщо параметр не визначено, показуємо помилку і виходимо
+    if (!exerciseGenderForApi) {
       container.innerHTML =
-        '<p style="color:orange;">Поверніться до кроку "Стать" та зробіть вибір.</p>';
-      loadingTimerManager.stop(); // Зупиняємо таймер, бо далі не йдемо
+        '<p style="color:orange;">Будь ласка, поверніться до кроку "Стать" та зробіть вибір, щоб завантажити список вправ.</p>';
+      loadingTimerManager.stop();
       return;
     }
 
     const { data: exercises, response } = await fetchWithAuth(
-      `${baseURL}/registration/exercises`
+      `${baseURL}/registration/exercises?exercise_gender=${exerciseGenderForApi}`
     );
     if (!response.ok) {
       throw new Error(
