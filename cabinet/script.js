@@ -8699,16 +8699,18 @@ async function runAuthenticatedCabinet() {
 
   const hash = window.location.hash.substring(1);
 
+  // Перевіряємо підписку ОДИН РАЗ, але з різним параметром forceRedirect
+  const shouldForceRedirect = hash !== 'plan';
+  await checkInitialSubscriptionAndRedirect(shouldForceRedirect);
+
+  // Відкриваємо потрібну вкладку ПІСЛЯ перевірки
   if (hash === 'plan') {
     const planTabButton = document.querySelector(
       '.tab-link[data-tab-name="plan"]'
     );
-    if (planTabButton) {
+    if (planTabButton && !planTabButton.classList.contains('active')) {
       openTab({ currentTarget: planTabButton }, 'plan');
     }
-    await checkInitialSubscriptionAndRedirect(false);
-  } else {
-    await checkInitialSubscriptionAndRedirect(true);
   }
 
   await runInitialChecksAndModals();
