@@ -8638,7 +8638,7 @@ async function runInitialChecksAndModals() {
           { data: plansData, response: plansResponse },
           { data: subscriptionsData, response: subResponse },
         ] = await Promise.all([
-          fetchWithAuth(`${baseURL}/profile`),
+          fetchWithAuth(`${baseURL}/profile/my-profile`),
           fetchWithAuth(`${baseURL}/my-workout-plans`),
           fetchWithAuth(`${baseURL}/api/my-subscriptions`),
         ]);
