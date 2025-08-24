@@ -746,10 +746,10 @@ function updateTabAccessibility(hasActiveSubscription, userProfile = null) {
   const allTabs = document.querySelectorAll('.tab-link');
 
   // Визначаємо, які вкладки доступні для користувача БЕЗ підписки
-  let allowedTabsWithoutSub = ['subscription', 'logout']; // Базовий набір
+  let allowedTabsWithoutSub = ['subscription', 'logout'];
   if (userProfile && userProfile.registration_type === 'self') {
-    // Якщо самостійна реєстрація, додаємо доступ до Плану та Профілю
-    allowedTabsWithoutSub = ['plan', 'subscription', 'profile', 'logout'];
+    // Для користувача "без тренера" додаємо ТІЛЬКИ вкладку "План"
+    allowedTabsWithoutSub.push('plan');
   }
 
   allTabs.forEach((tab) => {
@@ -2103,7 +2103,12 @@ async function checkInitialSubscriptionAndRedirect(forceRedirect = true) {
   // Оновлюємо доступність вкладок, передаючи ОБИДВА параметри
   updateTabAccessibility(hasActiveSub, userProfile);
 
-  if (forceRedirect && !hasActiveSub) {
+  const isSelfUserOnPlanTab =
+    userProfile?.registration_type === 'self' &&
+    window.location.hash === '#plan';
+
+  if (forceRedirect && !hasActiveSub && !isSelfUserOnPlanTab) {
+    // Тільки в інших випадках перенаправляємо на підписку
     const subscriptionTabButton = document.querySelector(
       '.tab-link[data-tab-name="subscription"]'
     );
