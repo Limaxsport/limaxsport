@@ -8699,9 +8699,10 @@ async function runAuthenticatedCabinet() {
 
   const hash = window.location.hash.substring(1);
 
-  // Перевіряємо підписку ОДИН РАЗ, але з різним параметром forceRedirect
+  // Перевіряємо підписку, отримуємо її статус і використовуємо його далі
   const shouldForceRedirect = hash !== 'plan';
-  await checkInitialSubscriptionAndRedirect(shouldForceRedirect);
+  const hasActiveSub =
+    await checkInitialSubscriptionAndRedirect(shouldForceRedirect);
 
   // Відкриваємо потрібну вкладку ПІСЛЯ перевірки
   if (hash === 'plan') {
@@ -8715,7 +8716,10 @@ async function runAuthenticatedCabinet() {
 
   await runInitialChecksAndModals();
 
-  preloadFirstActiveWorkoutGif();
+  // Запускаємо передзавантаження GIF тільки якщо є активна підписка
+  if (hasActiveSub) {
+    preloadFirstActiveWorkoutGif();
+  }
   scheduleProactiveTokenRefresh();
   fetchAndDisplayUnreadCount();
 }
