@@ -8614,79 +8614,120 @@ function initializePasswordRecovery() {
 }
 
 /**
- * ОНОВЛЕНО v5: Функція-оркестратор ТІЛЬКИ для користувачів, зареєстрованих тренером.
- * Перевіряє нагадування про підписку та сповіщення про новий план.
+ * ОНОВЛЕНО v6: Головна функція-оркестратор з перевіркою статусу генерації.
  */
 async function runInitialChecksAndModals() {
   if (!isAuthorized()) return;
 
-  // Переконуємось, що дані профілю завантажені
-  if (!currentUserProfileData) {
-    try {
-      currentUserProfileData = await fetchCurrentProfileDataOnce();
-    } catch (error) {
-      console.error(
-        'Не вдалося завантажити профіль для початкових перевірок:',
-        error
-      );
-      return;
-    }
-  }
+  let attempts = 0;
+  const maxAttempts = 10;
+  const checkInterval = 500;
 
-  // Якщо користувач зареєструвався самостійно, для нього ця логіка не потрібна.
-  if (
-    currentUserProfileData &&
-    currentUserProfileData.registration_type === 'self'
-  ) {
-    return; // Просто виходимо
-  }
-
-  // --- ПОЧАТОК НОВОЇ, СПРОЩЕНОЇ ЛОГІКИ ---
-  try {
-    // 1. Перевіряємо, чи потрібно показати нагадування про закінчення підписки
-    await checkAndShowSubscriptionReminder();
-
-    // 2. Перевіряємо, чи є новий план від тренера, про який треба сповістити
-    const { data: plansData, response } = await fetchWithAuth(
-      `${baseURL}/my-workout-plans`
+  const performChecks = async () => {
+    const daySelectorOverlay = document.getElementById(
+      'day-selector-modal-overlay'
     );
-    if (!response.ok) {
-      // Не критична помилка, просто логуємо і продовжуємо
-      console.warn('Не вдалося завантажити плани для перевірки сповіщень.');
-      return;
-    }
-
-    const plans = plansData || [];
-    if (plans.length < 2) {
-      // Якщо планів менше двох, то нового точно немає
-      return;
-    }
-
-    // Знаходимо найновіший план
-    const newestPlan = plans.sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at)
-    )[0];
-
-    // Перевіряємо, чи він створений нещодавно і чи ми про нього ще не сповіщали
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    if (
-      newestPlan &&
-      new Date(newestPlan.created_at) > thirtyDaysAgo &&
-      !localStorage.getItem(`plan_notified_${newestPlan.id}`)
-    ) {
-      // Показуємо модальне вікно і зберігаємо мітку, що сповіщення було показано
-      await showNewPlanNotificationModal();
-      localStorage.setItem(`plan_notified_${newestPlan.id}`, 'true');
-    }
-  } catch (error) {
-    console.error(
-      'Помилка під час початкових перевірок для користувача тренера:',
-      error
+    const newPlanOverlay = document.getElementById(
+      'new-plan-notification-overlay'
     );
-  }
-  // --- КІНЕЦЬ НОВОЇ ЛОГІКИ ---
+
+    if (daySelectorOverlay && newPlanOverlay) {
+      try {
+        const [
+          { data: profileData, response: profileResponse },
+          { data: plansData, response: plansResponse },
+          { data: subscriptionsData, response: subResponse },
+        ] = await Promise.all([
+          fetchWithAuth(`${baseURL}/profile`),
+          fetchWithAuth(`${baseURL}/my-workout-plans`),
+          fetchWithAuth(`${baseURL}/api/my-subscriptions`),
+        ]);
+
+        if (!profileResponse.ok) return;
+
+        const now = new Date();
+        const hasActiveSub =
+          subResponse.ok &&
+          Array.isArray(subscriptionsData) &&
+          subscriptionsData.some(
+            (sub) => sub.status === 'active' && new Date(sub.end_date) > now
+          );
+
+        currentUserProfileData = profileData;
+
+        if (profileData && profileData.registration_type === 'self') {
+          const plans = plansData || [];
+
+          // Модальне вікно №2: Повідомлення про новий 30-денний план
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          const newestPlan = plans.sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+          )[0];
+
+          if (
+            newestPlan &&
+            new Date(newestPlan.created_at) > thirtyDaysAgo &&
+            !localStorage.getItem(`plan_notified_${newestPlan.id}`)
+          ) {
+            const oldestPlan = plans.sort(
+              (a, b) => new Date(a.created_at) - new Date(b.created_at)
+            )[0];
+            if (newestPlan.id !== oldestPlan.id) {
+              await showNewPlanNotificationModal();
+              localStorage.setItem(`plan_notified_${newestPlan.id}`, 'true');
+            }
+          }
+
+          // Модальне вікно №1: Вибір днів тижня для тренувань
+          let planToSchedule = plans.find((p) => !p.are_workouts_generated);
+
+          // Перевіряємо, чи потрібно взагалі показувати вікно
+          if (planToSchedule) {
+            // 1. Перевіряємо, чи користувач ВЖЕ обрав дні (у профілі є дані)
+            const hasAlreadySelectedDays =
+              Array.isArray(profileData.preferred_training_weekdays) &&
+              profileData.preferred_training_weekdays.length > 0;
+
+            // 2. Перевіряємо, чи генерація не запущена (на випадок оновлення сторінки)
+            const generationTimestamp = localStorage.getItem(
+              `generation_in_progress_${planToSchedule.id}`
+            );
+            const tenMinutes = 10 * 60 * 1000;
+            const isGenerationInProgress =
+              generationTimestamp &&
+              Date.now() - generationTimestamp < tenMinutes;
+
+            // Якщо дні вже обрані АБО генерація вже йде, не показуємо вікно
+            if (hasAlreadySelectedDays || isGenerationInProgress) {
+              planToSchedule = null;
+            }
+          }
+
+          // Показуємо вікно вибору днів ТІЛЬКИ якщо є активна підписка і є план для генерації
+          if (hasActiveSub && planToSchedule) {
+            await showDaySelectorModal(planToSchedule, profileData);
+          }
+        }
+
+        // Модальне вікно №3: Нагадування про закінчення підписки (ДЛЯ ВСІХ)
+        await checkAndShowSubscriptionReminder();
+      } catch (error) {
+        console.error('Помилка під час початкових перевірок:', error);
+      }
+    } else {
+      attempts++;
+      if (attempts < maxAttempts) {
+        setTimeout(performChecks, checkInterval);
+      } else {
+        console.error(
+          'Не вдалося знайти HTML-елементи для модальних вікон після кількох спроб.'
+        );
+      }
+    }
+  };
+
+  performChecks();
 }
 
 /**
