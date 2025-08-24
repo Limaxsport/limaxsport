@@ -2107,6 +2107,12 @@ async function checkInitialSubscriptionAndRedirect(forceRedirect = true) {
     userProfile?.registration_type === 'self' &&
     window.location.hash === '#plan';
 
+  if (isSelfUserOnPlanTab) {
+    // Якщо це новий користувач, який щойно потрапив на вкладку "План",
+    // прокручуємо сторінку догори.
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   if (forceRedirect && !hasActiveSub && !isSelfUserOnPlanTab) {
     // Тільки в інших випадках перенаправляємо на підписку
     const subscriptionTabButton = document.querySelector(
@@ -2114,6 +2120,8 @@ async function checkInitialSubscriptionAndRedirect(forceRedirect = true) {
     );
     if (subscriptionTabButton) {
       openTab({ currentTarget: subscriptionTabButton }, 'subscription');
+      // І прокручуємо догори при перенаправленні на "Підписку".
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
