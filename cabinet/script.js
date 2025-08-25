@@ -2539,7 +2539,7 @@ async function loadAndRenderExcludedExercisesForEditForm() {
   try {
     // Отримуємо доступні для виключення GIF
     const { data: availableGifObjects, response: availableResponse } =
-      await fetchWithAuth(`${baseURL}/profile//excluded-exercises/available`);
+      await fetchWithAuth(`${baseURL}/profile/excluded-exercises`);
     if (!availableResponse.ok) {
       // У data може бути детальна помилка
       throw new Error(
