@@ -1024,6 +1024,9 @@ async function funnel_loadAndRenderExcludedExercises(userExcludedNames = []) {
       return;
     }
 
+    const userTrainingType =
+      funnelManager.state.registrationData.type_of_training;
+
     let filteredExercises;
     if (userTrainingType === 'home') {
       filteredExercises = exercises.filter(
