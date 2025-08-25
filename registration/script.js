@@ -983,33 +983,35 @@ async function funnel_loadAndRenderExcludedExercises(userExcludedNames = []) {
   loadingTimerManager.start(tempStatusElement);
 
   try {
-    const userTrainingType =
-      funnelManager.state.registrationData.type_of_training;
     const genderChoice = funnelManager.state.registrationData.gender;
     const preferredGender =
       funnelManager.state.registrationData.preferred_exercise_gender;
-    let exerciseGenderForApi = null;
 
-    if (genderChoice === 'male' || genderChoice === 'female') {
-      exerciseGenderForApi = genderChoice;
-    } else if (genderChoice === 'not_applicable') {
-      exerciseGenderForApi = preferredGender;
+    // Створюємо параметри для URL
+    const params = new URLSearchParams();
+    if (genderChoice) {
+      params.append('gender', genderChoice);
+    }
+    if (preferredGender) {
+      params.append('preferred_exercise_gender', preferredGender);
     }
 
-    // Якщо параметр не визначено, показуємо помилку і виходимо
-    if (!exerciseGenderForApi) {
+    // Якщо параметрів немає, не робимо запит
+    if (!params.toString()) {
       container.innerHTML =
-        '<p style="color:orange;">Будь ласка, поверніться до кроку "Стать" та зробіть вибір, щоб завантажити список вправ.</p>';
+        '<p style="color:orange;">Будь ласка, поверніться до попередніх кроків та зробіть вибір статі.</p>';
       loadingTimerManager.stop();
       return;
     }
 
+    // Робимо запит з новими параметрами
     const { data: exercises, response } = await fetchWithAuth(
-      `${baseURL}/registration/exercises?exercise_gender=${exerciseGenderForApi}`
+      `${baseURL}/registration/exercises?${params.toString()}`
     );
+
     if (!response.ok) {
       throw new Error(
-        exercises.detail || 'Не вдалося завантажити список вправ.'
+        exercises?.detail || 'Не вдалося завантажити список вправ.'
       );
     }
 
