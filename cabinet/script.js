@@ -5204,6 +5204,17 @@ async function showWorkoutDetails(planId) {
           }
           detailsContentDiv.appendChild(setsTableContainer);
 
+          if (currentUserProfileData?.is_independent && !isCompleted) {
+            // Додаємо setsInput тут!
+            const setsInput = exerciseDiv.querySelector('.sets-input');
+            addSetButtonsListeners(
+              exerciseDiv,
+              exercise,
+              setsTableContainer,
+              setsInput
+            );
+          }
+
           if (exercise.total_weight === true) {
             const span = document.createElement('span');
             span.className = 'total-weight-text';
@@ -5524,6 +5535,74 @@ async function showWorkoutDetails(planId) {
     slowConnectionDetector.stop();
   }
 } // Кінець основного блоку showWorkoutDetails
+
+// Додаємо обробники для кнопок "Додати сет" та "Видалити сет"
+function addSetButtonsListeners(
+  exerciseDiv,
+  exercise,
+  setsTableContainer,
+  setsInput
+) {
+  const addSetBtn = setsTableContainer.querySelector('.add-set-btn');
+  const removeSetBtn = setsTableContainer.querySelector('.remove-set-btn');
+  const setsTableCont = setsTableContainer;
+
+  function redrawTableAndSave() {
+    setsTableCont.innerHTML = generateEditableSetsTableHTML(exercise);
+    addEditListenersToExercise(exerciseDiv);
+    // Додаємо обробники для нових кнопок після перемальовки!
+    addSetButtonsListeners(exerciseDiv, exercise, setsTableCont, setsInput);
+
+    // Збираємо поточні значення
+    const numSets = parseInt(setsInput.value);
+    let reps = Array(numSets).fill(null);
+    let weights = Array(numSets).fill(null);
+    let time = Array(numSets).fill(null);
+
+    const repsSpans = exerciseDiv.querySelectorAll(
+      '.editable-reps .set-reps-value'
+    );
+    if (repsSpans.length)
+      reps = Array.from(repsSpans).map((s) =>
+        s.textContent === '--' ? null : parseInt(s.textContent)
+      );
+    const weightsSpans = exerciseDiv.querySelectorAll(
+      '.editable-weight .set-weight-value'
+    );
+    if (weightsSpans.length)
+      weights = Array.from(weightsSpans).map((s) => {
+        const val = s.textContent.replace(/\s*кг$/, '').trim();
+        return val === '--' ? null : parseInt(val);
+      });
+    const timeSpans = exerciseDiv.querySelectorAll(
+      '.editable-time .set-time-value'
+    );
+    if (timeSpans.length)
+      time = Array.from(timeSpans).map((s) => {
+        const val = s.textContent.replace(/\s*сек$/, '').trim();
+        return val === '--' ? null : parseInt(val);
+      });
+
+    updateExercisePreference(exercise.gif.id, reps, weights, time, null);
+  }
+
+  if (addSetBtn && setsInput && setsTableCont) {
+    addSetBtn.addEventListener('click', () => {
+      setsInput.value = parseInt(setsInput.value) + 1;
+      exercise.sets = parseInt(setsInput.value);
+      redrawTableAndSave();
+    });
+  }
+  if (removeSetBtn && setsInput && setsTableCont) {
+    removeSetBtn.addEventListener('click', () => {
+      if (parseInt(setsInput.value) > 1) {
+        setsInput.value = parseInt(setsInput.value) - 1;
+        exercise.sets = parseInt(setsInput.value);
+        redrawTableAndSave();
+      }
+    });
+  }
+}
 
 // --- БЛОК КОДУ АНАЛІЗУ ФІДБЕКУ від GEMINI ---
 /**
@@ -6257,10 +6336,13 @@ function handleUserAddExercise() {
 /**
  * ФІНАЛЬНА ВЕРСІЯ: Створює HTML-структуру та коректно додає всі обробники.
  */
-function createExerciseFieldsetHTML(counter) {
+function createExerciseFieldsetHTML(counter, exerciseId = null) {
   const exerciseFieldset = document.createElement('fieldset');
   exerciseFieldset.className = 'exercise exercise-item-in-form';
   exerciseFieldset.innerHTML = `
+    <input type="hidden" class="order-input" value="${counter}">
+    <input type="hidden" class="gif-id-input">
+    <input type="hidden" class="exercise-id-input" value="${exerciseId || ''}">
         <div class="exercise-header-form"><h5 class="exercise-title-header"><span class="exercise-number">${counter}</span>. Вправа</h5></div>
         <input type="hidden" class="order-input" value="${counter}"><input type="hidden" class="gif-id-input">
         <button type="button" class="select-gif-btn">Обрати GIF</button>
@@ -6900,6 +6982,7 @@ async function handleUserTrainingPlanSubmit(event) {
       fs.querySelector('.rest-time-seconds')?.value || '0'
     );
     trainingPlanData.exercises.push({
+      id: fs.querySelector('.exercise-id-input')?.value || null,
       gif_id: parseInt(gifId),
       order: parseInt(fs.querySelector('.order-input').value),
       superset: fs.querySelector('.superset-input').checked,
@@ -6988,27 +7071,42 @@ async function handleEditWorkout(planId) {
           `Помилка завантаження тренування: ${response.status}`
       );
     }
+
+    // Додаємо перевірку на факт виконання вправ у цьому тренуванні
+    const completedExercisesMap = JSON.parse(
+      localStorage.getItem(`completedPlan_${planId}`) || '{}'
+    );
+
     const preparedData = {
       id: planToEdit.id,
       title: planToEdit.title,
       description: planToEdit.description,
       date: planToEdit.date,
-      exercises: planToEdit.exercises.map((ex) => ({
-        gif_id: ex.gif.id,
-        name: ex.gif.name,
-        description: ex.gif.description,
-        order: ex.order,
-        superset: ex.superset,
-        emphasis: ex.emphasis,
-        total_weight: ex.total_weight,
-        total_reps: ex.total_reps,
-        rest_time: ex.rest_time,
-        sets: ex.sets,
-        reps: ex.reps,
-        weights: ex.weights,
-        time: ex.time,
-      })),
+      exercises: planToEdit.exercises.map((ex) => {
+        // Якщо є факт виконання — додаємо його до даних вправи
+        const completed = completedExercisesMap[ex.id];
+        return {
+          gif_id: ex.gif.id,
+          name: ex.gif.name,
+          description: ex.gif.description,
+          order: ex.order,
+          superset: ex.superset,
+          emphasis: ex.emphasis,
+          total_weight: ex.total_weight,
+          total_reps: ex.total_reps,
+          rest_time: ex.rest_time,
+          sets: ex.sets,
+          reps: ex.reps,
+          weights: ex.weights,
+          time: ex.time,
+          // Додаємо факт виконання, якщо він є
+          completedReps: completed?.completedReps || null,
+          completedWeights: completed?.completedWeights || null,
+          completedTime: completed?.completedTime || null,
+        };
+      }),
     };
+
     showUserWorkoutView('form');
     await setupUserWorkoutForm(preparedData);
     displayStatus(
@@ -7393,6 +7491,14 @@ function generateEditableSetsTableHTML(exercise) {
     setsTableHTML += `<tr>${rowHTML}</tr>`;
   }
   setsTableHTML += `</tbody></table>`;
+  if (currentUserProfileData?.is_independent && !exercise.isCompleted) {
+    setsTableHTML += `
+    <div class="sets-actions">
+      <button class="add-set-btn green-btn" title="Додати підхід">+</button>
+      <button class="remove-set-btn red-btn" title="Видалити підхід">-</button>
+    </div>
+  `;
+  }
   return `<div class="table-scroll-wrapper">${setsTableHTML}</div>`;
 }
 

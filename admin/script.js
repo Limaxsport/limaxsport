@@ -3303,6 +3303,13 @@ async function addExerciseToFormWithData(
   }
   exerciseFieldset.classList.add('exercise-item-in-form');
 
+  // Додаємо прихований input для id вправи
+  const exerciseIdInput = document.createElement('input');
+  exerciseIdInput.type = 'hidden';
+  exerciseIdInput.className = 'exercise-id-input';
+  exerciseIdInput.value = exerciseData.id || '';
+  exerciseFieldset.appendChild(exerciseIdInput);
+
   // --- Кнопка видалення вправи ---
   const deleteExerciseBtn = document.createElement('button');
   deleteExerciseBtn.type = 'button';
@@ -4367,6 +4374,11 @@ async function handleTrainingPlanSubmit(event) {
     const exerciseNumber = index + 1;
     let exerciseIsValid = true;
 
+    const exerciseIdInput = fieldset.querySelector('.exercise-id-input');
+    const exerciseId = exerciseIdInput?.value
+      ? parseInt(exerciseIdInput.value)
+      : null;
+
     const gifIdInput = fieldset.querySelector('.gif-id-input');
     const gifId = gifIdInput?.value;
     if (!gifId || parseInt(gifId) <= 0) {
@@ -4512,6 +4524,7 @@ async function handleTrainingPlanSubmit(event) {
         minutes * 60 + seconds > 0 ? minutes * 60 + seconds : null;
 
       exercises.push({
+        id: exerciseId,
         gif_id: parseInt(gifId),
         name: name, // name тепер може бути null, якщо це редагування і поле було порожнім
         description: exerciseDesc, // exerciseDesc тепер може бути null
