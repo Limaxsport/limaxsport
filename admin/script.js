@@ -3292,10 +3292,7 @@ async function addExerciseToFormWithData(
   const template = document
     .getElementById('exercise-template')
     ?.content.cloneNode(true);
-  if (!template) {
-    alert('Помилка: Шаблон вправи не знайдено.');
-    return;
-  }
+  if (!template) return;
   const exerciseFieldset = template.querySelector('.exercise');
   if (!exerciseFieldset) {
     alert('Помилка: Некоректний шаблон вправи.');
@@ -3330,18 +3327,12 @@ async function addExerciseToFormWithData(
       saveWorkoutDraft();
     }
   });
-  const headerForm = exerciseFieldset.querySelector('.exercise-header-form');
-  if (headerForm) {
-    headerForm.appendChild(deleteExerciseBtn);
-  } else {
-    exerciseFieldset.prepend(deleteExerciseBtn);
-  }
+  exerciseFieldset.appendChild(deleteExerciseBtn);
 
   // --- Номер та порядок вправи ---
   const exerciseNumberSpan = exerciseFieldset.querySelector('.exercise-number');
   if (exerciseNumberSpan) exerciseNumberSpan.textContent = exerciseCounter;
   const orderInput = exerciseFieldset.querySelector('.order-input');
-  // 'order' з відповіді Gemini має пріоритет
   if (orderInput) orderInput.value = exerciseData.order || exerciseCounter;
 
   // --- Отримуємо посилання на всі елементи DOM ---
@@ -3369,20 +3360,24 @@ async function addExerciseToFormWithData(
   const setsTableContainer = exerciseFieldset.querySelector(
     '.sets-table-container'
   );
-  const folderSelector = exerciseFieldset.querySelector('.folder-selector');
-  const subfolderSelector = exerciseFieldset.querySelector(
-    '.subfolder-selector'
+  // Показуємо правильні контейнери
+  exerciseFieldset.querySelector('.gif-selector-container').style.display =
+    'none';
+  const selectedGifContainer = exerciseFieldset.querySelector(
+    '.selected-gif-container'
   );
-  const gifGrid = exerciseFieldset.querySelector('.gif-grid');
+  if (selectedGifContainer) selectedGifContainer.style.display = 'block';
+  const exerciseDetailsFields = exerciseFieldset.querySelector(
+    '.exercise-details-fields'
+  );
+  if (exerciseDetailsFields) exerciseDetailsFields.style.display = 'block';
 
-  // --- УНІВЕРСАЛЬНЕ ЗАПОВНЕННЯ ДАНИХ ---
-
-  // 1. Заповнення даних про GIF
   if (exerciseData.gif && exerciseData.gif.id) {
     if (gifIdInput) gifIdInput.value = exerciseData.gif.id;
     if (nameInput) nameInput.value = exerciseData.gif.name || '';
     if (descriptionInput)
       descriptionInput.value = exerciseData.gif.description || '';
+
     if (exerciseData.gif.filename) {
       if (selectedGifImg) {
         selectedGifImg.src = `https://limaxsport.top/static/gifs/${exerciseData.gif.filename}`;
@@ -3401,7 +3396,7 @@ async function addExerciseToFormWithData(
     totalWeightInput.checked = exerciseData.total_weight || false;
   if (totalRepsInput) totalRepsInput.checked = exerciseData.total_reps || false;
 
-  // 3. Заповнення полів ваги (НОВА, ПРОСТА ЛОГІКА)
+  // 3. Заповнення полів ваги
   if (allWeightInput) {
     allWeightInput.value = exerciseData.all_weight || '';
   }
@@ -3491,7 +3486,7 @@ async function addExerciseToFormWithData(
     }
   }
 
-  // --- Логіка підсвічування виключених вправ (залишається без змін) ---
+  // --- Логіка підсвічування виключених вправ ---
   if (
     isInCopyMode &&
     exerciseData.gif?.id &&
@@ -3503,14 +3498,17 @@ async function addExerciseToFormWithData(
     if (!isAllowed) {
       exerciseFieldset.classList.add('copied-exercise-is-excluded');
       console.warn(
-        `[addExerciseToFormWithData - CopyMode] Вправа GIF ID:${exerciseData.gif.id} ("${exerciseData.gif?.name || nameInput?.value || 'N/A'}") ВИКЛЮЧЕНА для цільового користувача ${trainingUserPhone}. Позначено.`
+        `[addExerciseToFormWithData - CopyMode] Вправа GIF ID:${
+          exerciseData.gif.id
+        } ("${
+          exerciseData.gif?.name || nameInput?.value || 'N/A'
+        }") ВИКЛЮЧЕНА для цільового користувача ${trainingUserPhone}. Позначено.`
       );
 
       const warningMsgElement = document.createElement('p');
-      warningMsgElement.classList.add('js-copied-exercise-warning-message'); // Клас для легкого пошуку та видалення
+      warningMsgElement.classList.add('js-copied-exercise-warning-message');
       warningMsgElement.innerHTML =
         '<strong>УВАГА:</strong> Ця вправа виключена для обраного користувача!';
-      // ... (стилі для warningMsgElement, як ви вже додали) ...
       warningMsgElement.style.color = 'red';
       warningMsgElement.style.fontWeight = 'normal';
       warningMsgElement.style.fontSize = '0.9em';
@@ -3527,162 +3525,122 @@ async function addExerciseToFormWithData(
         } else {
           nameInput.parentNode.appendChild(warningMsgElement);
         }
-      } else {
-        /* ... запасний варіант вставки ... */
       }
     }
   }
 
-  // --- Налаштування вибору GIF (залишається без змін) ---
-  if (selectGifBtn && folderSelector && subfolderSelector && gifGrid) {
-    const phoneForGifSelectionLogic = trainingUserPhone;
-    let currentlyFilteredGifsForSelector = null;
-
-    selectGifBtn.addEventListener('click', async () => {
-      document
-        .querySelectorAll('.gif-grid, .folder-selector, .subfolder-selector')
-        .forEach((el) => {
-          if (el.closest('.exercise') !== exerciseFieldset) {
-            el.style.display = 'none';
-          }
-        });
-      const currentFolderButtons =
-        folderSelector.querySelector('.folder-buttons');
-      const currentSubfolderButtons =
-        subfolderSelector.querySelector('.subfolder-buttons');
-      if (currentFolderButtons) currentFolderButtons.innerHTML = '';
-      if (currentSubfolderButtons) currentSubfolderButtons.innerHTML = '';
-      gifGrid.innerHTML = '<p>Завантаження GIF...</p>';
-      folderSelector.style.display = 'none';
-      subfolderSelector.style.display = 'none';
-      gifGrid.style.display = 'block';
-
-      if (!phoneForGifSelectionLogic) {
-        alert('Помилка: Телефон користувача для вибору GIF не визначено.');
-        gifGrid.innerHTML = '<p>Помилка: Користувач не обраний.</p>';
-        currentlyFilteredGifsForSelector = null;
-        return;
-      }
-      console.log(
-        `addExerciseToFormWithData (selectGifBtn clicked): Завантаження GIF для вибору користувачем ${phoneForGifSelectionLogic}`
-      );
-      currentlyFilteredGifsForSelector = await loadGifs(
-        phoneForGifSelectionLogic
-      );
-
-      if (
-        !currentlyFilteredGifsForSelector ||
-        currentlyFilteredGifsForSelector.length === 0
-      ) {
-        gifGrid.innerHTML =
-          '<p>GIF-файли не знайдено для цього користувача (можливо, всі виключені).</p>'; // Уточнено повідомлення
-        // Не ховаємо селектори папок, якщо вони вже були показані раніше,
-        // просто в gifGrid буде повідомлення. Або можна і їх сховати:
-        // folderSelector.style.display = "none";
-        // subfolderSelector.style.display = "none";
-        return;
-      }
-      gifGrid.innerHTML = ''; // Очищаємо "Завантаження..."
-      const folders = getUniqueFolders(currentlyFilteredGifsForSelector);
-      if (currentFolderButtons) {
-        currentFolderButtons.innerHTML = folders
-          .map(
-            (f) =>
-              `<button type="button" class="folder-btn" data-folder="${f}">${f}</button>`
-          )
-          .join('');
-        folderSelector.style.display = 'block';
-      }
-    });
-
-    folderSelector.addEventListener('click', async (e) => {
-      if (e.target.classList.contains('folder-btn')) {
-        const folder = e.target.dataset.folder;
-        folderSelector
-          .querySelectorAll('.folder-btn')
-          .forEach((btn) => btn.classList.remove('active'));
-        e.target.classList.add('active');
-
-        if (!currentlyFilteredGifsForSelector) {
-          console.error(
-            "folderSelector: currentlyFilteredGifsForSelector не завантажено! Спробуйте натиснути 'Змінити GIF' знову."
-          );
-          gifGrid.innerHTML = "<p>Помилка: Натисніть 'Змінити GIF' ще раз.</p>";
-          return; // Важливо вийти, якщо немає даних для роботи
-        }
-        const subfolders = getUniqueSubfolders(
-          currentlyFilteredGifsForSelector,
-          folder
-        );
-        const subfolderButtonsContainer =
-          subfolderSelector.querySelector('.subfolder-buttons');
-        if (subfolders.length === 0) {
-          subfolderSelector.style.display = 'none';
-          if (subfolderButtonsContainer)
-            subfolderButtonsContainer.innerHTML = '';
-          const adminPhone = localStorage
-            .getItem('admin_phone')
-            ?.replace('+', '');
-          const prefix = `${adminPhone}/${folder}/`;
-          const gifsForDisplay = currentlyFilteredGifsForSelector.filter(
-            (gif) =>
-              gif.filename.startsWith(prefix) &&
-              gif.filename.substring(prefix.length).indexOf('/') === -1
-          );
-          displayGifs(gifsForDisplay, exerciseFieldset); // displayGifs має містити логіку зняття підсвітки
-        } else {
-          gifGrid.style.display = 'none';
-          if (subfolderButtonsContainer) {
-            subfolderButtonsContainer.innerHTML = subfolders
-              .map(
-                (sub) =>
-                  `<button type="button" class="subfolder-btn" data-subfolder="${sub}">${sub}</button>`
-              )
-              .join('');
-            subfolderSelector.style.display = 'block';
-          }
-        }
-      }
-    });
-
-    subfolderSelector.addEventListener('click', async (e) => {
-      if (e.target.classList.contains('subfolder-btn')) {
-        const subfolder = e.target.dataset.subfolder;
-        const activeFolderButton =
-          folderSelector.querySelector('.folder-btn.active');
-        if (!activeFolderButton) return;
-        const folder = activeFolderButton.dataset.folder;
-        subfolderSelector
-          .querySelectorAll('.subfolder-btn')
-          .forEach((btn) => btn.classList.remove('active'));
-        e.target.classList.add('active');
-
-        if (!currentlyFilteredGifsForSelector) {
-          console.error(
-            "subfolderSelector: currentlyFilteredGifsForSelector не завантажено! Спробуйте натиснути 'Змінити GIF' знову."
-          );
-          gifGrid.innerHTML = "<p>Помилка: Натисніть 'Змінити GIF' ще раз.</p>";
-          return; // Важливо вийти
-        }
-        const adminPhone = localStorage
-          .getItem('admin_phone')
-          ?.replace('+', '');
-        const prefix = `${adminPhone}/${folder}/${subfolder}/`;
-        const gifsForDisplay = currentlyFilteredGifsForSelector.filter((gif) =>
-          gif.filename.startsWith(prefix)
-        );
-        displayGifs(gifsForDisplay, exerciseFieldset); // displayGifs має містити логіку зняття підсвітки
-      }
+  // --- НОВА, СПРОЩЕНА ЛОГІКА ---
+  // Додаємо обробник на кнопку "Змінити вправу"
+  const changeBtn = exerciseFieldset.querySelector('.change-exercise-btn');
+  if (changeBtn) {
+    changeBtn.addEventListener('click', () => {
+      initializeAdminGifBrowser(exerciseFieldset, trainingUserPhone);
     });
   }
-  // --- Кінець налаштування вибору GIF ---
 
-  // --- Додавання елемента на сторінку та авто-ресайз ---
   document.getElementById('exercises-container')?.appendChild(exerciseFieldset);
   if (nameInput && nameInput.tagName.toLowerCase() === 'textarea')
     autoResize(nameInput);
   if (descriptionInput && descriptionInput.tagName.toLowerCase() === 'textarea')
     autoResize(descriptionInput);
+}
+
+/**
+ * Ініціалізує та керує браузером GIF в адмін-панелі.
+ */
+async function initializeAdminGifBrowser(exerciseFieldset, userPhone) {
+  const selectorContainer = exerciseFieldset.querySelector(
+    '.gif-selector-container'
+  );
+  if (!selectorContainer) return;
+
+  selectorContainer.style.display = 'block';
+  if (selectorContainer.dataset.initialized === 'true') return;
+
+  const gifGrid = exerciseFieldset.querySelector('.gif-grid');
+  const folderSelector = exerciseFieldset.querySelector('.folder-selector');
+  const directoryContainer = folderSelector.querySelector('.folder-buttons');
+  const pathDisplay = exerciseFieldset.querySelector('.path-display');
+
+  gifGrid.innerHTML = '<p>Завантаження GIF...</p>';
+  const gifsForBrowser = await loadGifs(userPhone);
+
+  if (!gifsForBrowser || gifsForBrowser.length === 0) {
+    gifGrid.innerHTML = '<p>GIF-файли не знайдено.</p>';
+    return;
+  }
+
+  const getContentsForPath = (allGifs, pathArray) => {
+    const subdirectories = new Set();
+    const files = [];
+    const pathDepth = pathArray.length;
+    if (!allGifs) return { subdirectories: [], files: [] };
+    allGifs.forEach((gif) => {
+      const gifParts = gif.filename.split('/').slice(1);
+      if (gifParts.length <= pathDepth) return;
+      let prefixMatches = true;
+      for (let i = 0; i < pathDepth; i++) {
+        if (gifParts[i] !== pathArray[i]) {
+          prefixMatches = false;
+          break;
+        }
+      }
+      if (!prefixMatches) return;
+      const partsAfterPrefix = gifParts.length - pathDepth;
+      if (partsAfterPrefix > 1) {
+        subdirectories.add(gifParts[pathDepth]);
+      } else if (partsAfterPrefix === 1) {
+        files.push(gif);
+      }
+    });
+    return { subdirectories: Array.from(subdirectories).sort(), files };
+  };
+
+  let currentPath = [];
+  const renderBrowser = (pathArray) => {
+    directoryContainer.innerHTML = '';
+    gifGrid.innerHTML = '';
+    const displayPath = ['📁 Мої вправи', ...pathArray].join(' / ');
+    pathDisplay.innerHTML = `<h5 class="level-title">${displayPath}</h5>`;
+
+    const content = getContentsForPath(gifsForBrowser, pathArray);
+
+    // Відображаємо кнопку "Назад" разом з папками
+    if (pathArray.length > 0) {
+      const backButton = document.createElement('button');
+      backButton.className = 'back-btn secondary-action-button'; // Використовуємо існуючий клас
+      backButton.textContent = '⬅️ Назад';
+      directoryContainer.appendChild(backButton);
+    }
+
+    content.subdirectories.forEach((dir) => {
+      const button = document.createElement('button');
+      button.className = 'folder-btn'; // Використовуємо існуючий клас
+      button.dataset.dir = dir;
+      button.textContent = dir;
+      directoryContainer.appendChild(button);
+    });
+
+    if (content.files.length > 0) {
+      displayGifs(content.files, exerciseFieldset);
+      gifGrid.style.display = 'grid';
+    } else {
+      gifGrid.style.display = 'none';
+    }
+  };
+
+  folderSelector.addEventListener('click', (e) => {
+    if (e.target.matches('.folder-btn')) {
+      currentPath.push(e.target.dataset.dir);
+      renderBrowser(currentPath);
+    } else if (e.target.matches('.back-btn')) {
+      currentPath.pop();
+      renderBrowser(currentPath);
+    }
+  });
+
+  renderBrowser(currentPath);
+  selectorContainer.dataset.initialized = 'true';
 }
 
 /**
@@ -3764,57 +3722,11 @@ async function loadGifs(targetUserPhone = null) {
   }
 }
 
-/**
- * Отримує унікальні папки першого рівня з імен файлів GIF.
- * @param {Array} gifs - Масив об'єктів GIF.
- * @returns {Array<string>} Масив унікальних назв папок.
- */
-function getUniqueFolders(gifs) {
-  const folders = new Set();
-  gifs?.forEach((gif) => {
-    // Додав перевірку на gifs
-    const parts = gif.filename.split('/');
-    // parts[0] - номер адміна, parts[1] - папка (gym, home, ...)
-    if (parts.length >= 2 && parts[1]) folders.add(parts[1]);
-  });
-  return Array.from(folders).sort(); // Сортуємо папки
-}
-
-/**
- * Отримує унікальні підпапки для обраної папки.
- * @param {Array} gifs - Масив об'єктів GIF.
- * @param {string} folder - Назва папки першого рівня.
- * @returns {Array<string>} Масив унікальних назв підпапок.
- */
-function getUniqueSubfolders(gifs, folder) {
-  const subfolders = new Set();
-  gifs?.forEach((gif) => {
-    // Додав перевірку
-    const parts = gif.filename.split('/');
-    // parts[2] - підпапка
-    if (parts[1] === folder && parts.length >= 4 && parts[2]) {
-      subfolders.add(parts[2]);
-    }
-  });
-  return Array.from(subfolders).sort(); // Сортуємо підпапки
-}
-
-/**
- * Відображає сітку GIF файлів, використовуючи техніку з двома зображеннями
- * для плавного завантаження анімації на мобільних пристроях.
- * @param {Array} gifs - Масив об'єктів GIF для відображення.
- * @param {HTMLElement} exerciseFieldset - DOM-елемент fieldset поточної вправи.
- */
 function displayGifs(gifs, exerciseFieldset) {
   const gifGrid = exerciseFieldset.querySelector('.gif-grid');
-  const folderSelector = exerciseFieldset.querySelector('.folder-selector');
-  const subfolderSelector = exerciseFieldset.querySelector(
-    '.subfolder-selector'
-  );
-
-  if (!gifGrid || !folderSelector || !subfolderSelector) {
+  if (!gifGrid) {
     console.error(
-      'displayGifs: Не знайдено необхідні елементи у fieldset:',
+      'displayGifs: Не знайдено елемент .gif-grid у fieldset:',
       exerciseFieldset
     );
     return;
@@ -3823,7 +3735,7 @@ function displayGifs(gifs, exerciseFieldset) {
   gifGrid.innerHTML = '';
   if (!gifs || gifs.length === 0) {
     gifGrid.innerHTML = '<p>GIF не знайдено для цього розділу.</p>';
-    gifGrid.style.display = 'block';
+    gifGrid.style.display = 'grid';
     return;
   }
 
@@ -3832,7 +3744,6 @@ function displayGifs(gifs, exerciseFieldset) {
     gifItem.className = 'gif-item';
 
     const hasPreview = gif.preview && gif.preview !== gif.filename;
-
     const previewImg = document.createElement('img');
     previewImg.className = 'gif-preview';
     previewImg.src = `https://limaxsport.top/static/gifs/${hasPreview ? gif.preview : gif.filename}`;
@@ -3869,45 +3780,31 @@ function displayGifs(gifs, exerciseFieldset) {
 
       if (!isAnimated) {
         isAnimated = true;
-
         let slowLoadTimeoutId = null;
-
         slowLoadTimeoutId = setTimeout(() => {
           const message = document.createElement('p');
           message.className = 'slow-load-message';
           message.textContent =
             "Поганий інтернет-зв'язок, анімація завантажується.";
-
-          // --- КЛЮЧОВА ЗМІНА №1 ---
-          // Додаємо повідомлення всередину .gif-item, а не поруч з ним
           gifItem.appendChild(message);
         }, 10000);
-
         gifItem.classList.add('loading');
         fullGifImg.src = gifData.gifSrc;
-
         fullGifImg.onload = () => {
           clearTimeout(slowLoadTimeoutId);
-
-          // --- КЛЮЧОВА ЗМІНА №2 ---
-          // Шукаємо і видаляємо повідомлення також всередині .gif-item
           const existingMessage = gifItem.querySelector('.slow-load-message');
           if (existingMessage) existingMessage.remove();
-
           gifItem.classList.remove('loading');
           gifItem.classList.add('is-loaded');
         };
-
         fullGifImg.onerror = () => {
           clearTimeout(slowLoadTimeoutId);
           const existingMessage = gifItem.querySelector('.slow-load-message');
           if (existingMessage) existingMessage.remove();
-
           console.error('Не вдалося завантажити GIF:', gifData.gifSrc);
           gifItem.classList.remove('loading');
         };
       } else {
-        // --- ВАША ЛОГІКА ДРУГОГО КЛІКУ (БЕЗ ЗМІН) ---
         const currentExerciseFieldset = gifItem.closest('.exercise');
         if (!currentExerciseFieldset) return;
 
@@ -3956,17 +3853,26 @@ function displayGifs(gifs, exerciseFieldset) {
         const phoneForPreferences = formElement
           ? formElement.dataset.trainingUserPhone
           : null;
+
         if (phoneForPreferences && gifData.id) {
           try {
             const { data: preferences } = await fetchWithAuth(
               `/admin/trainings/${phoneForPreferences}/preferences/${gifData.id}`
             );
-            if (
-              preferences &&
-              Array.isArray(preferences.reps) &&
-              preferences.reps.length > 0
-            ) {
-              const numSetsFromPrefs = preferences.reps.length;
+
+            let repsData = preferences.reps;
+            let weightsData = preferences.weights;
+            let timeData = preferences.time;
+
+            if (typeof repsData === 'string')
+              repsData = JSON.parse(repsData || '[]');
+            if (typeof weightsData === 'string')
+              weightsData = JSON.parse(weightsData || '[]');
+            if (typeof timeData === 'string')
+              timeData = JSON.parse(timeData || '[]');
+
+            if (preferences && Array.isArray(repsData) && repsData.length > 0) {
+              const numSetsFromPrefs = repsData.length;
               setsInput.value = numSetsFromPrefs;
               generateSetsTable(numSetsFromPrefs, setsTableContainer);
               const repsSelects =
@@ -3976,12 +3882,10 @@ function displayGifs(gifs, exerciseFieldset) {
               const timeSelects =
                 setsTableContainer.querySelectorAll('.time-select');
               for (let i = 0; i < numSetsFromPrefs; i++) {
-                if (repsSelects[i])
-                  repsSelects[i].value = preferences.reps[i] ?? '';
+                if (repsSelects[i]) repsSelects[i].value = repsData[i] ?? '';
                 if (weightsSelects[i])
-                  weightsSelects[i].value = preferences.weights?.[i] ?? '';
-                if (timeSelects[i])
-                  timeSelects[i].value = preferences.time?.[i] ?? '';
+                  weightsSelects[i].value = weightsData?.[i] ?? '';
+                if (timeSelects[i]) timeSelects[i].value = timeData?.[i] ?? '';
               }
             } else {
               const currentNumSets = parseInt(setsInput.value) || 0;
@@ -3996,26 +3900,31 @@ function displayGifs(gifs, exerciseFieldset) {
             generateSetsTable(currentNumSets, setsTableContainer);
           }
         } else {
+          console.warn('Телефон клієнта не знайдено, запит переваг пропущено.');
           const currentNumSets = parseInt(setsInput.value) || 0;
           generateSetsTable(currentNumSets, setsTableContainer);
         }
 
-        currentExerciseFieldset.classList.remove('copied-exercise-is-excluded');
-        const warningMessage = currentExerciseFieldset.querySelector(
-          '.js-copied-exercise-warning-message'
+        const selectorContainer = currentExerciseFieldset.querySelector(
+          '.gif-selector-container'
         );
-        if (warningMessage) warningMessage.remove();
+        const selectedGifContainer = currentExerciseFieldset.querySelector(
+          '.selected-gif-container'
+        );
+        const exerciseDetailsFields = currentExerciseFieldset.querySelector(
+          '.exercise-details-fields'
+        );
 
-        gifGrid.style.display = 'none';
-        folderSelector.style.display = 'none';
-        subfolderSelector.style.display = 'none';
+        if (selectorContainer) selectorContainer.style.display = 'none';
+        if (selectedGifContainer) selectedGifContainer.style.display = 'block';
+        if (exerciseDetailsFields)
+          exerciseDetailsFields.style.display = 'block';
 
         if (selectedGifImg)
           selectedGifImg.scrollIntoView({
             behavior: 'smooth',
             block: 'nearest',
           });
-
         saveWorkoutDraft();
       }
     });
@@ -4071,20 +3980,12 @@ function generateSetsTable(sets, container) {
  * Обробник додавання нової вправи до форми тренування.
  * @param {string} trainingUserPhone - Номер телефону користувача, для якого створюється тренування.
  */
-async function handleAddExercise(
-  trainingUserPhone,
-  isInCopyMode = false,
-  allowedGifsForTargetUser = null
-) {
+async function handleAddExercise(trainingUserPhone) {
   exerciseCounter++;
   const template = document
     .getElementById('exercise-template')
     ?.content.cloneNode(true);
-  if (!template) {
-    alert('Помилка: Шаблон вправи не знайдено.');
-    return;
-  }
-
+  if (!template) return;
   const exerciseFieldset = template.querySelector('.exercise');
   if (!exerciseFieldset) {
     alert('Помилка: Некоректний шаблон вправи.');
@@ -4098,7 +3999,6 @@ async function handleAddExercise(
   deleteExerciseBtn.classList.add('delete-exercise-btn');
   deleteExerciseBtn.title = 'Видалити цю вправу';
   deleteExerciseBtn.addEventListener('click', () => {
-    // 👇 ДОДАНО ПІДТВЕРДЖЕННЯ 👇
     if (confirm('Ви впевнені, що хочете видалити цю вправу з форми?')) {
       exerciseFieldset.remove();
       // Перенумерація вправ
@@ -4116,7 +4016,7 @@ async function handleAddExercise(
 
   const headerForm = exerciseFieldset.querySelector('.exercise-header-form');
   if (headerForm) {
-    headerForm.appendChild(deleteExerciseBtn);
+    exerciseFieldset.appendChild(deleteExerciseBtn);
   } else {
     exerciseFieldset.prepend(deleteExerciseBtn);
   }
@@ -4136,183 +4036,155 @@ async function handleAddExercise(
   const nameInput = exerciseFieldset.querySelector('.name-input');
   const descriptionInput = exerciseFieldset.querySelector('.description-input');
 
+  // --- ФІНАЛЬНИЙ БЛОК НАЛАШТУВАННЯ ВИБОРУ GIF (v6, робоча версія) ---
+  // Цей блок повністю ідентичний блоку в функції addExerciseToFormWithData
   if (selectGifBtn && folderSelector && subfolderSelector && gifGrid) {
-    // Телефон користувача для фільтрації GIF для ЦЬОГО блоку вправи.
-    // Пріоритет надається аргументу функції.
-    const phoneForThisExerciseGifs =
-      trainingUserPhone ||
-      document.getElementById('add-training-plan-form')?.dataset
-        .trainingUserPhone;
-    console.log(
-      `[handleAddExercise] phoneForThisExerciseGifs для цього блоку: ${phoneForThisExerciseGifs} (аргумент був: ${trainingUserPhone})`
-    );
+    const browserContainer = folderSelector.parentElement;
+    let currentlyFilteredGifsForSelector = null;
 
-    let currentlyFilteredGifs = null; // Кеш відфільтрованих GIF для поточного вибору
+    const getContentsForPath = (allGifs, pathArray) => {
+      const subdirectories = new Set();
+      const files = [];
+      const pathDepth = pathArray.length;
+
+      if (!allGifs) return { subdirectories: [], files: [] };
+
+      allGifs.forEach((gif) => {
+        const gifParts = gif.filename.split('/').slice(1);
+        if (gifParts.length <= pathDepth) return;
+
+        let prefixMatches = true;
+        for (let i = 0; i < pathDepth; i++) {
+          if (gifParts[i] !== pathArray[i]) {
+            prefixMatches = false;
+            break;
+          }
+        }
+        if (!prefixMatches) return;
+
+        const partsAfterPrefix = gifParts.length - pathDepth;
+        if (partsAfterPrefix > 1) {
+          subdirectories.add(gifParts[pathDepth]);
+        } else if (partsAfterPrefix === 1) {
+          files.push(gif);
+        }
+      });
+
+      return {
+        subdirectories: Array.from(subdirectories).sort(),
+        files: files,
+      };
+    };
+
+    const renderBrowser = (pathArray) => {
+      const { subdirectories, files } = getContentsForPath(
+        currentlyFilteredGifsForSelector,
+        pathArray
+      );
+
+      const subfolderButtonsContainer =
+        subfolderSelector.querySelector('.subfolder-buttons');
+      const folderButtonsContainer =
+        folderSelector.querySelector('.folder-buttons');
+
+      folderButtonsContainer.innerHTML = '';
+      subfolderButtonsContainer.innerHTML = '';
+      gifGrid.innerHTML = '';
+
+      let breadcrumbsHTML = `<span class="path-segment" data-path="">📁 Мої вправи</span>`;
+      pathArray.forEach((segment, index) => {
+        const pathSlice = pathArray.slice(0, index + 1).join('/');
+        breadcrumbsHTML += ` / <span class="path-segment" data-path="${pathSlice}">${segment}</span>`;
+      });
+      const backButtonHTML =
+        pathArray.length > 0
+          ? `<button type="button" class="back-btn">⬅️ Назад</button>`
+          : '';
+      folderButtonsContainer.innerHTML = backButtonHTML + breadcrumbsHTML;
+
+      if (subdirectories.length > 0) {
+        subfolderButtonsContainer.innerHTML = subdirectories
+          .map(
+            (dir) =>
+              `<button type="button" class="directory-btn" data-dir="${dir}">${dir}</button>`
+          )
+          .join('');
+        subfolderSelector.style.display = 'block';
+      } else {
+        subfolderSelector.style.display = 'none';
+      }
+
+      if (files.length > 0) {
+        displayGifs(files, exerciseFieldset);
+        gifGrid.style.display = 'grid';
+      } else {
+        gifGrid.style.display = subdirectories.length > 0 ? 'none' : 'block';
+      }
+
+      if (subdirectories.length === 0 && files.length === 0) {
+        gifGrid.innerHTML = '<p>Тут порожньо.</p>';
+      }
+    };
 
     selectGifBtn.addEventListener('click', async () => {
       document
-        .querySelectorAll('.gif-grid, .folder-selector, .subfolder-selector')
+        .querySelectorAll('.folder-selector, .subfolder-selector, .gif-grid')
         .forEach((el) => {
-          if (el.closest('.exercise') !== exerciseFieldset) {
+          if (el.closest('.exercise') !== exerciseFieldset)
             el.style.display = 'none';
-          }
         });
 
-      const currentFolderButtons =
-        folderSelector.querySelector('.folder-buttons');
-      const currentSubfolderButtons =
-        subfolderSelector.querySelector('.subfolder-buttons');
-      if (currentFolderButtons) currentFolderButtons.innerHTML = '';
-      if (currentSubfolderButtons) currentSubfolderButtons.innerHTML = '';
+      folderSelector.style.display = 'block';
+      gifGrid.style.display = 'block';
       gifGrid.innerHTML = '<p>Завантаження GIF...</p>';
 
-      folderSelector.style.display = 'none';
-      subfolderSelector.style.display = 'none';
-      gifGrid.style.display = 'block';
+      currentlyFilteredGifsForSelector = await loadGifs(trainingUserPhone);
 
-      if (!phoneForThisExerciseGifs) {
-        alert(
-          'Помилка: Телефон користувача для тренування не визначено. Неможливо завантажити GIF.'
-        );
-        gifGrid.innerHTML = '<p>Помилка: Користувач не обраний.</p>';
-        currentlyFilteredGifs = null;
-        return;
-      }
-
-      console.log(
-        `handleAddExercise (selectGifBtn clicked): Завантаження GIF для користувача ${phoneForThisExerciseGifs}`
-      );
-      currentlyFilteredGifs = await loadGifs(phoneForThisExerciseGifs);
-
-      if (!currentlyFilteredGifs || currentlyFilteredGifs.length === 0) {
-        gifGrid.innerHTML =
-          '<p>GIF-файли не знайдено для цього користувача (можливо, всі виключені або відсутні у тренера).</p>';
-        folderSelector.style.display = 'none';
+      if (
+        !currentlyFilteredGifsForSelector ||
+        currentlyFilteredGifsForSelector.length === 0
+      ) {
+        gifGrid.innerHTML = '<p>GIF-файли не знайдено.</p>';
+        folderSelector.querySelector('.folder-buttons').innerHTML = '';
         subfolderSelector.style.display = 'none';
         return;
       }
-      gifGrid.innerHTML = '';
-
-      const folders = getUniqueFolders(currentlyFilteredGifs);
-      if (currentFolderButtons) {
-        currentFolderButtons.innerHTML = folders
-          .map(
-            (folder) =>
-              `<button type="button" class="folder-btn" data-folder="${folder}">${folder}</button>`
-          )
-          .join('');
-        folderSelector.style.display = 'block';
-      }
+      renderBrowser([]);
     });
 
-    folderSelector.addEventListener('click', async (e) => {
-      if (e.target.classList.contains('folder-btn')) {
-        const folder = e.target.dataset.folder;
-        folderSelector
-          .querySelectorAll('.folder-btn')
-          .forEach((btn) => btn.classList.remove('active'));
-        e.target.classList.add('active');
+    browserContainer.addEventListener('click', (e) => {
+      const target = e.target;
+      let currentPath = (
+        folderSelector.querySelector('.path-segment:last-child')?.dataset
+          .path || ''
+      )
+        .split('/')
+        .filter((p) => p);
 
-        if (!currentlyFilteredGifs) {
-          console.error(
-            'Логічна помилка в handleAddExercise (folderSelector): currentlyFilteredGifs не встановлено!'
-          );
-          gifGrid.innerHTML =
-            "<p>Помилка: список GIF не завантажено. Натисніть 'Обрати GIF' знову.</p>";
-          // Як варіант, можна спробувати завантажити знову, але це не ідеально:
-          // if (phoneForThisExerciseGifs) {
-          //    currentlyFilteredGifs = await loadGifs(phoneForThisExerciseGifs);
-          //    if (!currentlyFilteredGifs) { return; } // Вийти, якщо завантаження не вдалося
-          // } else { return; } // Вийти, якщо немає телефону
-          return;
-        }
-
-        const subfolders = getUniqueSubfolders(currentlyFilteredGifs, folder);
-        const subfolderButtonsContainer =
-          subfolderSelector.querySelector('.subfolder-buttons');
-
-        if (subfolders.length === 0) {
-          subfolderSelector.style.display = 'none';
-          if (subfolderButtonsContainer)
-            subfolderButtonsContainer.innerHTML = '';
-
-          const adminPhone = localStorage
-            .getItem('admin_phone')
-            ?.replace('+', '');
-          const prefix = `${adminPhone}/${folder}/`;
-
-          const gifsForDisplay = currentlyFilteredGifs.filter(
-            (gif) =>
-              gif.filename.startsWith(prefix) &&
-              gif.filename.substring(prefix.length).indexOf('/') === -1
-          );
-          displayGifs(gifsForDisplay, exerciseFieldset);
-        } else {
-          gifGrid.style.display = 'none';
-          if (subfolderButtonsContainer) {
-            subfolderButtonsContainer.innerHTML = subfolders
-              .map(
-                (sub) =>
-                  `<button type="button" class="subfolder-btn" data-subfolder="${sub}">${sub}</button>`
-              )
-              .join('');
-            subfolderSelector.style.display = 'block';
-          }
-        }
-      }
-    });
-
-    subfolderSelector.addEventListener('click', async (e) => {
-      if (e.target.classList.contains('subfolder-btn')) {
-        const subfolder = e.target.dataset.subfolder;
-        const activeFolderButton =
-          folderSelector.querySelector('.folder-btn.active');
-        if (!activeFolderButton) return;
-        const folder = activeFolderButton.dataset.folder;
-
-        subfolderSelector
-          .querySelectorAll('.subfolder-btn')
-          .forEach((btn) => btn.classList.remove('active'));
-        e.target.classList.add('active');
-
-        if (!currentlyFilteredGifs) {
-          console.error(
-            'Логічна помилка в handleAddExercise (subfolderSelector): currentlyFilteredGifs не встановлено!'
-          );
-          gifGrid.innerHTML =
-            "<p>Помилка: список GIF не завантажено. Натисніть 'Обрати GIF' знову.</p>";
-          return;
-        }
-
-        const adminPhone = localStorage
-          .getItem('admin_phone')
-          ?.replace('+', '');
-        const prefix = `${adminPhone}/${folder}/${subfolder}/`;
-
-        const gifsForDisplay = currentlyFilteredGifs.filter((gif) =>
-          gif.filename.startsWith(prefix)
-        );
-        displayGifs(gifsForDisplay, exerciseFieldset);
+      if (target.matches('.directory-btn')) {
+        const dirName = target.dataset.dir;
+        currentPath.push(dirName);
+        renderBrowser(currentPath);
+      } else if (target.matches('.back-btn')) {
+        currentPath.pop();
+        renderBrowser(currentPath);
+      } else if (target.matches('.path-segment')) {
+        const newPath = (target.dataset.path || '').split('/').filter((p) => p);
+        renderBrowser(newPath);
       }
     });
   }
 
-  const setsInput = exerciseFieldset.querySelector('.sets-input');
-  const setsTableContainer = exerciseFieldset.querySelector(
+  const setsInput_local = exerciseFieldset.querySelector('.sets-input');
+  const setsTableContainer_local = exerciseFieldset.querySelector(
     '.sets-table-container'
   );
-  if (setsInput && setsTableContainer) {
-    // Обробник зміни кількості сетів тепер має бути налаштований через делегування
-    // в attachAdminPanelListeners, тому тут лише початкова генерація.
-    generateSetsTable(parseInt(setsInput.value) || 0, setsTableContainer);
+  if (setsInput_local && setsTableContainer_local) {
+    generateSetsTable(
+      parseInt(setsInput_local.value) || 0,
+      setsTableContainer_local
+    );
   }
-
-  // Слухачі для збереження чернетки мають бути налаштовані через делегування
-  // в attachAdminPanelListeners для полів всередині .exercise,
-  // або додаватися тут більш вибірково, якщо потрібно.
-  // Ваш існуючий блок:
-  // exerciseFieldset.querySelectorAll('input, textarea, select').forEach(input => { ... });
-  // Якщо делегування в attachAdminPanelListeners покриває ці випадки, цей блок може бути не потрібний.
 
   document.getElementById('exercises-container')?.appendChild(exerciseFieldset);
   if (nameInput && nameInput.tagName.toLowerCase() === 'textarea')
@@ -4320,7 +4192,8 @@ async function handleAddExercise(
   if (descriptionInput && descriptionInput.tagName.toLowerCase() === 'textarea')
     autoResize(descriptionInput);
 
-  // saveWorkoutDraft(); - не зберігаємо чернетку, тому що вона зберігає пусту чернетку, до підвантаження інсуючих даних
+  // Одразу запускаємо браузер GIF для нового блоку
+  await initializeAdminGifBrowser(exerciseFieldset, trainingUserPhone);
 }
 
 /**

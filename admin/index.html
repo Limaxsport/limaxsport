@@ -273,7 +273,7 @@
               >Загальний опис тренування (не обов'язково):</label
             >
             <textarea name="description" id="training-description"></textarea>
-            <h3>Вправи:</h3>
+
             <div id="exercises-container"></div>
             <button type="button" id="add-exercise-btn">+ Додати вправу</button>
             <button type="submit">Зберегти тренування</button>
@@ -354,184 +354,118 @@
       </div>
       <template id="exercise-template">
         <fieldset class="exercise">
-          <legend>Вправа <span class="exercise-number"></span></legend>
-          <button type="button" class="select-gif-btn">Обрати GIF</button>
-          <div class="selected-gif-container" style="margin-top: 10px">
-            <img
-              class="selected-gif"
-              style="
-                display: none;
-                max-width: 270px;
-                height: auto;
-                object-fit: cover;
-              "
-            />
-          </div>
-          <div class="folder-selector" style="display: none; margin-top: 10px">
-            <div class="folder-buttons"></div>
-          </div>
-          <div
-            class="subfolder-selector"
-            style="display: none; margin-top: 10px"
-          >
-            <div class="subfolder-buttons"></div>
-          </div>
-          <div
-            class="gif-grid"
-            style="
-              display: none;
-              grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-              gap: 8px;
-              margin-top: 10px;
-            "
-          ></div>
-          <input type="hidden" name="gif_id[]" class="gif-id-input" />
-          <input type="hidden" class="original-gif-filename-input" />
-
-          <label for="order">Порядковий номер вправи:</label>
-          <select name="order[]" class="order-input">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-
-          <label for="name">Назва вправи:</label>
-          <textarea name="name[]" class="name-input" rows="1"></textarea>
-
-          <label for="description">Техніка виконання вправи:</label>
-          <textarea
-            name="description[]"
-            class="description-input"
-            rows="2"
-          ></textarea>
-
-          <label class="checkbox-label"
-            >Позначити суперсет з наступною вправою (за необхідністю):
-            <input
-              type="checkbox"
-              name="superset[]"
-              class="superset-input"
-              style="margin-left: 5px"
-            />
-          </label>
-
-          <label class="checkbox-label"
-            >Позначити акцент на цій вправі (за необхідністю):
-            <input
-              type="checkbox"
-              name="emphasis[]"
-              class="emphasis-input"
-              style="margin-left: 5px"
-            />
-          </label>
-
-          <div class="form-group">
-            <label for="all-weight-input"
-              >Загальна робоча вага (не обов'язково):</label
-            >
-            <!-- Тепер це поле для вводу зі списком підказок -->
-            <input
-              type="text"
-              list="all-weight-options"
-              class="all-weight admin-input"
-            />
-            <datalist id="all-weight-options">
-              <option value="легка"></option>
-              <option value="середня"></option>
-              <option value="вище середньої"></option>
-              <option value="важка"></option>
-              <option value="максимальна"></option>
-            </datalist>
-          </div>
-          <div class="form-group">
-            <label>Діапазон робочих ваг (не обов'язково):</label>
-            від
-            <input
-              type="text"
-              list="range-options"
-              class="weight-range-from admin-input"
-            />
-            до
-            <input
-              type="text"
-              list="range-options"
-              class="weight-range-to admin-input"
-            />
-            <datalist id="range-options">
-              <option value="легких"></option>
-              <option value="середніх"></option>
-              <option value="вище середніх"></option>
-              <option value="важких"></option>
-              <option value="максимальних"></option>
-            </datalist>
+          <div class="exercise-header-form">
+            <h4 class="exercise-title-header">
+              <span class="exercise-number"></span>. Вправа
+            </h4>
           </div>
 
-          <label for="sets">Кількість підходів:</label>
-          <select name="sets[]" class="sets-input">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-          <div class="sets-table-container"></div>
+          <div class="selected-gif-container" style="display: none">
+            <img src="" class="selected-gif" alt="Обрана вправа" />
+            <button type="button" class="change-exercise-btn">
+              Змінити вправу
+            </button>
+          </div>
 
-          <label class="checkbox-label"
-            >Позначити загальну вагу для 2-х гантелей/кросоверів (за
-            необхідністю):
-            <input
-              type="checkbox"
-              name="total_weight[]"
-              class="total-weight-input"
-              style="margin-left: 5px"
-            />
-          </label>
+          <div class="gif-selector-container" style="display: none">
+            <div class="path-display"></div>
 
-          <label class="checkbox-label"
-            >Позначити загальну кількість повторень для обох ніг/рук (за
-            необхідністю):
-            <input
-              type="checkbox"
-              name="total_reps[]"
-              class="total-reps-input"
-              style="margin-left: 5px"
-            />
-          </label>
+            <div class="folder-selector">
+              <div class="folder-buttons"></div>
+            </div>
 
-          <label for="rest_time"
-            >Час відпочинку між підходами (не обов'язково):</label
-          >
-          <div class="rest-time-container">
-            <select name="rest_time_minutes[]" class="rest-time-minutes">
-              <option value="0">00</option>
-              <option value="1">01</option>
-              <option value="2">02</option>
-              <option value="3">03</option>
-              <option value="4">04</option>
-              <option value="5">05</option>
-            </select>
-            :
-            <select name="rest_time_seconds[]" class="rest-time-seconds">
-              <option value="0">00</option>
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="30">30</option>
-              <option value="40">40</option>
-              <option value="50">50</option>
-            </select>
-            <span>(хв:сек)</span>
+            <div class="gif-grid"></div>
+          </div>
+
+          <div class="exercise-details-fields" style="display: none">
+            <input type="hidden" name="gif_id[]" class="gif-id-input" />
+            <input type="hidden" class="original-gif-filename-input" />
+            <input type="hidden" name="order[]" class="order-input" />
+
+            <label>Назва:</label>
+            <textarea
+              name="name[]"
+              class="name-input auto-resize-textarea"
+              rows="1"
+            ></textarea>
+
+            <label>Опис (техніка виконання):</label>
+            <textarea
+              name="description[]"
+              class="description-input auto-resize-textarea"
+              rows="2"
+            ></textarea>
+
+            <div class="form-group">
+              <label>Кількість підходів:</label>
+              <select name="sets[]" class="sets-input">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </div>
+            <div class="sets-table-container"></div>
+
+            <div class="exercise-options">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="superset[]"
+                  class="superset-input"
+                />
+                Суперсет
+              </label>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="emphasis[]"
+                  class="emphasis-input"
+                />
+                Акцент
+              </label>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="total_weight[]"
+                  class="total-weight-input"
+                />
+                Заг. вага
+              </label>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="total_reps[]"
+                  class="total-reps-input"
+                />
+                Заг. к-ть
+              </label>
+            </div>
+
+            <div class="rest-time-container">
+              <label>Час відпочинку:</label>
+              <select name="rest_time_minutes[]" class="rest-time-minutes">
+                <option value="0">00</option>
+                <option value="1">01</option>
+                <option value="2">02</option>
+                <option value="3">03</option>
+              </select>
+              <span>:</span>
+              <select name="rest_time_seconds[]" class="rest-time-seconds">
+                <option value="0">00</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="40">40</option>
+                <option value="50">50</option>
+              </select>
+            </div>
           </div>
         </fieldset>
       </template>

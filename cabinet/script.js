@@ -6028,7 +6028,7 @@ function updateWorkoutListItemAppearance(planId, containsExcluded) {
 // --- Кінець модифікації showWorkoutDetails ---
 
 // ========================================================================
-// === ЛОГІКА СТВОРЕННЯ САМОСТІЙНОГО ТРЕНУВАННЯ (Фінал v8) ===
+// === ЛОГІКА СТВОРЕННЯ САМОСТІЙНОГО ТРЕНУВАННЯ (Фінал v9) ===
 // ========================================================================
 
 const FOLDER_TRANSLATIONS = {
@@ -6044,6 +6044,7 @@ const FOLDER_TRANSLATIONS = {
   back: 'Спина',
   functional: 'Функціонал',
   resistance_band: 'Гумові петлі',
+  dumbbells: 'Гантелі',
 };
 
 function translateFolderName(name) {
@@ -6317,55 +6318,81 @@ async function addUserExerciseToFormWithData(
 }
 
 /**
- * ФІНАЛЬНА ВЕРСІЯ: Коректно додає новий блок вправи і створює таблицю.
+ * ЛОГІКА ДЛЯ "+ ДОДАТИ ВПРАВУ": Створює блок і показує браузер вгорі.
  */
-function handleUserAddExercise() {
+async function handleUserAddExercise() {
   userExerciseCounter++;
   const exerciseFieldset = createExerciseFieldsetHTML(userExerciseCounter);
-  const setsInput = exerciseFieldset.querySelector('.sets-input');
-  const setsTableContainer = exerciseFieldset.querySelector(
-    '.sets-table-container'
-  );
-  generateUserEditableSetsTable(parseInt(setsInput.value), setsTableContainer);
   document
     .getElementById('user-exercises-container')
     .appendChild(exerciseFieldset);
+
+  // Ініціалізуємо браузер (якщо ще не було)
+  await initializeGifBrowserForUser(exerciseFieldset, false); // false - означає "не переміщувати"
+
   exerciseFieldset.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 /**
- * ФІНАЛЬНА ВЕРСІЯ: Створює HTML-структуру та коректно додає всі обробники.
+ * ЛОГІКА ДЛЯ "ЗМІНИТИ ВПРАВУ": Переміщує браузер під кнопку і показує його.
+ */
+async function handleChangeExercise(exerciseFieldset) {
+  // Ініціалізуємо браузер (якщо ще не було) і кажемо йому переміститися
+  await initializeGifBrowserForUser(exerciseFieldset, true); // true - означає "перемістити під кнопку"
+}
+
+/**
+ * ФІНАЛЬНА ВЕРСІЯ: Правильна HTML-структура, де браузер і деталі є сусідами.
  */
 function createExerciseFieldsetHTML(counter, exerciseId = null) {
   const exerciseFieldset = document.createElement('fieldset');
   exerciseFieldset.className = 'exercise exercise-item-in-form';
+
   exerciseFieldset.innerHTML = `
-    <input type="hidden" class="order-input" value="${counter}">
-    <input type="hidden" class="gif-id-input">
-    <input type="hidden" class="exercise-id-input" value="${exerciseId || ''}">
-        <div class="exercise-header-form"><h5 class="exercise-title-header"><span class="exercise-number">${counter}</span>. Вправа</h5></div>
-        <input type="hidden" class="order-input" value="${counter}"><input type="hidden" class="gif-id-input">
-        <button type="button" class="select-gif-btn">Обрати GIF</button>
+        <input type="hidden" class="order-input" value="${counter}">
+        <input type="hidden" class="gif-id-input">
+        <input type="hidden" class="exercise-id-input" value="${exerciseId || ''}">
+        
+        <div class="exercise-header-form">
+            <h5 class="exercise-title-header"><span class="exercise-number">${counter}</span>. Вправа</h5>
+        </div>
+
+        <div class="gif-selector-container" style="display: none;">
+            <div class="folder-selector"><div class="folder-buttons"></div></div>
+            <div class="gif-grid"></div>
+        </div>
+
         <div class="exercise-details-wrapper" style="display: none;">
             <h4 class="exercise-name-display"></h4>
-            <div class="selected-gif-container"><img src="" class="form-gif-preview" style="display: none;" alt="Прев'ю вправи"><img src="" class="form-gif-final" style="display: none;" alt="Анімація вправи"><div class="form-gif-loader" style="display: none;"></div></div>
-            <button type="button" class="change-gif-btn" style="display:none;">Змінити GIF</button>
-            <div class="gif-selector-container" style="display:none;"><div class="folder-selector" style="display: none;"><div class="folder-buttons"></div></div><div class="subfolder-selector" style="display: none;"><div class="subfolder-buttons"></div></div><div class="gif-grid" style="display: none;"></div></div>
-            <div class="technique-toggle"><span>Техніка виконання вправи</span><span class="toggle-arrow">▼</span></div>
-            <div class="technique-content">
-                <div class="description-text"></div>
+            <div class="selected-gif-container">
+                <img src="" class="form-gif-preview" alt="Прев'ю вправи" style="display: none;">
+                <img src="" class="form-gif-final" alt="Анімація вправи" style="display: none;">
+                <div class="form-gif-loader" style="display: none;"></div>
+            </div>
+            <button type="button" class="change-exercise-btn">Змінити вправу</button>
+            <div class="technique-toggle"><span>Техніка виконання</span><span class="toggle-arrow">▼</span></div>
+            <div class="technique-content"><div class="description-text"></div></div>
+            <label>Кількість підходів:</label>
+            <select class="sets-input" style="width: 100px; text-align: center;">
+                ${Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}" ${i + 1 === 4 ? 'selected' : ''}>${i + 1}</option>`).join('')}
+            </select>
+            <div class="sets-table-container"></div>
+            <div class="exercise-options">
+                <label class="checkbox-label"><input type="checkbox" class="superset-input"> Суперсет</label>
+                <label class="checkbox-label"><input type="checkbox" class="emphasis-input"> Акцент</label>
+                <label class="checkbox-label"><input type="checkbox" class="total-weight-input" title="Загальна вага"> Заг. вага</label>
+                <label class="checkbox-label"><input type="checkbox" class="total-reps-input" title="Загальна кількість"> Заг. к-ть</label>
+            </div>
+            <div class="rest-time-container">
+                <label>Відпочинок:</label>
+                <select class="rest-time-minutes"><option value="0">0</option>${Array.from({ length: 5 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}</select> <span>хв</span>
+                <select class="rest-time-seconds"><option value="0">00</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="40">40</option><option value="50">50</option></select> <span>сек</span>
             </div>
         </div>
-        <label for="sets-input-${counter}">Кількість підходів:</label>
-        <select id="sets-input-${counter}" class="sets-input" style="width: 100px; text-align: center;">${Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}" ${i + 1 === 4 ? 'selected' : ''}>${i + 1}</option>`).join('')}</select>
-        <div class="sets-table-container"></div>
-        <div class="exercise-options"><label class="checkbox-label"><input type="checkbox" class="superset-input"> Суперсет</label><label class="checkbox-label"><input type="checkbox" class="emphasis-input"> Акцент</label><label class="checkbox-label"><input type="checkbox" class="total-weight-input" title="Загальна вага"> Заг. вага</label><label class="checkbox-label"><input type="checkbox" class="total-reps-input" title="Загальна кількість"> Заг. к-ть</label></div>
-        <div class="rest-time-container"><label>Відпочинок:</label><select class="rest-time-minutes"><option value="0">0</option>${Array.from({ length: 5 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}</select> <span>хв</span><select class="rest-time-seconds"><option value="0">00</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="40">40</option><option value="50">50</option></select> <span>сек</span></div>
     `;
 
-  // Решта коду цієї функції залишається без змін...
   const deleteBtn = document.createElement('button');
-  deleteBtn.type = 'button';
+  deleteBtn.className = 'delete-exercise-btn';
   deleteBtn.innerHTML = '❌';
   deleteBtn.className = 'delete-exercise-btn';
   deleteBtn.title = 'Видалити цю вправу';
@@ -6388,27 +6415,7 @@ function createExerciseFieldsetHTML(counter, exerciseId = null) {
   };
   exerciseFieldset.appendChild(deleteBtn);
 
-  exerciseFieldset
-    .querySelector('.select-gif-btn')
-    .addEventListener('click', () => handleUserGifSelection(exerciseFieldset));
-  exerciseFieldset
-    .querySelector('.change-gif-btn')
-    .addEventListener('click', () => handleUserGifSelection(exerciseFieldset));
-  exerciseFieldset
-    .querySelector('.sets-input')
-    .addEventListener('change', (e) => {
-      generateUserEditableSetsTable(
-        parseInt(e.target.value) || 0,
-        exerciseFieldset.querySelector('.sets-table-container')
-      );
-      saveUserWorkoutDraft();
-    });
-  const techniqueToggle = exerciseFieldset.querySelector('.technique-toggle');
-  techniqueToggle.addEventListener('click', () => {
-    techniqueToggle.classList.toggle('active');
-    const content = exerciseFieldset.querySelector('.technique-content');
-    content.classList.toggle('expanded');
-  });
+  // Ми будемо додавати слухачі динамічно в інших функціях
   return exerciseFieldset;
 }
 
@@ -6469,157 +6476,129 @@ function generateUserEditableSetsTable(newSetsCount, container) {
 }
 
 /**
- * ФІНАЛЬНА ВЕРСІЯ 4.1: Виправлено друкарську помилку (getComputedStyle).
+ * Ініціалізує браузер GIF, опціонально переміщуючи його під кнопку "Змінити".
  */
-async function handleUserGifSelection(exerciseFieldset) {
+async function initializeGifBrowserForUser(exerciseFieldset, shouldMove) {
   const selectorContainer = exerciseFieldset.querySelector(
     '.gif-selector-container'
   );
-  if (!selectorContainer) {
-    console.error("Критична помилка: '.gif-selector-container' не знайдено!");
-    return;
-  }
+  if (!selectorContainer) return;
 
-  // ▼▼▼ ОСЬ ТУТ БУЛА ВИПРАВЛЕНА ПОМИЛКА ▼▼▼
-  const isVisible =
-    window.getComputedStyle(selectorContainer).display === 'block';
-
-  if (isVisible) {
-    selectorContainer.style.display = 'none';
-    return;
-  }
-
-  const detailsWrapper = exerciseFieldset.querySelector(
-    '.exercise-details-wrapper'
-  );
-  if (detailsWrapper) {
-    detailsWrapper.style.display = 'block';
-  }
-
-  const isChangingGif = !!exerciseFieldset.querySelector('.gif-id-input').value;
-
-  if (!isChangingGif) {
-    const selectedGifContainer = exerciseFieldset.querySelector(
-      '.selected-gif-container'
-    );
-    if (selectedGifContainer) selectedGifContainer.style.display = 'none';
-
-    const techniqueToggle = exerciseFieldset.querySelector('.technique-toggle');
-    if (techniqueToggle) techniqueToggle.style.display = 'none';
-
-    const techniqueContent =
-      exerciseFieldset.querySelector('.technique-content');
-    if (techniqueContent) techniqueContent.style.display = 'none';
+  // Якщо нам потрібно перемістити браузер (для кнопки "Змінити вправу")
+  if (shouldMove) {
+    const changeBtn = exerciseFieldset.querySelector('.change-exercise-btn');
+    // Метод insertAdjacentElement('afterend', ...) вставляє елемент одразу після кнопки
+    changeBtn.insertAdjacentElement('afterend', selectorContainer);
   }
 
   selectorContainer.style.display = 'block';
 
-  const folderSelector = exerciseFieldset.querySelector('.folder-selector');
-  const subfolderSelector = exerciseFieldset.querySelector(
-    '.subfolder-selector'
-  );
+  if (selectorContainer.dataset.initialized === 'true') return;
+
+  // ... (решта коду цієї функції залишається без змін: завантаження GIF, getContentsForPath, renderBrowser, і т.д.) ...
   const gifGrid = exerciseFieldset.querySelector('.gif-grid');
+  const folderSelector = exerciseFieldset.querySelector('.folder-selector');
+  const directoryContainer = folderSelector.querySelector('.folder-buttons');
 
-  folderSelector.style.display = 'block';
-  subfolderSelector.style.display = 'none';
-  gifGrid.innerHTML = '';
-  gifGrid.style.display = 'none';
+  gifGrid.innerHTML = '<p>Завантаження вправ...</p>';
+  if (!userGifsCache['all']?.length) {
+    userGifsCache['all'] = await loadGifsForUser();
+  }
+  const gifsForBrowser = userGifsCache['all'] || [];
 
-  const gifs = userGifsCache['all'] || [];
-  if (gifs.length === 0) {
-    gifGrid.style.display = 'block';
+  if (gifsForBrowser.length === 0) {
     gifGrid.innerHTML = '<p>Доступні вправи відсутні.</p>';
     return;
   }
 
-  const folders = getUniqueFolders(gifs);
-  const folderButtonsContainer =
-    folderSelector.querySelector('.folder-buttons');
-  folderButtonsContainer.innerHTML = folders
-    .map(
-      (f) =>
-        `<button type="button" class="folder-btn" data-folder="${f}">${translateFolderName(f)}</button>`
-    )
-    .join('');
-
-  folderButtonsContainer.querySelectorAll('.folder-btn').forEach((button) => {
-    button.addEventListener('click', () => {
-      const folder = button.dataset.folder;
-      folderButtonsContainer
-        .querySelectorAll('.folder-btn')
-        .forEach((btn) => btn.classList.remove('active'));
-      button.classList.add('active');
-
-      const subfolders = getUniqueSubfolders(gifs, folder);
-      const subfolderButtonsContainer =
-        subfolderSelector.querySelector('.subfolder-buttons');
-
-      if (subfolders.length === 0) {
-        subfolderSelector.style.display = 'none';
-        gifGrid.style.display = 'grid';
-        const creatorPhone = getGifCreatorPhone(currentUserProfileData);
-        const prefix = `${creatorPhone}/${folder}/`;
-        const gifsForDisplay = gifs.filter(
-          (gif) =>
-            gif.filename.startsWith(prefix) &&
-            !gif.filename.substring(prefix.length).includes('/')
-        );
-        displayGifsForUser(gifsForDisplay, exerciseFieldset);
-      } else {
-        gifGrid.style.display = 'none';
-        subfolderSelector.style.display = 'block';
-        subfolderButtonsContainer.innerHTML = subfolders
-          .map(
-            (sub) =>
-              `<button type="button" class="subfolder-btn" data-subfolder="${sub}">${translateFolderName(sub)}</button>`
-          )
-          .join('');
-
-        subfolderButtonsContainer
-          .querySelectorAll('.subfolder-btn')
-          .forEach((subButton) => {
-            subButton.addEventListener('click', () => {
-              const subfolder = subButton.dataset.subfolder;
-              subfolderButtonsContainer
-                .querySelectorAll('.subfolder-btn')
-                .forEach((btn) => btn.classList.remove('active'));
-              subButton.classList.add('active');
-              const activeFolderButton =
-                folderSelector.querySelector('.folder-btn.active');
-              if (!activeFolderButton) return;
-              const folder = activeFolderButton.dataset.folder;
-              const creatorPhone = getGifCreatorPhone(currentUserProfileData);
-              const prefix = `${creatorPhone}/${folder}/${subfolder}/`;
-              const gifsForDisplay = gifs.filter((gif) =>
-                gif.filename.startsWith(prefix)
-              );
-              gifGrid.style.display = 'grid';
-              displayGifsForUser(gifsForDisplay, exerciseFieldset);
-            });
-          });
+  const getContentsForPath = (allGifs, pathArray) => {
+    const subdirectories = new Set();
+    const files = [];
+    const pathDepth = pathArray.length;
+    if (!allGifs) return { subdirectories: [], files: [] };
+    allGifs.forEach((gif) => {
+      const gifParts = gif.filename.split('/').slice(1);
+      if (gifParts.length <= pathDepth) return;
+      let prefixMatches = true;
+      for (let i = 0; i < pathDepth; i++) {
+        if (gifParts[i] !== pathArray[i]) {
+          prefixMatches = false;
+          break;
+        }
+      }
+      if (!prefixMatches) return;
+      const partsAfterPrefix = gifParts.length - pathDepth;
+      if (partsAfterPrefix > 1) {
+        subdirectories.add(gifParts[pathDepth]);
+      } else if (partsAfterPrefix === 1) {
+        files.push(gif);
       }
     });
-  });
-}
+    return { subdirectories: Array.from(subdirectories).sort(), files };
+  };
 
-function getUniqueFolders(gifs) {
-  const folders = new Set();
-  gifs?.forEach((gif) => {
-    const parts = gif.filename.split('/');
-    if (parts.length >= 2 && parts[1]) folders.add(parts[1]);
-  });
-  return Array.from(folders).sort();
-}
+  let currentPath = [];
+  const renderBrowser = (pathArray) => {
+    directoryContainer.innerHTML = '';
+    gifGrid.innerHTML = '';
+    let rootTitle = 'Всі вправи';
+    if (currentUserProfileData) {
+      let trainerName = null;
+      if (
+        currentUserProfileData.is_admin ||
+        currentUserProfileData.is_trainer
+      ) {
+        trainerName = currentUserProfileData.full_name;
+      } else if (
+        currentUserProfileData.registration_type === 'by_trainer' &&
+        currentUserProfileData.who_registered?.full_name
+      ) {
+        trainerName = currentUserProfileData.who_registered.full_name;
+      }
+      if (trainerName) {
+        rootTitle = `Вправи тренера "${trainerName}"`;
+      }
+    }
 
-function getUniqueSubfolders(gifs, folder) {
-  const subfolders = new Set();
-  gifs?.forEach((gif) => {
-    const parts = gif.filename.split('/');
-    if (parts[1] === folder && parts.length >= 4 && parts[2]) {
-      subfolders.add(parts[2]);
+    const displayPath = [
+      '📁 ' + rootTitle,
+      ...pathArray.map((p) => translateFolderName(p)),
+    ].join(' / ');
+    directoryContainer.innerHTML = `<h5 class="level-title">${displayPath}</h5>`;
+    const content = getContentsForPath(gifsForBrowser, pathArray);
+    if (pathArray.length > 0) {
+      const backButton = document.createElement('button');
+      backButton.className = 'back-btn';
+      backButton.textContent = '⬅️ Назад';
+      directoryContainer.appendChild(backButton);
+    }
+    content.subdirectories.forEach((dir) => {
+      const button = document.createElement('button');
+      button.className = 'directory-btn';
+      button.dataset.dir = dir;
+      button.textContent = translateFolderName(dir);
+      directoryContainer.appendChild(button);
+    });
+    if (content.files.length > 0) {
+      displayGifsForUser(content.files, exerciseFieldset);
+      gifGrid.style.display = 'grid';
+    } else {
+      gifGrid.style.display = 'none';
+    }
+  };
+
+  folderSelector.addEventListener('click', (e) => {
+    if (e.target.matches('.directory-btn')) {
+      currentPath.push(e.target.dataset.dir);
+      renderBrowser(currentPath);
+    } else if (e.target.matches('.back-btn')) {
+      currentPath.pop();
+      renderBrowser(currentPath);
     }
   });
-  return Array.from(subfolders).sort();
+
+  renderBrowser(currentPath);
+  selectorContainer.dataset.initialized = 'true';
 }
 
 /**
@@ -6711,47 +6690,6 @@ function displayGifsForUser(gifs, exerciseFieldset) {
   gifGrid.style.display = 'grid';
 }
 
-// НОВА ДОПОМІЖНА ФУНКЦІЯ для відображення Gif для користувачів "без тренера"
-function getGifCreatorPhone(profileData) {
-  const MALE_ADMIN_PHONE = '380505687804';
-  const FEMALE_ADMIN_PHONE = '380663962022';
-
-  if (!profileData) {
-    console.error('getGifCreatorPhone: profileData is missing.');
-    return null;
-  }
-
-  // Сценарій 1: Користувач сам є тренером або адміном
-  if (profileData.is_admin || profileData.is_trainer) {
-    return profileData.phone;
-  }
-
-  // Сценарій 2: Користувача зареєстрував тренер
-  if (profileData.registration_type === 'by_trainer') {
-    return profileData.who_registered?.phone;
-  }
-
-  // Сценарій 3: Користувач зареєструвався самостійно
-  if (profileData.registration_type === 'self') {
-    const userGender = profileData.gender;
-    const preferredGender = profileData.preferred_exercise_gender;
-
-    if (userGender === 'male') return MALE_ADMIN_PHONE;
-    if (userGender === 'female') return FEMALE_ADMIN_PHONE;
-    if (userGender === 'not_applicable') {
-      if (preferredGender === 'male') return MALE_ADMIN_PHONE;
-      if (preferredGender === 'female') return FEMALE_ADMIN_PHONE;
-    }
-  }
-
-  // Якщо жоден сценарій не підійшов, повертаємо null
-  console.error(
-    'Не вдалося визначити телефон творця GIF з даних профілю:',
-    profileData
-  );
-  return null;
-}
-
 async function loadGifsForUser() {
   const cacheKey = `user_available_gifs`;
   if (userGifsCache[cacheKey]) {
@@ -6763,7 +6701,7 @@ async function loadGifsForUser() {
 }
 
 /**
- * ФІНАЛЬНА ВЕРСІЯ 4.0: Гарантовано очищує таблицю, якщо немає переваг.
+ * ФІНАЛЬНА ВЕРСІЯ: Правильно налаштовує кнопку "Змінити вправу".
  */
 async function selectGifForUserExercise(
   fieldset,
@@ -6772,52 +6710,34 @@ async function selectGifForUserExercise(
   shouldScroll = false
 ) {
   const detailsWrapper = fieldset.querySelector('.exercise-details-wrapper');
+  const selectorContainer = fieldset.querySelector('.gif-selector-container');
+  selectorContainer.style.display = 'none';
+  detailsWrapper.style.display = 'block';
+
+  // ... (весь код заповнення даних, завантаження анімації та переваг залишається тут) ...
   const nameDisplay = fieldset.querySelector('.exercise-name-display');
   const descriptionText = fieldset.querySelector('.description-text');
-
   fieldset.querySelector('.gif-id-input').value = gif.id;
   nameDisplay.textContent = gif.name || '';
   descriptionText.textContent = gif.description || '';
-
-  detailsWrapper.style.display = 'block';
-  const selectorContainer = fieldset.querySelector('.gif-selector-container');
-  if (selectorContainer) selectorContainer.style.display = 'none';
-  const selectedGifContainer = fieldset.querySelector(
-    '.selected-gif-container'
-  );
-  if (selectedGifContainer) selectedGifContainer.style.display = 'inline-block';
-  const techniqueToggle = fieldset.querySelector('.technique-toggle');
-  if (techniqueToggle) techniqueToggle.style.display = 'flex';
-  const techniqueContent = fieldset.querySelector('.technique-content');
-  if (techniqueContent) techniqueContent.style.display = 'block';
-
-  fieldset.querySelector('.select-gif-btn').style.display = 'none';
-  fieldset.querySelector('.change-gif-btn').style.display = 'block';
-
-  const previewImg = fieldset.querySelector('.form-gif-preview');
   const finalGifImg = fieldset.querySelector('.form-gif-final');
   const loader = fieldset.querySelector('.form-gif-loader');
-  previewImg.style.display = 'none';
-  finalGifImg.style.display = 'none';
-  loader.style.display = 'block';
-
-  const baseStaticUrl = 'https://limaxsport.top/static/gifs/';
-  const gifUrl = `${baseStaticUrl}${gif.filename}`;
-  const pngUrl = `${baseStaticUrl}${gif.filename.substring(0, gif.filename.lastIndexOf('.')) || gif.filename}.png`;
+  const previewImg = fieldset.querySelector('.form-gif-preview');
+  const pngUrl = `https://limaxsport.top/static/gifs/${gif.filename.substring(0, gif.filename.lastIndexOf('.')) || gif.filename}.png`;
   previewImg.src = pngUrl;
   previewImg.style.display = 'block';
-  finalGifImg.src = gifUrl;
-
+  finalGifImg.style.display = 'none';
+  loader.style.display = 'block';
+  finalGifImg.src = `https://limaxsport.top/static/gifs/${gif.filename}`;
   finalGifImg.onload = () => {
     loader.style.display = 'none';
     previewImg.style.display = 'none';
     finalGifImg.style.display = 'block';
   };
   finalGifImg.onerror = () => {
-    console.error(`Не вдалося завантажити GIF: ${gifUrl}`);
+    console.error(`Не вдалося завантажити GIF: ${finalGifImg.src}`);
     loader.style.display = 'none';
   };
-
   if (loadPreferences && currentUserProfileData?.exercise_preferences_summary) {
     const preferences =
       currentUserProfileData.exercise_preferences_summary.find(
@@ -6825,7 +6745,6 @@ async function selectGifForUserExercise(
       );
     const setsInput = fieldset.querySelector('.sets-input');
     const setsTableContainer = fieldset.querySelector('.sets-table-container');
-
     if (preferences?.reps?.length > 0) {
       const numSets = preferences.reps.length;
       setsInput.value = numSets;
@@ -6845,18 +6764,52 @@ async function selectGifForUserExercise(
     } else {
       const defaultSets = 4;
       setsInput.value = defaultSets;
-      // ▼▼▼ ОСНОВНИЙ ФІКС: ПРИМУСОВО ОЧИЩУЄМО КОНТЕЙНЕР ПЕРЕД ПЕРЕМАЛЬОВКОЮ ▼▼▼
       setsTableContainer.innerHTML = '';
       generateUserEditableSetsTable(defaultSets, setsTableContainer);
     }
+  } else {
+    const setsInput = fieldset.querySelector('.sets-input');
+    const setsTableContainer = fieldset.querySelector('.sets-table-container');
+    generateUserEditableSetsTable(
+      parseInt(setsInput.value) || 4,
+      setsTableContainer
+    );
+  }
+
+  // Налаштовуємо обробники подій для блоку, що став видимим
+  const changeBtn = fieldset.querySelector('.change-exercise-btn');
+  if (changeBtn && !changeBtn.dataset.listenerAttached) {
+    // Тепер ця кнопка викликає свою власну, правильну функцію
+    changeBtn.addEventListener('click', () => handleChangeExercise(fieldset));
+    changeBtn.dataset.listenerAttached = 'true';
+  }
+  const setsDropdown = fieldset.querySelector('.sets-input');
+  if (setsDropdown && !setsDropdown.dataset.listenerAttached) {
+    setsDropdown.addEventListener('change', (e) => {
+      generateUserEditableSetsTable(
+        parseInt(e.target.value) || 0,
+        fieldset.querySelector('.sets-table-container')
+      );
+      saveUserWorkoutDraft();
+    });
+    setsDropdown.dataset.listenerAttached = 'true';
+  }
+  const techniqueToggle = fieldset.querySelector('.technique-toggle');
+  if (techniqueToggle && !techniqueToggle.dataset.listenerAttached) {
+    techniqueToggle.addEventListener('click', () => {
+      techniqueToggle.classList.toggle('active');
+      const content = fieldset.querySelector('.technique-content');
+      content.classList.toggle('expanded');
+    });
+    techniqueToggle.dataset.listenerAttached = 'true';
   }
 
   if (shouldScroll) {
-    setTimeout(() => {
-      fieldset.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    setTimeout(
+      () => fieldset.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      100
+    );
   }
-
   saveUserWorkoutDraft();
 }
 

@@ -1045,46 +1045,110 @@ th {
 }
 // --- КІНЕЦЬ стилей GEMINI HELPER ---
 
-/* Блок однієї вправи */
+/* =================================================================== */
+/* === ФІНАЛЬНІ СТИЛІ: БЛОК ВПРАВИ В АДМІН-ПАНЕЛІ (v11) === */
+/* =================================================================== */
+
+/* --- 1. ГОЛОВНИЙ КОНТЕЙНЕР (FIELDSET) --- */
 .exercise {
-  border: 1px solid #444; /* Темніша рамка */
-  padding: 15px;
+  border: 1px solid #444;
+  padding: 30px 15px 15px 15px;
   margin-bottom: 20px;
   border-radius: 8px;
-  background-color: #1a1a1a; /* Фон для блоку */
+  background-color: #1a1a1a;
   position: relative;
 }
-.exercise legend {
-  color: rgb(113, 41, 218);
+
+/* --- 2. ЗАГОЛОВОК ВПРАВИ ("1. Вправа") --- */
+#exercises-container .exercise-header-form {
+  position: absolute;
+  top: -13px;
+  left: 25px;
+  z-index: 5;
+}
+#exercises-container .exercise-title-header {
+  display: inline-block;
+  background-color: rgb(113, 41, 218);
+  padding: 2px 10px;
+  margin: 0;
+  color: white;
   font-weight: bold;
-  font-size: 1.2em; /* Більший шрифт легенди */
-  padding: 0 10px; /* Відступи навколо тексту легенди */
+  font-size: 1.2em;
+  border: 1px solid #444;
+  border-radius: 6px;
 }
 
-/* Вибір GIF */
-.select-gif-btn {
-  background-color: rgb(113, 41, 218);
+/* --- 3. КНОПКА ВИДАЛЕННЯ "ХРЕСТИК" --- */
+#exercises-container .delete-exercise-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent !important;
+  border: none;
+  color: #888;
+  font-size: 1.2em;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    transform 0.2s;
+  z-index: 10;
+}
+#exercises-container .delete-exercise-btn:hover {
+  color: #ff4d4d;
+  transform: scale(1.2);
+}
+
+/* --- 4. БЛОК З ОБРАНИМ GIF --- */
+.selected-gif-container {
+  margin-bottom: 15px;
+}
+.selected-gif {
+  max-width: 270px;
+  height: auto;
+  border: 2px solid rgb(113, 41, 218);
+  border-radius: 5px;
+  display: block;
+}
+/* ВИПРАВЛЕННЯ №6: Стилі для кнопки "Змінити вправу" */
+.change-exercise-btn {
+  display: block;
+  margin-top: 10px;
+  width: fit-content;
+  background-color: #555; /* Повертаємо сірий стиль */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
   font-size: 0.9em;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
-.select-gif-btn:hover {
-  background-color: white;
-  color: rgb(113, 41, 218);
+.change-exercise-btn:hover {
+  background-color: #777;
 }
-.folder-selector,
-.subfolder-selector {
+
+/* --- 5. БРАУЗЕР ДЛЯ ВИБОРУ GIF --- */
+.gif-selector-container {
   background-color: #222;
   padding: 10px;
   border-radius: 5px;
-  margin-top: 10px;
+  margin-bottom: 15px;
 }
-.folder-buttons,
-.subfolder-buttons {
+.path-display {
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #444;
+  color: #ccc;
+  font-size: 0.9em;
+}
+.folder-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-.folder-buttons button,
-.subfolder-buttons button {
+.folder-buttons button {
   background-color: #555;
   color: white;
   border: none;
@@ -1093,56 +1157,35 @@ th {
   border-radius: 4px;
   font-size: 0.9em;
 }
-.folder-buttons button:hover,
-.subfolder-buttons button:hover {
+.folder-buttons button:hover {
   background-color: #777;
 }
-.folder-buttons button.active,
-.subfolder-buttons button.active {
-  /* Стиль активної кнопки папки */
+.folder-buttons button.active {
   background-color: rgb(113, 41, 218);
-  box-shadow: 0 0 5px rgb(113, 41, 218);
 }
+
+/* --- 6. СІТКА З GIF-ФАЙЛАМИ (Твій код, нічого не втрачено) --- */
 .gif-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 10px;
   margin-top: 15px;
-  background-color: #252525;
-  padding: 10px;
-  border-radius: 5px;
 }
-
 .grid-cell {
   display: flex;
   flex-direction: column;
-  border-radius: 4px; /* Узгоджено з існуючими стилями */
-  overflow: hidden; /* Ховаємо все, що виходить за межі заокруглених кутів */
-  background-color: #222; /* Ледь помітний фон для комірки */
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #222;
 }
-
-/* Додайте цей новий клас для стилізації назви */
-.gif-name-label {
-  background-color: rgb(113, 41, 218); /* Фіолетовий фон, як ви хотіли */
-  color: #ffffff; /* Білий колір тексту */
-  font-weight: bold; /* Жирний шрифт */
-  text-align: center; /* Текст по центру */
-  padding: 8px 5px; /* Внутрішні відступи для краси */
-  font-size: 0.9em; /* Трохи менший розмір шрифту */
-  flex-shrink: 0; /* Забороняємо контейнеру стискатися */
-}
-
-/* Контейнер для КОЖНОГО елемента сітки */
 .gif-item {
-  position: relative; /* Встановлюємо контекст для позиціонування */
+  position: relative;
   aspect-ratio: 9 / 16;
   cursor: pointer;
-  background-color: #333; /* Фон на випадок затримок */
-  overflow: hidden; /* Ховаємо все, що виходить за межі */
+  background-color: #333;
+  overflow: hidden;
   flex-grow: 1;
 }
-
-/* Спільні стилі для ОБОХ зображень (PNG і GIF) */
 .gif-item img {
   position: absolute;
   top: 0;
@@ -1150,15 +1193,11 @@ th {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 4px; /* Рамку переносимо на сам .gif-item */
   transition: opacity 0.3s ease;
 }
-
 .gif-item:hover {
-  box-shadow: 0 0 0 2px rgb(113, 41, 218); /* Ефект рамки тепер через тінь */
+  box-shadow: 0 0 0 2px rgb(113, 41, 218);
 }
-
-/* Порядок шарів (z-index) */
 .gif-full {
   z-index: 1;
   opacity: 0;
@@ -1166,31 +1205,24 @@ th {
 .gif-preview {
   z-index: 2;
 }
-
-/* Коли GIF завантажено */
 .gif-item.is-loaded .gif-full {
   opacity: 1;
 }
 .gif-item.is-loaded .gif-preview {
   opacity: 0;
 }
-
-/* --- ВИРІШЕННЯ ПРОБЛЕМИ №1: НАДІЙНИЙ ОВЕРЛЕЙ --- */
-/* Створюємо напівпрозорий шар поверх зображень під час завантаження */
 .gif-item.loading::after {
-  content: ''; /* Обов'язково для псевдо-елементів */
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Напівпрозорий чорний */
-  z-index: 3; /* Поверх зображень */
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 3;
 }
-
-/* Анімація завантаження (кружечок) */
 .loader {
-  display: none; /* Сховано за замовчуванням */
+  display: none;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1201,172 +1233,119 @@ th {
   border-top-color: rgb(113, 41, 218);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  z-index: 4; /* Поверх оверлею */
+  z-index: 4;
 }
-
 .gif-item.loading .loader {
-  display: block; /* Показуємо при завантаженні */
+  display: block;
 }
-
 @keyframes spin {
   to {
     transform: translate(-50%, -50%) rotate(360deg);
   }
 }
-
-/* --- ВИРІШЕННЯ ПРОБЛЕМИ №2: ПОЗИЦІОНУВАННЯ ПОВІДОМЛЕННЯ --- */
-.slow-load-message {
-  position: absolute; /* Позиціонуємо відносно .gif-item */
-  bottom: 10px; /* Відступ від нижнього краю */
-  left: 50%;
-  transform: translateX(-50%); /* Центруємо по горизонталі */
-  width: 90%; /* Ширина, трохи менша за контейнер */
-
-  background-color: rgba(255, 193, 7, 0.9); /* Жовтуватий фон, як ви хотіли */
-  color: #000; /* Чорний текст для кращої читабельності */
-  padding: 5px 8px;
-  border-radius: 4px;
-  font-size: 0.7em;
+.gif-name-label {
+  background-color: rgb(113, 41, 218);
+  color: #ffffff;
   font-weight: bold;
   text-align: center;
-  box-sizing: border-box;
-  z-index: 5; /* Поверх абсолютно всього */
+  padding: 8px 5px;
+  font-size: 0.9em;
+  flex-shrink: 0;
 }
 
-/* ---- ВАШІ СТИЛІ ДЛЯ ОБРАНОГО GIF (без змін) ---- */
-.selected-gif-container {
+/* --- 7. ПОЛЯ ДЛЯ ВВОДУ ДАНИХ (з виправленнями) --- */
+.exercise-details-fields {
+  display: flex;
+  flex-direction: column;
+}
+.exercise-details-fields > label {
+  /* Стиль для прямих нащадків-лейблів */
   margin-top: 15px;
-  text-align: center;
-}
-.selected-gif {
-  max-width: 270px;
-  height: auto;
-  object-fit: cover;
-  border: 2px solid rgb(113, 41, 218);
-  border-radius: 5px;
-}
-
-/* Поля всередині вправи */
-.exercise label {
-  margin-top: 15px; /* Відступ над лейблом */
-  margin-bottom: 3px; /* Менший відступ під лейблом */
-  font-weight: bold; /* Жирні лейбли */
+  margin-bottom: 5px;
+  font-weight: bold;
   color: #ddd;
 }
-.exercise input[type='text'],
-.exercise input[type='number'],
-.exercise textarea,
-.exercise select {
-  background: #2a2a2a; /* Фон для полів */
-  border: 1px solid #555; /* Рамка */
-  border-radius: 4px;
-  color: white;
-  padding: 8px; /* Зменшений падінг */
-  margin-bottom: 10px; /* Зменшений відступ */
-}
-.exercise textarea {
-  /* Textarea всередині вправи */
-  min-height: 60px;
-}
-.exercise input[type='checkbox'] {
-  /* Чекбокси всередині вправи */
-  width: auto;
-  margin-right: 5px;
-  margin-bottom: 10px; /* Спільний відступ */
-}
-/* Стилі для flex-контейнерів, що містять поля all_weight та weight_rainge */
-/* Цей блок залишається майже без змін, бо він стилізує батьківські div */
-.exercise .form-group {
-  display: flex;
-  gap: 10px;
-  align-items: center; /* Вирівнювання */
-  margin-bottom: 10px;
-}
-
-/* Стиль для тексту "від", "до", ":" */
-.exercise .form-group span,
-.exercise .form-group label {
-  /* Додаємо label для кращої сумісності */
-  color: #ccc;
-}
-
-/* ОНОВЛЕНО: Тепер ми стилізуємо INPUT, а не SELECT.
-  Ми використовуємо селектор по атрибуту, щоб застосувати стилі до всіх інпутів,
-  які мають список підказок (datalist).
-*/
-.exercise .form-group input[list] {
-  width: auto; /* Авто ширина */
-  flex-grow: 1; /* Дозволяємо рости */
-  margin-bottom: 0; /* Прибираємо нижній відступ у flex-контейнері */
-
-  /* Додаємо базові стилі, щоб інпути виглядали як селекти */
-  background-color: #333;
-  color: #fff;
+.exercise-details-fields input,
+.exercise-details-fields textarea,
+.exercise-details-fields select {
+  width: 100%;
+  background: #2a2a2a;
   border: 1px solid #555;
   border-radius: 4px;
+  color: white;
   padding: 8px;
-  font-family: inherit; /* Успадковуємо шрифт */
-  font-size: 1em; /* Успадковуємо розмір шрифту */
 }
-.exercise .rest-time-container {
-  display: flex;
-  gap: 10px;
-  align-items: center; /* Вирівнювання */
-  margin-bottom: 10px;
+/* ВИПРАВЛЕННЯ №1: Назва вправи (textarea) */
+.exercise-details-fields .name-input {
+  min-height: 0;
+  resize: none;
 }
-.exercise .rest-time-container span {
-  /* Текст "від", "до", ":" */
-  color: #ccc;
-}
-.exercise .rest-time-container select {
-  width: auto; /* Авто ширина для селектів */
-  flex-grow: 1; /* Дозволяємо рости */
-  margin-bottom: 0; /* Прибираємо нижній відступ у flex */
+/* ВИПРАВЛЕННЯ №2: Техніка виконання (textarea) */
+.exercise-details-fields .description-input {
+  resize: vertical;
+  min-height: 80px;
 }
 
-/* Таблиця підходів/повторень/ваги в адмінці */
+/* ВИПРАВЛЕННЯ №4: Чекбокси */
+.exercise-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+  align-items: center; /* <-- Вирівнювання */
+}
+.exercise-options .checkbox-label {
+  font-weight: normal;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.exercise-options input[type='checkbox'] {
+  margin: 0;
+  width: auto;
+}
+
+/* ВИПРАВЛЕННЯ №5: Час відпочинку */
+.rest-time-container {
+  display: flex;
+  gap: 8px;
+  align-items: center; /* <-- Вирівнювання */
+  margin-top: 15px;
+}
+.rest-time-container label {
+  margin: 0;
+  flex-shrink: 0;
+}
+.rest-time-container select {
+  width: 60px; /* <-- Звуження */
+  padding: 6px;
+  flex-grow: 0;
+}
+
+/* ВИПРАВЛЕННЯ №3: Таблиця підходів */
 .sets-table-container {
-  margin-top: 10px;
+  margin-top: 15px;
   margin-bottom: 15px;
 }
 .admin-sets-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 4px; /* Відстань між рядками */
+  width: auto; /* <-- НЕ розтягуємо */
+  border-collapse: collapse;
 }
-.admin-sets-table th {
-  background-color: #333; /* Темний фон заголовків */
-  font-size: 0.9em;
-  padding: 6px 8px;
-  text-align: center;
-  border-bottom: 1px solid rgb(113, 41, 218);
-}
+.admin-sets-table th,
 .admin-sets-table td {
-  padding: 4px;
+  padding: 6px 10px; /* Зменшуємо відступи */
   text-align: center;
   border-bottom: 1px solid #444;
 }
-.admin-sets-table td:first-child {
-  /* Номер підходу */
-  color: #ccc;
-  width: 20%;
+.admin-sets-table th {
+  font-size: 0.9em;
 }
 .admin-sets-table select {
-  /* Селекти в таблиці */
-  width: 90%; /* Ширина селекту в комірці */
+  width: 100%;
   padding: 4px;
-  font-size: 0.95em;
-  margin: 0 auto; /* Центруємо селект */
-  display: block;
-  background-color: #2a2a2a;
-  border-color: #555;
 }
-
-// Підсвітка червонем контейнеру вправи, якщо є виключена вправа (при копіюванні)
-.copied-exercise-is-excluded {
-  background-color: #4d1f1f !important; /* Темно-червоний фон, щоб перебити інші стилі */
-  border: 1px solid #8c3a3a !important; /* Темніша червона рамка */
-}
+/* --- КІНЕЦЬ блоку однієї вправи у формі створення тренування --- */
 
 /* --- Загальні стилі для нових блоків --- */
 #admin-workout-list-view,
@@ -1567,31 +1546,26 @@ th {
   position: relative;
 }
 
-.delete-exercise-btn {
+/* --- КНОПКА ВИДАЛЕННЯ "ХРЕСТИК" В АДМІН-ПАНЕЛІ (ПРАВИЛЬНА ВЕРСІЯ) --- */
+#exercises-container .delete-exercise-btn {
   position: absolute;
-  top: 5px;
-  right: 20px;
-  background-color: transparent !important; /* !important, якщо є конфлікти */
+  top: 10px;
+  right: 10px;
+  background: transparent !important;
   border: none;
+  color: #888;
+  font-size: 1.2em;
   padding: 0;
-  font-size: 1.3em; /* Розмір іконки */
-  line-height: 1; /* Для кращого вирівнювання іконки */
   cursor: pointer;
   transition:
     color 0.2s,
-    transform 0.2s; /* Плавні переходи */
-
-  min-width: 24px;
-  min-height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10; /* Щоб кнопка була поверх іншого контенту, якщо потрібно */
+    transform 0.2s;
+  z-index: 10; /* Щоб бути поверх інших елементів */
 }
 
-.delete-exercise-btn:hover {
-  color: #ff4d4d; /* Яскраво-червоний при наведенні */
-  transform: scale(1.2); /* Легке збільшення */
+#exercises-container .delete-exercise-btn:hover {
+  color: #ff4d4d;
+  transform: scale(1.2);
 }
 
 /* Основний контент (як було, без margin-left) */

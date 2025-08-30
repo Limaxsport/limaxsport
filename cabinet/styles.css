@@ -3912,22 +3912,21 @@ input:checked + .slider:before {
   left: 25px;
 }
 
-/* --- КНОПКА ВИДАЛЕННЯ "ХРЕСТИК" --- */
+/* --- КНОПКА ВИДАЛЕННЯ "ХРЕСТИК" (ЄДИНА ПРАВИЛЬНА ВЕРСІЯ) --- */
 #user-exercises-container .delete-exercise-btn {
   position: absolute;
-  /* Тепер ці координати знову працюють відносно всього блоку */
-  top: 15px;
-  right: -10px;
-
+  top: 10px;
+  right: 10px;
   background: transparent !important;
   border: none;
   color: #888;
-  font-size: 1em;
+  font-size: 1.2em;
   padding: 0;
   cursor: pointer;
   transition:
     color 0.2s,
     transform 0.2s;
+  z-index: 5; /* Щоб бути поверх інших елементів */
 }
 
 #user-exercises-container .delete-exercise-btn:hover {
@@ -4025,11 +4024,6 @@ input:checked + .slider:before {
   padding-right: 5px;
 }
 
-/* --- 4. Вибір GIF (стилі, адаптовані з адмінки) --- */
-#independent-workout-form .select-gif-btn {
-  margin-top: 5px;
-}
-
 #independent-workout-form .gif-selector-container {
   margin-top: 15px;
   background-color: #111;
@@ -4037,37 +4031,18 @@ input:checked + .slider:before {
   border-radius: 5px;
 }
 
-/* === НОВІ СТИЛІ: Анімація завантаження GIF у формі === */
-
-/* Контейнер тепер відносний, щоб позиціонувати лоадер */
-#independent-workout-form .selected-gif-container {
-  position: relative;
-  min-height: 150px;
-  /* `inline-block` змусить контейнер стиснутись до розміру контенту (нашого GIF) */
-  display: inline-block;
-
-  /* Ці властивості більше не потрібні, бо це не flex-контейнер */
-  /* align-items: center; */
-  /* justify-content: flex-start; */
-
-  /* Залишаємо решту стилів */
-  background-color: #111;
-  border: none;
-  border-radius: 5px;
-  margin-top: 10px;
-  /* Додамо вертикальне вирівнювання, щоб усе було чітко */
-  vertical-align: middle;
-}
-
-/* Загальні стилі для обох зображень */
-#independent-workout-form .form-gif-preview,
-#independent-workout-form .form-gif-final {
-  max-width: 270px;
+/* ДОДАЙТЕ ЦЕЙ БЛОК */
+/* Загальні стилі для зображень всередині контейнера обраного GIF */
+#independent-workout-form .selected-gif-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: auto;
-  border: 2px solid rgb(113, 41, 218);
-  border-radius: 5px;
+  height: 100%;
+  object-fit: cover; /* Заповнює контейнер, зберігаючи пропорції */
 }
+
+/* === НОВІ СТИЛІ: Анімація завантаження GIF у формі === */
 
 /* Індикатор завантаження (схожий на той, що у деталях тренування) */
 #independent-workout-form .form-gif-loader {
@@ -4084,38 +4059,44 @@ input:checked + .slider:before {
   z-index: 1;
 }
 
-/* ВИПРАВЛЕННЯ: Позиціонування кнопки "Змінити GIF" під анімацією (зліва) */
-#independent-workout-form .select-gif-btn {
-  display: block; /* Залишаємо, щоб кнопка була на новому рядку */
-  margin: 10px 0 0 0; /* ВИПРАВЛЕНО: прибираємо 'auto', щоб вирівняти зліва */
-  width: fit-content; /* Ширина кнопки по її вмісту */
+/* === Нові стилі для деревоподібного вибору GIF === */
+#independent-workout-form .directory-level {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #444;
 }
 
-/* === ВИПРАВЛЕННЯ #1: Стилі кнопок папок === */
-#independent-workout-form .folder-selector,
-#independent-workout-form .subfolder-selector {
-  padding: 5px;
-  border-radius: 5px;
-  margin-bottom: 5px;
+#independent-workout-form .directory-level:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
-#independent-workout-form .folder-buttons,
-#independent-workout-form .subfolder-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px; /* <-- ЗМЕНШЕНО ВІДСТУП */
+#independent-workout-form .level-title {
+  font-size: 1em;
+  color: #ccc;
+  margin-bottom: 8px;
 }
-#independent-workout-form .folder-buttons button,
-#independent-workout-form .subfolder-buttons button {
+
+#independent-workout-form .directory-btn {
   background-color: #555;
+  color: #fff;
+  border: none;
   padding: 6px 10px;
   font-size: 0.9em;
-  border-radius: 4px; /* <-- ЗМЕНШЕНО ОКРУГЛЕННЯ */
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 2px;
+  transition: background-color 0.2s;
 }
-#independent-workout-form .folder-buttons button.active,
-#independent-workout-form .subfolder-buttons button.active {
+
+#independent-workout-form .directory-btn:hover {
+  background-color: #777;
+}
+
+#independent-workout-form .directory-btn.active {
   background-color: rgb(113, 41, 218);
   color: white;
+  font-weight: bold;
 }
 
 #independent-workout-form .gif-grid {
@@ -4238,18 +4219,38 @@ input:checked + .slider:before {
   opacity: 1;
 }
 
-/* === ВИПРАВЛЕННЯ #3: Вирівнювання обраного GIF === */
+/* ОНОВЛЕНІ СТИЛІ ДЛЯ КОНТЕЙНЕРА ОБРАНОГО GIF */
 #independent-workout-form .selected-gif-container {
-  margin-top: 0px;
-  text-align: left; /* <-- ВИРІВНЮВАННЯ ПО ЛІВОМУ КРАЮ */
-}
-#independent-workout-form .selected-gif {
-  max-width: 270px;
-  height: auto;
+  position: relative;
+  display: block; /* Займає всю ширину */
+  width: 270px; /* Фіксована ширина */
+  max-width: 100%;
+  aspect-ratio: 9 / 16; /* Підтримуємо пропорції */
+  background-color: #111;
   border: 2px solid rgb(113, 41, 218);
   border-radius: 5px;
+  margin-top: 10px;
+  overflow: hidden; /* Ховаємо все, що виходить за межі */
+}
+
+/* ОНОВЛЕНІ СТИЛІ ДЛЯ КНОПКИ "ЗМІНИТИ ВПРАВУ" */
+#independent-workout-form .change-exercise-btn {
   display: block;
-  margin: 0; /* <-- ПРИБРАНО АВТО-ВІДСТУПИ */
+  margin: 10px 0 0 0;
+  width: fit-content;
+  background-color: rgb(113, 41, 218); /* <-- ЗМІНА КОЛЬОРУ */
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: background-color 0.2s; /* <-- ДОДАНО ПЛАВНІСТЬ */
+}
+
+#independent-workout-form .change-exercise-btn:hover {
+  background-color: rgb(93, 31, 188); /* <-- ЗМІНА КОЛЬОРУ ПРИ НАВЕДЕННІ */
 }
 
 /* --- 5. Таблиця підходів --- */
