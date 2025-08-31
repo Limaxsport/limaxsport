@@ -11,10 +11,6 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/Limaxsport/limaxsport/admin/styles.css"
-    />
   </head>
   <body>
     <!-- Оверлей з формою авторизації -->
@@ -369,18 +365,33 @@
 
           <div class="gif-selector-container" style="display: none">
             <div class="path-display"></div>
-
             <div class="folder-selector">
               <div class="folder-buttons"></div>
             </div>
-
             <div class="gif-grid"></div>
           </div>
 
           <div class="exercise-details-fields" style="display: none">
-            <input type="hidden" name="gif_id[]" class="gif-id-input" />
+            <input type="hidden" class="gif-id-input" />
             <input type="hidden" class="original-gif-filename-input" />
-            <input type="hidden" name="order[]" class="order-input" />
+            <input type="hidden" class="exercise-id-input" />
+            <div class="form-group">
+              <label>Порядковий номер:</label>
+              <select name="order[]" class="order-input">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+              </select>
+            </div>
 
             <label>Назва:</label>
             <textarea
@@ -395,6 +406,46 @@
               class="description-input auto-resize-textarea"
               rows="2"
             ></textarea>
+
+            <div class="form-group">
+              <label>Загальна робоча вага:</label>
+              <input
+                type="text"
+                list="all-weight-options"
+                class="all-weight admin-input"
+              />
+              <datalist id="all-weight-options">
+                <option value="легка"></option>
+                <option value="середня"></option>
+                <option value="вище середньої"></option>
+                <option value="важка"></option>
+                <option value="максимальна"></option>
+              </datalist>
+            </div>
+            <div class="form-group">
+              <label>Діапазон робочих ваг:</label>
+              <div class="weight-range-wrapper">
+                <span>від</span>
+                <input
+                  type="text"
+                  list="range-options"
+                  class="weight-range-from admin-input"
+                />
+                <span>до</span>
+                <input
+                  type="text"
+                  list="range-options"
+                  class="weight-range-to admin-input"
+                />
+              </div>
+              <datalist id="range-options">
+                <option value="легких"></option>
+                <option value="середніх"></option>
+                <option value="вище середніх"></option>
+                <option value="важких"></option>
+                <option value="максимальних"></option>
+              </datalist>
+            </div>
 
             <div class="form-group">
               <label>Кількість підходів:</label>
@@ -436,7 +487,7 @@
                   name="total_weight[]"
                   class="total-weight-input"
                 />
-                Заг. вага
+                Загальна вага
               </label>
               <label class="checkbox-label">
                 <input
@@ -444,7 +495,7 @@
                   name="total_reps[]"
                   class="total-reps-input"
                 />
-                Заг. к-ть
+                Загальна кількість повторень
               </label>
             </div>
 
@@ -584,7 +635,5 @@
         <button id="log-modal-close" class="action-btn">OK</button>
       </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/gh/Limaxsport/limaxsport/admin/script.js"></script>
   </body>
 </html>
