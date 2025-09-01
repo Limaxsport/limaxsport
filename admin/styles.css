@@ -93,10 +93,11 @@ h6 {
   display: none;
   padding: 20px;
   border: 1px solid rgb(113, 41, 218);
+  box-shadow: 2px 4px 8px rgba(113, 41, 218, 0.8);
   border-radius: 8px;
   font-size: 14px;
   margin-top: 10px;
-  background-color: #101010;
+  background-color: #000000;
 }
 
 /* --- Форми та Елементи вводу --- */
@@ -1074,11 +1075,8 @@ th {
 
 /* Стиль для підсвічування таблиці, заповненої на основі переваг */
 .preference-based-table {
-  background-color: rgba(46, 139, 87, 0.15); /* Напівпрозорий зелений фон */
-  border: 1px solid seagreen;
-  border-radius: 5px;
-  padding: 5px;
-  margin-top: 10px;
+  border: 2px solid rgb(6, 224, 35);
+  box-shadow: 2px 2px 5px rgba(4, 189, 34, 0.7);
 }
 // --- КІНЕЦЬ стилей GEMINI HELPER ---
 
@@ -1141,9 +1139,10 @@ th {
   margin-bottom: 15px;
 }
 .selected-gif {
-  max-width: 350px;
+  max-width: 330px;
   height: auto;
-  border: 2px solid rgb(113, 41, 218);
+  border: 1px solid rgb(113, 41, 218);
+  box-shadow: 2px 2px 5px rgba(113, 41, 218, 0.7);
   border-radius: 10px;
   display: block;
 }
@@ -1441,8 +1440,8 @@ th {
 
 /* Стиль для вправи, де дані користувача були успішно завантажені при копіюванні */
 .exercise.copied-with-preferences .admin-sets-table {
-  border: 1px solid rgb(22, 67, 218);
-  box-shadow: 0 0 5px rgba(2, 54, 223, 0.7);
+  border: 2px solid rgb(6, 224, 35);
+  box-shadow: 2px 2px 5px rgba(4, 189, 34, 0.7);
 }
 /* --- КІНЕЦЬ блоку однієї вправи у формі створення тренування --- */
 
@@ -2720,12 +2719,12 @@ th {
   /* --- 2. ЗОБРАЖЕННЯ GIF ТА СІТКА --- */
   .selected-gif {
     /* Робимо обраний GIF меншим, щоб він не займав весь екран */
-    max-width: 300px;
+    max-width: 280px;
   }
 
   .gif-grid {
     /* Дозволяємо колонками ставати вужчими на малих екранах */
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    grid-template-columns: repeat(minmax(80px, 1fr));
   }
 
   /* --- 3. ПОЛЯ ВВОДУ (НАЙВАЖЛИВІШЕ) --- */

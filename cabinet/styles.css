@@ -429,13 +429,14 @@ textarea {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 .tab-content {
-  /* Загальний контейнер для контенту основної вкладки */
   display: none;
   padding: 20px;
   border: 1px solid rgb(113, 41, 218);
-  border-radius: 5px;
+  box-shadow: 2px 4px 8px rgba(113, 41, 218, 0.7);
+  border-radius: 8px;
   font-size: 14px;
   margin-top: 10px;
+  background-color: #000000;
 }
 
 /* --- Modals (Login, Confirmation) --- */
@@ -4227,7 +4228,8 @@ input:checked + .slider:before {
   max-width: 100%;
   aspect-ratio: 9 / 16; /* Підтримуємо пропорції */
   background-color: #111;
-  border: 2px solid rgb(113, 41, 218);
+  border: 1px solid rgb(113, 41, 218);
+  box-shadow: 2px 2px 5px rgba(113, 41, 218, 0.7);
   border-radius: 5px;
   margin-top: 10px;
   overflow: hidden; /* Ховаємо все, що виходить за межі */
