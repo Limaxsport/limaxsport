@@ -1438,6 +1438,12 @@ th {
   text-align-last: center;
   margin-bottom: 0px;
 }
+
+/* Стиль для вправи, де дані користувача були успішно завантажені при копіюванні */
+.exercise.copied-with-preferences .admin-sets-table {
+  border: 1px solid rgb(22, 67, 218);
+  box-shadow: 0 0 5px rgba(2, 54, 223, 0.7);
+}
 /* --- КІНЕЦЬ блоку однієї вправи у формі створення тренування --- */
 
 /* --- Загальні стилі для нових блоків --- */

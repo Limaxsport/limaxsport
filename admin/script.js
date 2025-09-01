@@ -3478,47 +3478,60 @@ async function addExerciseToFormWithData(
     if (restSecondsInput) restSecondsInput.value = '';
   }
   if (setsInput && setsTableContainer) {
-    let numSetsToUse = exerciseData.sets || 0;
-    let dataToFill = {
-      reps: exerciseData.reps || [],
-      weights: exerciseData.weights || [],
-      time: exerciseData.time || [],
-    };
+    let numSetsToUse = 0;
+    let dataToFill = { reps: [], weights: [], time: [] };
+
+    // --- ПОЧАТОК НОВОЇ, БІЛЬШ НАДІЙНОЇ ЛОГІКИ ---
+
     if (isInCopyMode) {
+      // РЕЖИМ КОПІЮВАННЯ: Намагаємось завантажити дані ЦІЛЬОВОГО користувача
+      let preferencesFound = false; // Прапорець, чи знайшли ми дані
       const currentExerciseGifId = exerciseData.gif?.id;
+
       if (trainingUserPhone && currentExerciseGifId) {
         try {
-          // Робимо запит на сервер, щоб отримати показники ЦІЛЬОВОГО користувача для цієї вправи
           const { data: preferences } = await fetchWithAuth(
             `/admin/trainings/${trainingUserPhone}/preferences/${currentExerciseGifId}`
           );
 
-          // Перевіряємо, чи сервер повернув валідні дані
           if (
             preferences &&
             Array.isArray(preferences.reps) &&
             preferences.reps.length > 0
           ) {
-            // Якщо дані є - використовуємо їх для заповнення таблиці
+            // Успіх! Знайшли дані цільового користувача.
             numSetsToUse = preferences.reps.length;
             dataToFill = {
               reps: preferences.reps || [],
               weights: preferences.weights || [],
               time: preferences.time || [],
             };
-          } else {
-            // Якщо даних немає - беремо кількість підходів з тренування-джерела,
-            // але залишаємо поля для заповнення порожніми
-            numSetsToUse = exerciseData.sets || 0;
-            dataToFill = { reps: [], weights: [], time: [] };
+            preferencesFound = true;
+
+            // ДОДАТКОВО: Позначимо, що дані успішно завантажені
+            setsTableContainer
+              .closest('.exercise')
+              ?.classList.add('copied-with-preferences');
           }
         } catch (error) {
-          // У випадку помилки, створюємо порожню таблицю
           console.error(`[CopyMode] Помилка завантаження переваг:`, error);
-          numSetsToUse = exerciseData.sets || 0;
-          dataToFill = { reps: [], weights: [], time: [] };
         }
       }
+
+      // Якщо переваги НЕ були знайдені (або була помилка)
+      if (!preferencesFound) {
+        // Беремо кількість підходів з тренування-джерела, але дані залишаємо ПОРОЖНІМИ
+        numSetsToUse = exerciseData.sets || 0;
+        dataToFill = { reps: [], weights: [], time: [] }; // <-- Ключовий момент!
+      }
+    } else {
+      // ЦЕ НЕ РЕЖИМ КОПІЮВАННЯ: Просто завантажуємо дані з чернетки або збереженого тренування
+      numSetsToUse = exerciseData.sets || 0;
+      dataToFill = {
+        reps: exerciseData.reps || [],
+        weights: exerciseData.weights || [],
+        time: exerciseData.time || [],
+      };
     }
     setsInput.value = numSetsToUse;
     generateSetsTable(numSetsToUse, setsTableContainer);
