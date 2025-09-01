@@ -265,9 +265,7 @@
             <input type="text" id="training-title" name="title" required />
             <label for="training-date">Дата проведення:</label>
             <input type="date" id="training-date" name="date" required />
-            <label for="training-description"
-              >Загальний опис тренування (не обов'язково):</label
-            >
+            <label for="training-description">Загальний опис тренування:</label>
             <textarea name="description" id="training-description"></textarea>
 
             <div id="exercises-container"></div>
@@ -315,22 +313,22 @@
               "
             ></p>
             <p>
-              <strong>Тривалість силової (хв.):</strong>
+              <strong>Тривалість силової ⏱ (хв.):</strong>
               <span id="admin-workout-details-duration">-</span>
             </p>
             <p>
-              <strong>Складність:</strong>
+              <strong>Складність 💪:</strong>
               <span id="admin-workout-details-difficulty"></span>
             </p>
             <p>
-              <strong>Тривалість кардіо (хв.):</strong>
+              <strong>Тривалість кардіо ⏱ (хв.):</strong>
               <span id="admin-workout-details-cardio"></span>
             </p>
             <p>
-              <strong>Витрачено калорій:</strong>
+              <strong>Витрачено калорій 🔥:</strong>
               <span id="admin-workout-details-calories"></span>
             </p>
-            <h5>Відгук користувача:</h5>
+            <h5>Відгук користувача ✅:</h5>
             <p
               id="admin-workout-details-feedback"
               style="white-space: pre-wrap"
@@ -338,7 +336,7 @@
 
             <div id="admin-ai-analysis-container" style="display: none">
               <hr />
-              <h5>Аналіз тренування від Gemini:</h5>
+              <h5>Аналіз тренування від Gemini ✨:</h5>
               <div id="admin-ai-analysis-text" class="ai-analysis-text"></div>
             </div>
             <hr />
@@ -359,7 +357,7 @@
           <div class="selected-gif-container" style="display: none">
             <img src="" class="selected-gif" alt="Обрана вправа" />
             <button type="button" class="change-exercise-btn">
-              Змінити вправу
+              ЗМІНИТИ ВПРАВУ 💥
             </button>
           </div>
 
@@ -393,37 +391,41 @@
               </select>
             </div>
 
-            <label>Назва:</label>
+            <label>НАЗВА вправи (унікальна):</label>
             <textarea
               name="name[]"
               class="name-input auto-resize-textarea"
+              placeholder="Обов'язково додайте унікальну назву..."
               rows="1"
             ></textarea>
 
-            <label>Опис (техніка виконання):</label>
+            <label>ТЕХНІКА 📝 виконання вправи: </label>
             <textarea
               name="description[]"
               class="description-input auto-resize-textarea"
+              placeholder="Обов'язково додайте опис..."
               rows="2"
             ></textarea>
 
             <div class="form-group">
-              <label>Загальна робоча вага:</label>
-              <input
-                type="text"
-                list="all-weight-options"
-                class="all-weight admin-input"
-              />
-              <datalist id="all-weight-options">
-                <option value="легка"></option>
-                <option value="середня"></option>
-                <option value="вище середньої"></option>
-                <option value="важка"></option>
-                <option value="максимальна"></option>
-              </datalist>
+              <label>Загальна робоча вага (або 👇):</label>
+              <div class="all-weight-wrapper">
+                <input
+                  type="text"
+                  list="all-weight-options"
+                  class="all-weight admin-input"
+                />
+                <datalist id="all-weight-options">
+                  <option value="легка"></option>
+                  <option value="середня"></option>
+                  <option value="вище середньої"></option>
+                  <option value="важка"></option>
+                  <option value="максимальна"></option>
+                </datalist>
+              </div>
             </div>
             <div class="form-group">
-              <label>Діапазон робочих ваг:</label>
+              <label>Діапазон робочих ваг (або 👆):</label>
               <div class="weight-range-wrapper">
                 <span>від</span>
                 <input
@@ -471,7 +473,7 @@
                   name="superset[]"
                   class="superset-input"
                 />
-                Суперсет
+                СУПЕРСЕТ з наступною вправою ⏬
               </label>
               <label class="checkbox-label">
                 <input
@@ -479,7 +481,7 @@
                   name="emphasis[]"
                   class="emphasis-input"
                 />
-                Акцент
+                АКЦЕНТ на цій вправі! 🔥
               </label>
               <label class="checkbox-label">
                 <input
@@ -487,7 +489,7 @@
                   name="total_weight[]"
                   class="total-weight-input"
                 />
-                Загальна вага
+                Загальна вага (для 2-х гантелей)
               </label>
               <label class="checkbox-label">
                 <input
@@ -495,12 +497,12 @@
                   name="total_reps[]"
                   class="total-reps-input"
                 />
-                Загальна кількість повторень
+                Загальна кількість повторень (для 2-х ніг/рук)
               </label>
             </div>
 
             <div class="rest-time-container">
-              <label>Час відпочинку:</label>
+              <label>ВІДПОЧИНОК ⏱ (між підходами):</label>
               <select name="rest_time_minutes[]" class="rest-time-minutes">
                 <option value="0">00</option>
                 <option value="1">01</option>
@@ -523,8 +525,8 @@
 
       <div id="plans" class="tab-content" style="display: none">
         <p>
-          Будь ласка, оберіть користувача у вкладці "Профілі", щоб переглянути
-          його плани.
+          Друже, ти мабуть заблукав. 😁 Будь ласка, оберіть користувача у
+          вкладці "Профілі", щоб переглянути його тренувальні плани.
         </p>
       </div>
 

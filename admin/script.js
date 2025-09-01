@@ -661,15 +661,68 @@ function translateField(field, value) {
 }
 
 /**
- * Автоматично змінює висоту textarea.
- * @param {HTMLTextAreaElement} textarea - Елемент textarea.
+ * Функція для автоматичної зміни висоти textarea.
+ * @param {HTMLElement} textarea - Елемент textarea, висоту якого потрібно змінити.
  */
 function autoResize(textarea) {
-  if (textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
+  // Перевіряємо, чи це дійсно елемент і чи є у нього властивість scrollHeight
+  if (!textarea || typeof textarea.scrollHeight === 'undefined') {
+    return;
   }
+  // Тимчасово скидаємо висоту, щоб браузер міг коректно виміряти реальну висоту контенту
+  textarea.style.height = 'auto';
+  // Встановлюємо висоту, що дорівнює висоті прокрутки (вмісту) + 2px для уникнення "стрибання" скролбару
+  textarea.style.height = textarea.scrollHeight + 2 + 'px';
 }
+
+/**
+ * Ініціалізує авторесайз для всіх textarea з класом '.auto-resize-textarea'.
+ * Обробляє як існуючі елементи, так і ті, що додаються динамічно.
+ */
+function initializeAutoResize() {
+  const container = document.body; // Можна вказати більш конкретний контейнер, напр. document.getElementById('exercises-container')
+
+  // 1. Застосовуємо до всіх існуючих textarea на сторінці
+  const existingTextareas = container.querySelectorAll('.auto-resize-textarea');
+  existingTextareas.forEach((textarea) => {
+    // Встановлюємо початкову висоту і додаємо слухача
+    autoResize(textarea);
+    textarea.addEventListener('input', () => autoResize(textarea));
+  });
+
+  // 2. Створюємо "Спостерігача" (MutationObserver) для відслідковування нових елементів
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      // Перевіряємо, чи були додані нові вузли (елементи)
+      if (mutation.addedNodes.length) {
+        mutation.addedNodes.forEach((node) => {
+          // Перевіряємо, чи є доданий вузол елементом (а не текстом)
+          if (node.nodeType === 1) {
+            // Шукаємо textarea всередині нового елемента (або якщо сам елемент є textarea)
+            const newTextareas = node.matches('.auto-resize-textarea')
+              ? [node]
+              : node.querySelectorAll('.auto-resize-textarea');
+
+            newTextareas.forEach((textarea) => {
+              // Встановлюємо початкову висоту і додаємо слухача
+              autoResize(textarea);
+              textarea.addEventListener('input', () => autoResize(textarea));
+            });
+          }
+        });
+      }
+    });
+  });
+
+  // 3. Запускаємо спостерігача
+  observer.observe(container, {
+    childList: true, // Спостерігати за додаванням/видаленням дочірніх елементів
+    subtree: true, // Спостерігати у всіх нащадках контейнера
+  });
+}
+
+// Запускаємо ініціалізацію, коли весь HTML-контент сторінки завантажився
+document.addEventListener('DOMContentLoaded', initializeAutoResize);
 
 // --- Додаємо функцію форматування секунд, якщо її немає ---
 function formatSecondsToMMSS(totalSeconds) {
@@ -3432,7 +3485,40 @@ async function addExerciseToFormWithData(
       time: exerciseData.time || [],
     };
     if (isInCopyMode) {
-      /* ... твоя логіка копіювання ... */
+      const currentExerciseGifId = exerciseData.gif?.id;
+      if (trainingUserPhone && currentExerciseGifId) {
+        try {
+          // Робимо запит на сервер, щоб отримати показники ЦІЛЬОВОГО користувача для цієї вправи
+          const { data: preferences } = await fetchWithAuth(
+            `/admin/trainings/${trainingUserPhone}/preferences/${currentExerciseGifId}`
+          );
+
+          // Перевіряємо, чи сервер повернув валідні дані
+          if (
+            preferences &&
+            Array.isArray(preferences.reps) &&
+            preferences.reps.length > 0
+          ) {
+            // Якщо дані є - використовуємо їх для заповнення таблиці
+            numSetsToUse = preferences.reps.length;
+            dataToFill = {
+              reps: preferences.reps || [],
+              weights: preferences.weights || [],
+              time: preferences.time || [],
+            };
+          } else {
+            // Якщо даних немає - беремо кількість підходів з тренування-джерела,
+            // але залишаємо поля для заповнення порожніми
+            numSetsToUse = exerciseData.sets || 0;
+            dataToFill = { reps: [], weights: [], time: [] };
+          }
+        } catch (error) {
+          // У випадку помилки, створюємо порожню таблицю
+          console.error(`[CopyMode] Помилка завантаження переваг:`, error);
+          numSetsToUse = exerciseData.sets || 0;
+          dataToFill = { reps: [], weights: [], time: [] };
+        }
+      }
     }
     setsInput.value = numSetsToUse;
     generateSetsTable(numSetsToUse, setsTableContainer);
@@ -3452,7 +3538,45 @@ async function addExerciseToFormWithData(
     exerciseData.gif?.id &&
     Array.isArray(allowedGifsForTargetUser)
   ) {
-    /* ... твоя логіка підсвічування ... */
+    // Перевіряємо, чи ID поточної вправи є у списку дозволених для цільового юзера
+    const isAllowed = allowedGifsForTargetUser.some(
+      (gif) => gif.id === exerciseData.gif.id
+    );
+
+    // Якщо вправи немає у списку дозволених
+    if (!isAllowed) {
+      // Додаємо CSS-клас для візуального виділення (наприклад, червоний фон)
+      exerciseFieldset.classList.add('copied-exercise-is-excluded');
+      console.warn(
+        `[CopyMode] Вправа GIF ID:${exerciseData.gif.id} ("${
+          exerciseData.gif?.name || nameInput?.value || 'N/A'
+        }") ВИКЛЮЧЕНА для користувача ${trainingUserPhone}.`
+      );
+
+      // Створюємо та додаємо текстове попередження
+      const warningMsgElement = document.createElement('p');
+      warningMsgElement.classList.add('js-copied-exercise-warning-message');
+      warningMsgElement.innerHTML =
+        '<strong>УВАГА:</strong> Ця вправа виключена для обраного користувача!';
+      warningMsgElement.style.color = 'red';
+      warningMsgElement.style.fontWeight = 'normal';
+      warningMsgElement.style.fontSize = '0.9em';
+      warningMsgElement.style.textAlign = 'left';
+      warningMsgElement.style.padding = '5px 0px';
+      warningMsgElement.style.margin = '5px 0 10px 0';
+
+      // Вставляємо попередження після поля з назвою вправи
+      if (nameInput) {
+        if (nameInput.nextSibling) {
+          nameInput.parentNode.insertBefore(
+            warningMsgElement,
+            nameInput.nextSibling
+          );
+        } else {
+          nameInput.parentNode.appendChild(warningMsgElement);
+        }
+      }
+    }
   }
 
   // *** КЛЮЧОВА ЗМІНА №1 ***
@@ -3789,9 +3913,14 @@ function displayGifs(gifs, exerciseFieldset) {
         selectedGifImg.style.display = 'block';
         gifIdInput.value = gifData.id;
         nameInput.value = gifData.name;
-        autoResize(nameInput);
         descriptionInput.value = gifData.description;
-        autoResize(descriptionInput);
+
+        // *** КЛЮЧОВА ЗМІНА ***
+        // Даємо браузеру мить на "перетравлення" нового тексту перед розрахунком висоти
+        setTimeout(() => {
+          autoResize(nameInput);
+          autoResize(descriptionInput);
+        }, 500);
         originalFilenameInput.value = gifData.originalFilename;
 
         const selectBtn =
@@ -3974,6 +4103,25 @@ async function handleAddExercise(trainingUserPhone) {
   }
 
   document.getElementById('exercises-container')?.appendChild(exerciseFieldset);
+
+  // Знаходимо текстові поля у щойно створеній вправі
+  const newNameInput = exerciseFieldset.querySelector('.name-input');
+  const newDescriptionInput =
+    exerciseFieldset.querySelector('.description-input');
+
+  // Перевіряємо, чи існує функція autoResize, щоб уникнути помилок
+  if (typeof autoResize === 'function') {
+    // Додаємо обробник події 'input' для поля НАЗВИ
+    if (newNameInput) {
+      newNameInput.addEventListener('input', () => autoResize(newNameInput));
+    }
+    // Додаємо обробник події 'input' для поля ОПИСУ
+    if (newDescriptionInput) {
+      newDescriptionInput.addEventListener('input', () =>
+        autoResize(newDescriptionInput)
+      );
+    }
+  }
 
   // *** КЛЮЧОВА ЗМІНА №2 ***
   // Приховуємо блок обраного GIF та поля, і одразу запускаємо браузер вибору

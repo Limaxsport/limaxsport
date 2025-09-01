@@ -116,26 +116,46 @@ label.checkbox-label {
   color: #ccc;
 }
 
+/* ГЛОБАЛЬНІ СТИЛІ ДЛЯ ПОЛІВ ВВОДУ */
 input[type='text'],
 input[type='password'],
 input[type='number'],
 input[type='email'],
 input[type='date'],
+input[type='search'],
 select,
 textarea {
-  background: #1f1f1f; /* Темний фон для полів */
-  border: 1px solid #444; /* Рамка замість підкреслення */
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgb(113, 41, 218);
   color: white;
   padding: 10px;
   width: 100%;
-  margin-bottom: 18px; /* Зменшив трохи */
+  margin-bottom: 20px; /* Це створювало проблему, але ми його скасуємо локально */
   font-family: 'Montserrat', sans-serif;
   font-size: 14px;
   box-sizing: border-box;
-  border-radius: 4px; /* Скруглення для полів */
-  transition:
-    border-color 0.3s,
-    box-shadow 0.3s;
+  border-radius: 0;
+}
+input[type='date'] {
+  color-scheme: dark;
+}
+input[type='search'] {
+  border-radius: 5px;
+  border: 1px solid rgb(113, 41, 218);
+  padding-right: 30px;
+}
+input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  height: 1em;
+  width: 1em;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%237129da"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>')
+    center/1em auto no-repeat;
+  cursor: pointer;
+  opacity: 0.7;
+}
+input[type='search']::-webkit-search-cancel-button:hover {
+  opacity: 1;
 }
 input[type='text']:focus,
 input[type='password']:focus,
@@ -174,10 +194,13 @@ select {
   background-repeat: no-repeat;
   background-position: right 10px center;
   padding-right: 30px;
+  border-radius: 0; /* Прибираємо можливе скруглення від браузера */
 }
 select option {
   background-color: black;
   color: white;
+  white-space: normal;
+  word-wrap: break-word;
 }
 select option:checked {
   background-color: rgb(113, 41, 218);
@@ -187,8 +210,9 @@ select option:hover {
   background-color: #5a2a8a;
   color: white;
 }
+
+/* Мультиселект */
 select[multiple] {
-  /* Мультиселект (якщо буде використовуватися) */
   appearance: none;
   background-image: none;
   overflow-y: auto;
@@ -197,12 +221,26 @@ select[multiple] {
   border-radius: 5px;
   padding: 10px;
 }
+select[multiple]::-webkit-scrollbar {
+  width: 8px;
+}
+select[multiple]::-webkit-scrollbar-track {
+  background: #333;
+}
+select[multiple]::-webkit-scrollbar-thumb {
+  background: rgb(113, 41, 218);
+  border-radius: 4px;
+}
+select[multiple] {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(113, 41, 218) #333;
+}
 
 /* Textarea */
 textarea {
   resize: vertical;
-  min-height: 60px;
-  overflow: auto;
+  min-height: 40px;
+  overflow-y: hidden;
 }
 
 /* === Кнопки === */
@@ -929,14 +967,13 @@ th {
   border: 1px solid #333;
   border-radius: 8px;
   display: flex;
-  flex-wrap: wrap;
   gap: 20px;
-  align-items: flex-end; /* Вирівнюємо елементи по нижньому краю */
+  align-items: center;
 }
 
 .subscription-form .form-group {
-  flex: 1; /* Дозволяє полям розтягуватись */
-  min-width: 200px; /* Мінімальна ширина для полів */
+  display: block;
+  min-width: auto; /* Мінімальна ширина для полів */
 }
 
 .subscription-form label {
@@ -1046,17 +1083,17 @@ th {
 // --- КІНЕЦЬ стилей GEMINI HELPER ---
 
 /* =================================================================== */
-/* === ФІНАЛЬНІ СТИЛІ: БЛОК ВПРАВИ В АДМІН-ПАНЕЛІ (v13 - ОБ'ЄДНАНА) === */
+/* === СТРУКТУРОВАНИЙ БЛОК ВПРАВИ В АДМІН-ПАНЕЛІ (v1.0) === */
 /* =================================================================== */
 
 /* --- 1. ГОЛОВНИЙ КОНТЕЙНЕР (FIELDSET) --- */
 .exercise {
+  position: relative;
   border: 1px solid #444;
+  border-radius: 8px;
   padding: 30px 15px 15px 15px;
   margin-bottom: 20px;
-  border-radius: 8px;
   background-color: #1a1a1a;
-  position: relative;
 }
 
 /* --- 2. ЗАГОЛОВОК ВПРАВИ ("1. Вправа") --- */
@@ -1082,7 +1119,7 @@ th {
 #exercises-container .delete-exercise-btn {
   position: absolute;
   top: 10px;
-  right: 10px;
+  right: -15px;
   background: transparent !important;
   border: none;
   color: #888;
@@ -1104,10 +1141,10 @@ th {
   margin-bottom: 15px;
 }
 .selected-gif {
-  max-width: 270px;
+  max-width: 350px;
   height: auto;
   border: 2px solid rgb(113, 41, 218);
-  border-radius: 5px;
+  border-radius: 10px;
   display: block;
 }
 .change-exercise-btn {
@@ -1128,7 +1165,7 @@ th {
   background-color: #777;
 }
 
-/* --- 5. БРАУЗЕР ДЛЯ ВИБОРУ GIF (ВІДНОВЛЕНО) --- */
+/* --- 5. БРАУЗЕР ДЛЯ ВИБОРУ GIF --- */
 .gif-selector-container {
   background-color: #222;
   padding: 10px;
@@ -1140,7 +1177,7 @@ th {
   margin-bottom: 10px;
   border-bottom: 1px solid #444;
   color: #ccc;
-  font-size: 1em; /* Зробив трохи більшим */
+  font-size: 1em;
   font-weight: 500;
 }
 .path-display .path-segment {
@@ -1153,7 +1190,7 @@ th {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 10px; /* Додав відступ */
+  margin-top: 10px;
 }
 .folder-buttons button {
   background-color: #555;
@@ -1171,7 +1208,7 @@ th {
   background-color: rgb(113, 41, 218);
 }
 
-/* --- 6. СІТКА З GIF-ФАЙЛАМИ (ВІДНОВЛЕНО) --- */
+/* --- 6. СІТКА З GIF-ФАЙЛАМИ --- */
 .gif-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -1193,6 +1230,9 @@ th {
   overflow: hidden;
   flex-grow: 1;
 }
+.gif-item:hover {
+  box-shadow: 0 0 0 2px rgb(113, 41, 218);
+}
 .gif-item img {
   position: absolute;
   top: 0;
@@ -1201,9 +1241,6 @@ th {
   height: 100%;
   object-fit: cover;
   transition: opacity 0.3s ease;
-}
-.gif-item:hover {
-  box-shadow: 0 0 0 2px rgb(113, 41, 218);
 }
 .gif-full {
   z-index: 1;
@@ -1217,16 +1254,6 @@ th {
 }
 .gif-item.is-loaded .gif-preview {
   opacity: 0;
-}
-.gif-item.loading::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 3;
 }
 .loader {
   display: none;
@@ -1260,17 +1287,12 @@ th {
   flex-shrink: 0;
 }
 
-/* --- 7. ПОЛЯ ДЛЯ ВВОДУ ДАНИХ --- */
+/* --- 7. ПОЛЯ ДЛЯ ВВОДУ ДАНИХ (ЗАГАЛЬНІ СТИЛІ) --- */
 .exercise-details-fields {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Задаємо єдиний вертикальний відступ */
 }
-.exercise-details-fields > label {
-  margin: 0;
-  font-weight: bold;
-  color: #ddd;
-}
+/* Загальні стилі для всіх полів вводу */
 .exercise-details-fields input,
 .exercise-details-fields textarea,
 .exercise-details-fields select {
@@ -1280,69 +1302,84 @@ th {
   border-radius: 4px;
   color: white;
   padding: 8px;
+  text-align: justify;
 }
-
-/* === ЗМІНА #1: Авторесайз для `name` та `description` === */
-.exercise-details-fields textarea.name-input,
-.exercise-details-fields textarea.description-input {
-  resize: none;
-  overflow-y: hidden;
-}
-
-/* === ЗМІНА #2: Вирівнювання полів в один рядок === */
+/* Загальний контейнер для групи "лейбл + поле" */
 .form-group {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 10px;
-  margin: 0;
+  margin-top: 5px; /* Єдиний вертикальний відступ між групами */
 }
-.form-group label {
-  font-weight: bold;
-  color: #ddd;
-  flex-shrink: 0;
-}
-.form-group input,
 .form-group select {
   width: auto;
-  flex-grow: 1;
-}
-.form-group .weight-range-from,
-.form-group .weight-range-to {
-  min-width: 80px;
-}
-
-/* === ЗМІНА #4: Час відпочинку та плейсхолдери === */
-.rest-time-container {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.rest-time-container label {
-  margin: 0;
-  font-weight: bold;
-  color: #ddd;
-}
-.rest-time-container select {
-  width: 70px;
   text-align: center;
   text-align-last: center;
 }
+.rest-time-container {
+  margin-top: 15px; /* Єдиний вертикальний відступ між групами */
+}
+
+/* --- 8. КОНКРЕТНІ ПОЛЯ ДЛЯ ВВОДУ --- */
+
+/* Діапазон робочих ваг */
+.form-group .weight-range-wrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.form-group .weight-range-wrapper input {
+  width: 150px;
+}
+.form-group .weight-range-wrapper span {
+  font-weight: bold;
+  font-size: 0.75em;
+}
+
+/* Загальна робоча вага */
+.form-group .all-weight-wrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.form-group .all-weight-wrapper input {
+  width: 150px;
+}
+
+/* === ЧАС ВІДПОЧИНКУ (ПЕРЕВІРЕНА РОБОЧА ВЕРСІЯ) === */
+.rest-time-container {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.rest-time-container label {
+  font-weight: bold;
+  color: #ddd;
+}
+
+.rest-time-container select {
+  width: auto;
+  text-align: center;
+  text-align-last: center; /* Для кращого відображення в Firefox */
+}
+
 .rest-time-container span {
   font-weight: bold;
   font-size: 1.2em;
   color: #888;
 }
 
+/* Опції (Чекбокси) */
 .exercise-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  align-items: center;
+  display: block; /* Змінено з flex на block */
+  margin-top: 15px;
 }
 .exercise-options .checkbox-label {
   font-weight: normal;
   margin: 0;
   display: flex;
+  margin-bottom: 10px;
   align-items: center;
   gap: 5px;
 }
@@ -1351,33 +1388,34 @@ th {
   width: auto;
 }
 
-/* === ЗМІНА #3: Перероблена таблиця підходів === */
+/* --- 9. ТАБЛИЦЯ ПІДХОДІВ --- */
 .sets-table-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; /* Вирівнювання по лівому краю */
+  margin-top: 15px;
 }
 .admin-sets-table {
-  width: 100%;
-  max-width: 500px;
+  width: auto;
   border-collapse: collapse;
   border-spacing: 0;
-  background-color: #2a2a2a;
+  background-color: black; /* Фон таблиці */
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid #333;
 }
 .admin-sets-table th,
 .admin-sets-table td {
-  padding: 10px 8px;
+  padding: 8px 8px 8px 8px; /* Зменшені вертикальні відступи */
   text-align: center;
   border: none;
 }
 .admin-sets-table th {
-  background-color: #333;
-  color: #bbb;
+  background-color: rgb(113, 41, 218); /* Фон заголовку */
+  color: white; /* Текст заголовку */
   font-size: 0.8em;
   text-transform: uppercase;
   font-weight: 600;
+  font-weight: bold;
 }
 .admin-sets-table tbody tr {
   border-bottom: 1px solid #333;
@@ -1393,106 +1431,12 @@ th {
   color: #ccc;
 }
 .admin-sets-table select {
-  width: 100%;
-  padding: 6px;
-  background-color: #1e1e1e;
-  border: 1px solid #555;
+  width: auto;
+  background-color: #000000;
+  border: 1px solid rgba(92, 19, 202, 0.5);
   text-align: center;
   text-align-last: center;
-}
-
-/* =================================================================== */
-/* === ТОЧКОВІ ВИПРАВЛЕННЯ СТИЛІВ (v14) === */
-/* =================================================================== */
-
-/* --- 1. Повертаємо вертикальне відображення полів --- */
-/* Цей блок поверне стандартне відображення: лейбл зверху, поле вводу знизу */
-.exercise-details-fields .form-group,
-.rest-time-container {
-  display: block; /* Замість flex, робимо звичайним блоком */
-}
-.exercise-details-fields .form-group label,
-.rest-time-container label {
-  display: block; /* Гарантуємо, що лейбл займає свій рядок */
-  margin-bottom: 5px; /* Додаємо невеликий відступ знизу */
-}
-/* Повертаємо полям 100% ширини, оскільки вони тепер одне під одним */
-.exercise-details-fields .form-group input,
-.exercise-details-fields .form-group select {
-  width: 100%;
-}
-/* Для діапазону ваг робимо елементи гнучкими, щоб вони стали в рядок */
-.form-group.weight-range-fields {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-/* Для часу відпочинку також робимо поля гнучкими */
-.rest-time-container .fields-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.rest-time-container .fields-wrapper select {
-  width: 70px; /* Повертаємо фіксовану ширину для селектів часу */
-}
-
-/* --- 2. Виправлення авторесайзу для опису вправи --- */
-/* Це дозволить JS-функції autoResize безперешкодно розширювати поле на всю висоту тексту */
-.exercise-details-fields textarea.description-input {
-  min-height: 40px; /* Встановлюємо меншу початкову висоту */
-  height: auto;
-}
-
-/* --- 3. Зміна стилів таблиці та її вирівнювання --- */
-.sets-table-container {
-  justify-content: flex-start; /* Вирівнюємо таблицю по лівому краю */
-}
-.admin-sets-table {
-  background-color: black; /* Фон всієї таблиці - чорний */
-}
-.admin-sets-table th {
-  background-color: rgb(113, 41, 218); /* Фон заголовку - фірмовий */
-  color: white; /* Робимо текст у заголовку білим для контрасту */
-}
-
-/* =================================================================== */
-/* === ФІНАЛЬНІ ТОЧКОВІ ВИПРАВЛЕННЯ (v15) === */
-/* =================================================================== */
-
-/* --- 1. & 2. Виправлення авторесайзу та відступу для "Час відпочинку" --- */
-
-/* Скидаємо блочну модель для всіх груп, щоб задати єдиний відступ */
-.exercise-details-fields .form-group,
-.rest-time-container {
-  display: block;
-  margin-top: 15px; /* Задаємо однаковий відступ зверху для всіх груп полів */
-}
-
-/* Прибираємо зайвий відступ у лейблів, бо він вже є у батьківського блоку */
-.exercise-details-fields .form-group label,
-.rest-time-container label {
-  margin-top: 5px;
-}
-
-/* Цей трюк з висотою в 1px допомагає JavaScript точніше розрахувати
-   реальну висоту тексту для ідеального авторесайзу */
-.exercise-details-fields textarea.description-input {
-  height: 1px;
-}
-
-/* --- 3. Зменшення відступів у таблиці --- */
-.admin-sets-table th,
-.admin-sets-table td {
-  padding-top: 8px; /* Зменшуємо верхній відступ */
-  padding-bottom: 2px; /* Зменшуємо нижній відступ */
-}
-
-/* --- 4. Розміщення полів "Діапазон робочих ваг" в одну строку --- */
-.form-group .weight-range-wrapper {
-  display: flex; /* Вмикаємо flexbox для дочірніх елементів */
-  align-items: center; /* Вирівнюємо їх по центру по вертикалі */
-  gap: 10px; /* Додаємо відстань між ними */
+  margin-bottom: 0px;
 }
 /* --- КІНЕЦЬ блоку однієї вправи у формі створення тренування --- */
 
@@ -1699,7 +1643,7 @@ th {
 #exercises-container .delete-exercise-btn {
   position: absolute;
   top: 10px;
-  right: 10px;
+  right: -15px;
   background: transparent !important;
   border: none;
   color: #888;
@@ -2754,145 +2698,74 @@ th {
 
   /* Тренування на мобільних */
   /* Блок однієї вправи */
+  /* --- 1. ЗАГАЛЬНИЙ КОНТЕЙНЕР ТА КНОПКА ВИДАЛЕННЯ --- */
   .exercise {
-    display: block;
-    padding: 5px;
-    margin-bottom: 15px;
-    overflow-x: hidden !important; /* Спробуємо примусово сховати горизонтальний оверфлоу */
-    box-sizing: border-box; /* Додамо про всяк випадок */
-    width: 100%; /* Явно вкажемо ширину */
+    /* Зменшуємо бокові відступи, щоб дати більше місця контенту */
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
-  .exercise legend {
-    font-size: 1.1em; /* Трохи більший заголовок вправи */
+  #exercises-container .delete-exercise-btn {
+    /* Повертаємо хрестик всередину блоку, щоб він не вилазив за екран */
+    right: 10px;
+    top: 5px;
   }
 
-  /* Перенос довгих лейблів */
-  .exercise label {
-    white-space: normal !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    font-size: 0.9em;
-  }
-
-  /* Поля вводу всередині вправи */
-  .exercise input[type='text'],
-  .exercise input[type='number'],
-  .exercise textarea,
-  .exercise select {
-    padding: 6px 8px; /* Менші падінги */
-    font-size: 13px; /* Менший шрифт полів */
-  }
-  .exercise textarea {
-    min-height: 40px; /* Менша мінімальна висота */
-  }
-
-  /* Тут ми робимо так, щоб контейнери могли переносити елементи на новий рядок,
-      якщо їм не вистачає місця - all_weight та weight-rainge
-    */
-  .exercise .form-group {
-    flex-wrap: wrap;
-    gap: 5px 10px;
-  }
-
-  /* ОНОВЛЕНО: Застосовуємо стилі до інпутів для адаптивності:
-       all_weight та weight-rainge
-    */
-  .exercise .form-group input[list],
-  .exercise .rest-time-container select {
-    flex: 1 1 120px; /* Дозволяємо рости, стискатися, базова ширина 120px */
-    min-width: 100px;
-  }
-
-  /* Адаптуємо flex-контейнер (Час відпочинку) */
-  .exercise .rest-time-container {
-    display: flex;
-    flex-wrap: wrap; /* Примусовий перенос */
-    gap: 5px 10px;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  .exercise .rest-time-container select {
-    flex: 1; /* Дамо трохи більше місця */
-    min-width: 60px;
-  }
-
-  /* Сітка GIF */
-  .gif-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr) !important; /* ЧІТКО 2 КОЛОНКИ! */
-    gap: 8px; /* Збільшив відстань */
-    width: 100%; /* На всю ширину */
-    margin-top: 10px;
-    padding: 5px; /* Додамо невеликий падінг */
-    box-sizing: border-box;
-    background-color: #252525; /* Залишаємо фон */
-    border-radius: 5px;
-  }
-  .gif-grid img {
-    /* Зображення в сітці */
-    width: 100%; /* На всю ширину колонки */
-    height: auto;
-    aspect-ratio: 9 / 16; /* Зберігаємо пропорції */
-    object-fit: cover;
-    border-radius: 4px;
-  }
-  .gif-grid div span {
-    /* Текст під GIF */
-    font-size: 0.75em;
-  }
-
-  /* Обраний GIF */
+  /* --- 2. ЗОБРАЖЕННЯ GIF ТА СІТКА --- */
   .selected-gif {
-    max-width: 100%; /* Адаптивний розмір */
-    width: 250px; /* Але не більше за певну ширину */
-    height: auto;
-    display: block; /* Центрування через margin: auto */
-    margin: 10px auto;
+    /* Робимо обраний GIF меншим, щоб він не займав весь екран */
+    max-width: 300px;
   }
 
-  /* Таблиця підходів */
-  .admin-sets-table {
-    display: block !important; /* Примусово блочна */
-    width: 100% !important;
-    margin-top: 5px;
-    margin-bottom: 10px;
-    border: 1px solid #444;
-    border-radius: 4px;
-    box-sizing: border-box; /* Додамо */
-    text-align: center;
-  }
-  .admin-sets-table thead,
-  .admin-sets-table tbody,
-  .admin-sets-table tr {
-    text-align: center;
-    display: block !important;
+  .gif-grid {
+    /* Дозволяємо колонками ставати вужчими на малих екранах */
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   }
 
-  .admin-sets-table th,
-  .admin-sets-table td {
-    white-space: normal; /* Дозволяємо перенос тексту */
-    padding: 5px 3px;
-    text-align: center;
-    min-width: 70px;
-    display: inline-block; /* В рядок */
-    box-sizing: border-box; /* Додамо */
-    vertical-align: middle; /* Додамо вирівнювання */
+  /* --- 3. ПОЛЯ ВВОДУ (НАЙВАЖЛИВІШЕ) --- */
+  /* Робимо так, щоб лейбл був над полем вводу, а не збоку */
+  .form-group,
+  .rest-time-container {
+    display: inline-block;
+    gap: 5px; /* Зменшуємо відступ */
   }
-  .admin-sets-table th {
-    text-align: center;
-    font-size: 1em;
+
+  /* Для груп полів (діапазон ваг) також робимо вертикальне відображення */
+  .form-group .weight-range-wrapper,
+  .form-group .all-weight-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    width: auto; /* Дозволяємо обгортці зайняти всю ширину */
   }
-  .admin-sets-table td:first-child {
-    text-align: center;
-    width: calc(30% - 10px);
+
+  /* Всі інпути в цих групах робимо на 100% ширини */
+  .form-group .weight-range-wrapper input,
+  .form-group .all-weight-wrapper input {
+    width: auto;
   }
-  .admin-sets-table select {
-    text-align: center;
-    width: 80%;
-    padding: 5px 3px;
-    font-size: 0.9em;
+
+  /* --- 4. ТАБЛИЦЯ ПІДХОДІВ --- */
+  .sets-table-container {
+    /* Додаємо горизонтальний скрол, якщо таблиця не вміщається */
+    overflow-x: auto;
+    /* Невеликий трюк для кращого вигляду скролбару на темному фоні */
+    -webkit-overflow-scrolling: touch; /* Плавний скрол на iOS */
+    scrollbar-width: thin; /* Тонкий скролбар для Firefox */
+    scrollbar-color: #555 #222; /* Кольори скролбару для Firefox */
   }
+
+  /* Стилізація скролбару для Chrome/Safari */
+  .sets-table-container::-webkit-scrollbar {
+    height: 6px;
+  }
+  .sets-table-container::-webkit-scrollbar-track {
+    background: #222;
+  }
+  .sets-table-container::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 3px;
+  }
+  /* КІНЕЦЬ блоку однієї вправи на мобільних */
 
   /* Список тренувань адмінки на мобільних */
   .admin-workout-list-item {
