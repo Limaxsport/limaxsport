@@ -1841,6 +1841,82 @@ th {
 }
 /* --- ФІНАЛЬНІ СТИЛІ ДЛЯ ДЕТАЛЕЙ ТРЕНУВАННЯ В АДМІНЦІ --- */
 
+/* === СТИЛІ: для розгортання опису техніки в деталях тренування === */
+
+/* Стиль для кнопки-заголовка */
+.technique-toggle {
+  background-color: #2a2a2a;
+  color: #ccc;
+  padding: 10px 15px;
+  border: 1px solid #444;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-size: 1em;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.3s;
+  margin-top: 15px; /* Додаємо відступ зверху */
+  margin-bottom: 15px;
+}
+
+/* Ефект наведення тільки для десктопів (вирішує проблему "залипання" на мобільних) */
+@media (hover: hover) and (pointer: fine) {
+  .technique-toggle:hover {
+    background-color: #3a3a3a;
+    color: white;
+  }
+}
+
+/* Стрілочка для розгортання */
+.technique-toggle .toggle-arrow {
+  transition: transform 0.3s ease-in-out;
+  display: inline-block;
+  font-size: 1.2em;
+}
+
+/* Обертання стрілочки в активному стані */
+.technique-toggle.active .toggle-arrow {
+  transform: rotate(180deg);
+}
+
+/* Контейнер для тексту, який буде згортатись */
+.technique-content {
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.4s ease-out,
+    margin-top 0.4s ease-out,
+    padding 0.4s ease-out;
+  background-color: #1c1c1c;
+  border-radius: 0 0 5px 5px;
+  padding: 0 15px;
+}
+
+/* Стилі для розгорнутого стану (з рамкою, яка не видна у згорнутому) */
+.technique-content.expanded {
+  max-height: 1500px;
+  padding: 15px;
+  margin-top: -16px;
+  border: 1px solid #444;
+  border-top: none;
+  margin-bottom: 15px;
+}
+
+/* Стиль для самого тексту опису */
+.technique-content .description-text {
+  color: #ddd;
+  line-height: 1.6;
+  font-size: 0.95em;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: justify;
+}
+
 /* Застосовуємо єдиний стиль до всіх текстових блоків */
 #admin-workout-details-description,
 #admin-workout-details-feedback,

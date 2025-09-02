@@ -2885,7 +2885,6 @@ async function showAdminWorkoutDetails(planId, userPhone) {
         const details = document.createElement('div');
         details.className = 'exercise-details-content';
         details.innerHTML = `
-                    <p class="exercise-description"><strong>Техніка:</strong> ${exercise.gif.description || '-'}</p>
                     ${exercise.all_weight ? `<p><strong>Заг. вага:</strong> <span class="exercise-all-weight">${exercise.all_weight}</span></p>` : ''}
                     ${exercise.weight_range ? `<p><strong>Діапазон ваг:</strong> <span class="exercise-weight-range">${exercise.weight_range}</span></p>` : ''}
                     ${exercise.emphasis ? '<span class="exercise-emphasis"><strong>Акцент!</strong></span>' : ''}
@@ -2950,6 +2949,37 @@ async function showAdminWorkoutDetails(planId, userPhone) {
             gifContainer.classList.remove('loading');
           };
         }
+
+        // Створюємо заголовок-перемикач для опису техніки
+        const techniqueToggle = document.createElement('div');
+        techniqueToggle.className = 'technique-toggle'; // Додаємо клас для стилізації
+        // Створюємо HTML заголовка: назва та стрілочка
+        techniqueToggle.innerHTML = `<strong>Техніка виконання:</strong><span class="toggle-arrow">▼</span>`;
+
+        // Створюємо контейнер для самого тексту опису, який будемо ховати/показувати
+        const techniqueContent = document.createElement('div');
+        techniqueContent.className = 'technique-content'; // За замовчуванням він буде згорнутий завдяки CSS
+
+        // Створюємо елемент для тексту, щоб коректно відобразити переноси рядків
+        const descriptionText = document.createElement('div');
+        descriptionText.className = 'description-text';
+        const description = exercise.gif.description || 'Опис відсутній.';
+        // Замінюємо символи нового рядка (\n) на теги <br> для правильного відображення в HTML
+        descriptionText.innerHTML = description.replace(/\n/g, '<br>');
+
+        // Додаємо обробник кліку на заголовок
+        techniqueToggle.addEventListener('click', () => {
+          // При кліку додаємо/видаляємо класи, які керують відображенням
+          techniqueToggle.classList.toggle('active');
+          techniqueContent.classList.toggle('expanded');
+        });
+
+        // Збираємо блок: вкладаємо текст опису в його контейнер
+        techniqueContent.appendChild(descriptionText);
+
+        // Додаємо створені елементи на початок правої колонки з деталями
+        details.prepend(techniqueContent); // Спочатку контент
+        details.prepend(techniqueToggle); // Потім заголовок, щоб він був зверху
 
         // Додаємо праву колонку (деталі) у flex-контейнер
         mainContent.appendChild(details);
