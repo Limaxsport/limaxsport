@@ -1860,7 +1860,6 @@ th {
   justify-content: space-between;
   align-items: center;
   transition: background-color 0.3s;
-  margin-top: 15px; /* Додаємо відступ зверху */
   margin-bottom: 15px;
 }
 
@@ -2120,7 +2119,9 @@ th {
 #admin-workout-details-exercises
   .gif-container-wrapper.is-loaded
   .gif-preview-view {
-  opacity: 0;
+  border-radius: 5px;
+  border: 2px solid #7129da;
+  box-shadow: 2px 5px 15px rgba(113, 41, 218, 0.9);
 }
 
 /* Стан завантаження: оверлей */
@@ -2951,7 +2952,7 @@ th {
   /* Деталі тренувань адмінки на мобільних */
   #admin-workout-details-exercises .exercise-main-content {
     flex-direction: column; /* На малих екранах ставимо колонки одну під одною */
-    gap: 15px; /* Зменшуємо відстань */
+    gap: 5px; /* Зменшуємо відстань */
   }
   #admin-workout-details-exercises .exercise-item {
     display: block; /* Переконуємось, що flex вимкнено */
