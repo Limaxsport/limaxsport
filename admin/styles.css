@@ -93,7 +93,7 @@ h6 {
   display: none;
   padding: 20px;
   border: 1px solid rgb(113, 41, 218);
-  box-shadow: 2px 4px 8px rgba(113, 41, 218, 0.8);
+  box-shadow: 0px 0px 15px rgba(113, 41, 218, 0.9);
   border-radius: 8px;
   font-size: 14px;
   margin-top: 10px;
@@ -212,6 +212,29 @@ select option:hover {
   color: white;
 }
 
+datalist {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="rgb(113, 41, 218)"><polygon points="0,0 10,0 5,5"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  border-radius: 0; /* Прибираємо можливе скруглення від браузера */
+}
+datalist option {
+  background-color: black;
+  color: white;
+  white-space: normal;
+  word-wrap: break-word;
+}
+datalist option:checked {
+  background-color: rgb(113, 41, 218);
+  color: white;
+}
+datalist option:hover {
+  background-color: #5a2a8a;
+  color: white;
+}
+
 /* Мультиселект */
 select[multiple] {
   appearance: none;
@@ -233,6 +256,31 @@ select[multiple]::-webkit-scrollbar-thumb {
   border-radius: 4px;
 }
 select[multiple] {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(113, 41, 218) #333;
+}
+
+/* Мультиселект */
+ul {
+  appearance: none;
+  background-image: none;
+  overflow-y: auto;
+  background-color: #1a1a1a;
+  border: 1px solid rgb(113, 41, 218);
+  border-radius: 5px;
+  padding: 10px;
+}
+ul::-webkit-scrollbar {
+  width: 8px;
+}
+ul::-webkit-scrollbar-track {
+  background: #333;
+}
+ul::-webkit-scrollbar-thumb {
+  background: rgb(113, 41, 218);
+  border-radius: 4px;
+}
+ul {
   scrollbar-width: thin;
   scrollbar-color: rgb(113, 41, 218) #333;
 }
@@ -1075,7 +1123,7 @@ th {
 
 /* Стиль для підсвічування таблиці, заповненої на основі переваг */
 .preference-based-table {
-  border: 2px solid rgb(6, 224, 35);
+  border: 1px solid rgb(23, 139, 38);
   box-shadow: 2px 2px 5px rgba(4, 189, 34, 0.7);
 }
 // --- КІНЕЦЬ стилей GEMINI HELPER ---
@@ -1389,9 +1437,8 @@ th {
 
 /* --- 9. ТАБЛИЦЯ ПІДХОДІВ --- */
 .sets-table-container {
-  display: flex;
+  display: inline-flex;
   justify-content: flex-start; /* Вирівнювання по лівому краю */
-  margin-top: 15px;
 }
 .admin-sets-table {
   width: auto;
@@ -2197,7 +2244,7 @@ th {
 .plan-sub-content {
   background-color: #1a1a1a;
   border-radius: 8px;
-  padding: 20px 25px;
+  padding: 10px 10px;
   border: 1px solid #444;
   position: relative;
 }
@@ -2334,7 +2381,7 @@ th {
   border: none;
   padding: 10px 18px;
   cursor: pointer;
-  font-size: 0.95em;
+  font-size: 0.75em;
   font-family: 'Montserrat', sans-serif;
   border-radius: 5px 5px 0 0;
   margin-right: 5px;
@@ -2648,7 +2695,6 @@ th {
   #progress-table-admin {
     /* Таблиці прогресу */
     font-size: 8px;
-    display: block;
     overflow-x: auto;
     white-space: nowrap;
   }
@@ -2712,8 +2758,8 @@ th {
 
   #exercises-container .delete-exercise-btn {
     /* Повертаємо хрестик всередину блоку, щоб він не вилазив за екран */
-    right: 10px;
-    top: 5px;
+    right: -30px;
+    top: -5px;
   }
 
   /* --- 2. ЗОБРАЖЕННЯ GIF ТА СІТКА --- */
@@ -2729,7 +2775,12 @@ th {
 
   /* --- 3. ПОЛЯ ВВОДУ (НАЙВАЖЛИВІШЕ) --- */
   /* Робимо так, щоб лейбл був над полем вводу, а не збоку */
-  .form-group,
+  .form-group {
+    display: inline-flex;
+    gap: 5px; /* Зменшуємо відступ */
+    flex-wrap: wrap;
+  }
+
   .rest-time-container {
     display: inline-block;
     gap: 5px; /* Зменшуємо відступ */
@@ -2806,8 +2857,7 @@ th {
   .admin-workout-list-item .workout-list-actions {
     position: static; /* Скасовуємо абсолютне позиціонування, кнопки стають частиною потоку документа */
     width: 100%; /* Контейнер кнопок займає всю доступну ширину */
-    margin-top: 3px; /* Додаємо відступ зверху, щоб відокремити від тексту */
-    margin-bottom: 5px; /* Додаємо невеликий відступ знизу */
+    margin-bottom: 2px; /* Додаємо невеликий відступ знизу */
     /* Вирівнювання кнопок */
     display: flex; /* Залишаємо flex для вирівнювання самих кнопок */
     justify-content: flex-end; /* <--- ЗМІНЕНО: Притискаємо кнопки до правого краю */
@@ -2845,9 +2895,7 @@ th {
 
   .admin-sets-table.readonly {
     /* Таблиця підходів на мобільних */
-    font-size: 0.7em; /* Ще трохи менший шрифт */
-    vertical-align: middle;
-    table-layout: fixed;
+    font-size: 0.6em; /* Ще трохи менший шрифт */
   }
   .admin-sets-table.readonly td {
     word-break: break-word;

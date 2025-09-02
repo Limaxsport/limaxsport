@@ -5034,9 +5034,8 @@ async function populateFormWithAIData(aiData) {
       if (exercise.based_on_preference === true) {
         const lastExerciseBlock = exercisesContainer.lastElementChild;
         if (lastExerciseBlock) {
-          const tableContainer = lastExerciseBlock.querySelector(
-            '.sets-table-container'
-          );
+          const tableContainer =
+            lastExerciseBlock.querySelector('.admin-sets-table');
           if (tableContainer) {
             tableContainer.classList.add('preference-based-table');
             console.log(

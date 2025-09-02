@@ -432,7 +432,7 @@ textarea {
   display: none;
   padding: 20px;
   border: 1px solid rgb(113, 41, 218);
-  box-shadow: 2px 4px 8px rgba(113, 41, 218, 0.7);
+  box-shadow: 0px 0px 15px rgba(113, 41, 218, 0.9);
   border-radius: 8px;
   font-size: 14px;
   margin-top: 10px;
