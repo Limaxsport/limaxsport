@@ -4846,33 +4846,594 @@ function generateUserReadOnlyTableHTML(
   return `<div class="table-scroll-wrapper">${tableHTML}</div>`;
 }
 
-// Функція завантаження деталей тренування
-async function showWorkoutDetails(planId) {
-  const listContainer = document.getElementById('workout-list-container');
+/**
+ * ОНОВЛЕНО: Тепер ця функція відповідає ТІЛЬКИ за відображення даних.
+ * Вся логіка рендерингу перенесена сюди з showWorkoutDetails.
+ * @param {object} plan - Повний об'єкт тренування для відображення.
+ */
+function renderWorkoutDetailsFromData(plan) {
   const detailsContainer = document.getElementById('workout-details-container');
-
-  detailsContainer.dataset.currentPlanId = planId;
-
-  const detailsStatusDiv = document.getElementById('workout-details-status');
   const exercisesContainer = document.getElementById(
     'workout-details-exercises'
   );
-
   const detailsTitle = document.getElementById('workout-details-title');
   const detailsDate = document.getElementById('workout-details-date');
   const detailsDesc = document.getElementById('workout-details-description');
 
   if (
     !detailsContainer ||
-    !listContainer ||
-    !detailsStatusDiv ||
-    !exercisesContainer
+    !exercisesContainer ||
+    !detailsTitle ||
+    !detailsDate ||
+    !detailsDesc
   ) {
     console.error(
       'Критична помилка: Не знайдено основні контейнери для деталей тренування.'
     );
     return;
   }
+
+  detailsContainer.dataset.currentPlanId = plan.id;
+  displayStatus('workout-details-status', '', false);
+  exercisesContainer.innerHTML = '';
+  const feedbackSection = document.getElementById('feedback-section');
+  if (feedbackSection) feedbackSection.innerHTML = '';
+
+  detailsTitle.innerHTML = plan.title || 'Назви тренування немає =(';
+  detailsDate.innerHTML = new Date(plan.date).toLocaleDateString('uk-UA');
+  detailsDesc.innerHTML =
+    formatTextWithLineBreaks(plan.description) ||
+    'Загальний опис до тренування відсутній...';
+
+  renderFeedbackSection(plan);
+
+  const completedExercisesDataKey = `completedPlan_${plan.id}`;
+  const completedExercisesMap =
+    JSON.parse(localStorage.getItem(completedExercisesDataKey)) || {};
+
+  if (
+    plan.exercises &&
+    Array.isArray(plan.exercises) &&
+    plan.exercises.length > 0
+  ) {
+    let userExcludedGifNamesCurrent = [];
+    if (
+      currentUserProfileData &&
+      Array.isArray(currentUserProfileData.excluded_exercises)
+    ) {
+      userExcludedGifNamesCurrent = currentUserProfileData.excluded_exercises;
+    }
+
+    // --- ВИПРАВЛЕНО: Змінну потрібно оголосити тут ---
+    let planContainsExcludedExerciseInitially = false;
+
+    plan.exercises
+      .sort((a, b) => a.order - b.order)
+      .forEach((exercise) => {
+        //
+        // --- ПОЧАТОК ПОВНОГО ТА ВИПРАВЛЕНОГО КОДУ ДЛЯ РЕНДЕРИНГУ ВПРАВИ ---
+        //
+        const exerciseId = exercise.id;
+        const gifId = exercise.gif.id;
+        const gifName = exercise.gif.name ? exercise.gif.name.trim() : null;
+
+        // --- ВИПРАВЛЕНО: 'const exerciseDiv' оголошується тільки ОДИН РАЗ ---
+        const exerciseDiv = document.createElement('div');
+        exerciseDiv.classList.add('exercise-item');
+        exerciseDiv.setAttribute('data-exercise-id', exerciseId);
+        exerciseDiv.setAttribute('data-gif-id', gifId);
+        if (gifName) {
+          exerciseDiv.setAttribute('data-gif-name', gifName);
+        }
+
+        const isCompleted = !!completedExercisesMap[exerciseId];
+        if (isCompleted) {
+          exerciseDiv.classList.add('exercise-completed-visual');
+        }
+
+        const isEffectivelyExcluded =
+          exercise.is_excluded_by_user === true ||
+          (gifName && userExcludedGifNamesCurrent.includes(gifName));
+        if (isEffectivelyExcluded) {
+          exerciseDiv.classList.add('exercise-excluded-by-user');
+          planContainsExcludedExerciseInitially = true;
+        }
+
+        const headerDiv = document.createElement('div');
+        headerDiv.classList.add('exercise-header');
+
+        const orderSpan = document.createElement('span');
+        orderSpan.className = 'exercise-order';
+        orderSpan.textContent = `${exercise.order}.`;
+        headerDiv.appendChild(orderSpan);
+
+        const nameH5 = document.createElement('h5');
+        nameH5.className = 'exercise-name';
+        nameH5.textContent = gifName || 'Назва вправи відсутня';
+        headerDiv.appendChild(nameH5);
+
+        if (gifName && !isEffectivelyExcluded) {
+          const excludeButton = document.createElement('button');
+          excludeButton.className = 'exclude-exercise-btn';
+          excludeButton.title = 'Виключити цю вправу з майбутніх планів';
+          excludeButton.innerHTML = '&times;';
+          headerDiv.appendChild(excludeButton);
+        }
+
+        if (isCompleted) {
+          const checkmarkSpan = document.createElement('span');
+          checkmarkSpan.className = 'exercise-checkmark';
+          checkmarkSpan.title = 'Вправу виконано';
+          checkmarkSpan.textContent = ' ✔️';
+          headerDiv.appendChild(checkmarkSpan);
+        }
+        exerciseDiv.appendChild(headerDiv);
+
+        const mediaContainer = document.createElement('div');
+        mediaContainer.classList.add('exercise-media-container');
+
+        const exerciseGif = exercise.gif;
+        let pngPreviewUrl = '';
+        let gifUrl = '';
+        const baseStaticServerUrl = 'https://limaxsport.top/static/gifs/';
+
+        if (
+          exerciseGif &&
+          typeof exerciseGif.filename === 'string' &&
+          exerciseGif.filename.trim() !== ''
+        ) {
+          const relativePathWithExtension = exerciseGif.filename.trim();
+          gifUrl = `${baseStaticServerUrl}${relativePathWithExtension}`;
+          let baseRelativePath = relativePathWithExtension;
+          const lastDotIndex = baseRelativePath.lastIndexOf('.');
+          if (lastDotIndex !== -1) {
+            baseRelativePath = baseRelativePath.substring(0, lastDotIndex);
+          }
+          pngPreviewUrl = `${baseStaticServerUrl}${baseRelativePath}.png`;
+        }
+
+        const pngImg = document.createElement('img');
+        if (pngPreviewUrl) {
+          pngImg.src = pngPreviewUrl;
+        }
+        pngImg.alt = `Прев'ю: ${exerciseGif ? exerciseGif.name || 'вправа' : 'вправа'}`;
+        pngImg.classList.add('exercise-preview-png');
+
+        const loaderDiv = document.createElement('div'); // Потрібно визначити loaderDiv тут
+        loaderDiv.classList.add('exercise-loader');
+        loaderDiv.style.display = 'none';
+
+        pngImg.onerror = () => {
+          pngImg.style.display = 'none';
+          if (!mediaContainer.querySelector('.preview-error-message')) {
+            const errorP = document.createElement('p');
+            errorP.textContent = "Прев'ю тимчасово недоступне";
+            errorP.classList.add(
+              'preview-error-message',
+              'media-error-message'
+            );
+            mediaContainer.insertBefore(errorP, loaderDiv);
+          }
+        };
+        mediaContainer.appendChild(pngImg);
+        mediaContainer.appendChild(loaderDiv);
+
+        const slowLoadMessageDiv = document.createElement('div');
+        slowLoadMessageDiv.classList.add('exercise-slow-load-message');
+        slowLoadMessageDiv.textContent =
+          "Поганий інтернет зв'язок, іде завантаження анімації вправи";
+        slowLoadMessageDiv.style.display = 'none';
+        mediaContainer.appendChild(slowLoadMessageDiv);
+
+        const gifImg = document.createElement('img');
+        if (gifUrl) {
+          gifImg.alt = exerciseGif
+            ? exerciseGif.name || 'Анімація вправи'
+            : 'Анімація вправи';
+          gifImg.classList.add('exercise-gif');
+          gifImg.style.display = 'none';
+          mediaContainer.appendChild(gifImg);
+          loaderDiv.style.display = 'block';
+
+          let slowLoadTimer = setTimeout(() => {
+            if (
+              gifImg.style.display === 'none' &&
+              !gifImg.dataset.loadError &&
+              gifImg.src
+            ) {
+              slowLoadMessageDiv.style.display = 'block';
+            }
+          }, 10000);
+
+          gifImg.onload = () => {
+            clearTimeout(slowLoadTimer);
+            if (pngImg.style.display !== 'none') {
+              pngImg.style.display = 'none';
+              const previewErrorMsg = mediaContainer.querySelector(
+                '.preview-error-message'
+              );
+              if (previewErrorMsg) previewErrorMsg.remove();
+            }
+            loaderDiv.style.display = 'none';
+            slowLoadMessageDiv.style.display = 'none';
+            gifImg.style.display = 'block';
+            gifImg.dataset.loaded = 'true';
+          };
+
+          gifImg.onerror = () => {
+            clearTimeout(slowLoadTimer);
+            loaderDiv.style.display = 'none';
+            slowLoadMessageDiv.textContent = 'Не вдалося завантажити анімацію.';
+            slowLoadMessageDiv.style.display = 'block';
+            gifImg.dataset.loadError = 'true';
+          };
+
+          gifImg.src = gifUrl;
+        } else {
+          loaderDiv.style.display = 'none';
+          if (
+            pngImg.style.display === 'none' &&
+            !mediaContainer.querySelector('.preview-error-message')
+          ) {
+            if (!mediaContainer.querySelector('.no-media-message')) {
+              const noMediaP = document.createElement('p');
+              noMediaP.textContent = 'Медіа для вправи відсутнє';
+              noMediaP.classList.add('no-media-message');
+              noMediaP.style.cssText =
+                'color: #888; font-size: 0.8em; text-align: center;';
+              mediaContainer.insertBefore(noMediaP, loaderDiv);
+            }
+          }
+        }
+        exerciseDiv.appendChild(mediaContainer);
+
+        const detailsContentDiv = document.createElement('div');
+        detailsContentDiv.classList.add('exercise-details-content');
+
+        const techniqueToggle = document.createElement('div');
+        techniqueToggle.className = 'technique-toggle';
+        techniqueToggle.innerHTML = `<span>Техніка виконання вправи</span><span class="toggle-arrow">▼</span>`;
+
+        const techniqueContent = document.createElement('div');
+        techniqueContent.className = 'technique-content';
+
+        const descriptionText = document.createElement('div');
+        descriptionText.className = 'description-text';
+        descriptionText.innerHTML =
+          formatTextWithLineBreaks(exercise.gif.description) ||
+          'Опис відсутній.';
+
+        techniqueContent.appendChild(descriptionText);
+
+        techniqueToggle.addEventListener('click', () => {
+          techniqueToggle.classList.toggle('active');
+          techniqueContent.classList.toggle('expanded');
+        });
+
+        detailsContentDiv.appendChild(techniqueToggle);
+        detailsContentDiv.appendChild(techniqueContent);
+
+        if (exercise.all_weight) {
+          const p = document.createElement('p');
+          p.innerHTML = `<strong>Загальна робоча вага:</strong> <span class="exercise-all-weight">${exercise.all_weight}</span>`;
+          detailsContentDiv.appendChild(p);
+        }
+        if (exercise.weight_range) {
+          const p = document.createElement('p');
+          p.innerHTML = `<strong>Діапазон робочих ваг:</strong> <span class="exercise-weight-range">${exercise.weight_range}</span>`;
+          detailsContentDiv.appendChild(p);
+        }
+        if (exercise.emphasis) {
+          const span = document.createElement('span');
+          span.className = 'exercise-emphasis';
+          span.innerHTML = '<strong>Акцент на цій вправі!</strong>';
+          detailsContentDiv.appendChild(span);
+        }
+        if (exercise.superset) {
+          const span = document.createElement('span');
+          span.className = 'exercise-superset';
+          span.innerHTML =
+            '<strong>Виконувати в суперсеті з наступною вправою ⇓</strong>';
+          detailsContentDiv.appendChild(span);
+        }
+
+        const executionTitle = document.createElement('h6');
+        executionTitle.innerHTML = `<strong>Виконання вправи:</strong> ${!isCompleted ? '<em style="font-size:0.8em; color: #aaa;">(клікни на повторення або вагу, щоб змінити)</em>' : ''}`;
+        detailsContentDiv.appendChild(executionTitle);
+
+        exerciseDiv.dataset.plannedReps = JSON.stringify(exercise.reps || []);
+        exerciseDiv.dataset.plannedWeights = JSON.stringify(
+          exercise.weights || []
+        );
+        exerciseDiv.dataset.plannedTime = JSON.stringify(exercise.time || []);
+
+        const setsTableContainer = document.createElement('div');
+        setsTableContainer.classList.add('sets-table-container');
+
+        if (isCompleted) {
+          const completedData = completedExercisesMap[exerciseId];
+          setsTableContainer.innerHTML = generateUserReadOnlyTableHTML(
+            completedData.plannedReps || exercise.reps || [],
+            completedData.plannedWeights || exercise.weights || [],
+            completedData.plannedTime || exercise.time || [],
+            completedData.completedReps,
+            completedData.completedWeights,
+            completedData.completedTime || []
+          );
+        } else {
+          setsTableContainer.innerHTML = generateEditableSetsTableHTML(
+            exercise,
+            plan.id
+          );
+        }
+        detailsContentDiv.appendChild(setsTableContainer);
+
+        if (exercise.total_weight === true) {
+          const span = document.createElement('span');
+          span.className = 'total-weight-text';
+          span.innerHTML = '⇑ загальна вага для 2-х гантелей/кросоверів ⇑';
+          detailsContentDiv.appendChild(span);
+        }
+        if (exercise.total_reps === true) {
+          const span = document.createElement('span');
+          span.className = 'total-reps-text';
+          span.innerHTML = '⇑ загальна кількість повторень для обох ніг/рук ⇑';
+          detailsContentDiv.appendChild(span);
+        }
+
+        if (
+          Array.isArray(exercise.time) &&
+          exercise.time.some((t) => t !== null && t > 0)
+        ) {
+          const startWorkBtn = document.createElement('button');
+          startWorkBtn.className = 'rest-timer-button';
+          startWorkBtn.innerHTML = `
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586z"></path></svg>
+                          <span>Виконувати вправу з таймером</span>
+                      `;
+
+          addSafeEventListener(startWorkBtn, async () => {
+            unlockAudioContext();
+            openRestTimerModal();
+
+            if (!areSoundsLoaded) {
+              // ОНОВЛЕНО: Встановлюємо текст напряму, не змінюючи колір
+              timerStatusText.textContent = 'Завантаження звуків...';
+              await initAudio();
+            }
+            if (!areSoundsLoaded) {
+              // Якщо завантаження провалилось, повертаємо стандартний текст
+              timerStatusText.textContent = 'ВІДПОЧИНОК';
+              return;
+            }
+
+            const workDurations = exercise.time.filter(
+              (t) => t !== null && t > 0
+            );
+            const restDuration = exercise.rest_time || 0;
+            startWorkAndRestSequence(workDurations, restDuration);
+          });
+          detailsContentDiv.appendChild(startWorkBtn);
+
+          if (exercise.rest_time && exercise.rest_time > 0) {
+            const staticRestText = document.createElement('p');
+            staticRestText.className = 'static-rest-time';
+            staticRestText.innerHTML = `<strong>Відпочинок:</strong> ${formatSecondsToMMSS(exercise.rest_time)}`;
+            detailsContentDiv.appendChild(staticRestText);
+          }
+        } else if (exercise.rest_time && exercise.rest_time > 0) {
+          const restButton = document.createElement('button');
+          restButton.className = 'rest-timer-button';
+          restButton.title = 'Натисніть, щоб запустити таймер відпочинку';
+          restButton.innerHTML = `
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586z"></path></svg>
+                              <span>Відпочинок: ${formatSecondsToMMSS(exercise.rest_time)}</span>
+                          `;
+
+          addSafeEventListener(restButton, async () => {
+            unlockAudioContext();
+            openRestTimerModal();
+
+            if (!areSoundsLoaded) {
+              // ОНОВЛЕНО: Встановлюємо текст напряму, не змінюючи колір
+              timerStatusText.textContent = 'Завантаження звуків...';
+              await initAudio();
+            }
+            if (!areSoundsLoaded) {
+              timerStatusText.textContent = 'ВІДПОЧИНОК';
+              return;
+            }
+
+            startSimpleRestTimer(exercise.rest_time);
+          });
+          detailsContentDiv.appendChild(restButton);
+        }
+
+        if (!isCompleted) {
+          const saveAreaContainer = document.createElement('div');
+          saveAreaContainer.classList.add('save-preference-area');
+          const infoTextSpan = document.createElement('span');
+          infoTextSpan.classList.add('save-preference-info');
+          infoTextSpan.textContent = 'Виконав вправу - тисни блискавку:';
+          const saveButton = document.createElement('button');
+          saveButton.type = 'button';
+          saveButton.classList.add('save-preference-btn', 'icon-btn');
+          saveButton.dataset.gifId = exercise.gif.id;
+          saveButton.textContent = '⚡️';
+          saveButton.title = 'Позначити вправу виконаною та зберегти показники';
+          saveButton.addEventListener('click', handleSavePreferenceClick);
+
+          saveAreaContainer.appendChild(infoTextSpan);
+          saveAreaContainer.appendChild(saveButton);
+          detailsContentDiv.appendChild(saveAreaContainer);
+        }
+
+        exerciseDiv.appendChild(detailsContentDiv);
+
+        if (!isCompleted) {
+          addEditListenersToExercise(exerciseDiv);
+        }
+
+        exercisesContainer.appendChild(exerciseDiv);
+        //
+        // --- КІНЕЦЬ ПОВНОГО КОДУ РЕНДЕРИНГУ ---
+        //
+      });
+
+    // Ініціалізуємо обробники для нових кнопок "+/-"
+    const addSetButtons = exercisesContainer.querySelectorAll('.add-set-btn');
+    addSetButtons.forEach((btn) =>
+      btn.addEventListener('click', handleAddSetClick)
+    );
+
+    const removeSetButtons =
+      exercisesContainer.querySelectorAll('.remove-set-btn');
+    removeSetButtons.forEach((btn) =>
+      btn.addEventListener('click', handleRemoveLastSetClick)
+    );
+
+    initializeExcludeExerciseButtons(plan.id, userExcludedGifNamesCurrent);
+
+    // Фонове завантаження решти GIF
+    plan.exercises.forEach((exercise) => {
+      if (exercise.order > 1 && exercise.gif && exercise.gif.filename) {
+        const subsequentGifUrl = `https://limaxsport.top/static/gifs/${exercise.gif.filename}`;
+        const imgPreloader = new Image();
+        imgPreloader.src = subsequentGifUrl;
+      }
+    });
+  } else {
+    exercisesContainer.innerHTML =
+      '<p>Вправи для цього тренування ще не додані.</p>';
+  }
+
+  // --- ДОДАНО: Повний блок для кнопки завершення тренування ---
+  const completionDiv = document.createElement('div');
+  completionDiv.id = 'completion-section';
+  completionDiv.style.marginTop = '25px';
+  completionDiv.style.paddingTop = '15px';
+  completionDiv.style.borderTop = '1px dashed rgb(113, 41, 218)';
+  const isCompletedPlan = plan.completed;
+  completionDiv.innerHTML = `
+        <button id="complete-workout-button" class="${isCompletedPlan ? 'completed' : 'not-completed'}" data-plan-id="${plan.id}">
+            ${isCompletedPlan ? '✔ Виконано' : 'Позначити тренування виконаним'}
+        </button>
+        <div id="greeting-text" style="display: ${isCompletedPlan ? 'block' : 'none'}; margin-top: 10px; color: lightgreen; text-align: center;">
+            <h6><strong>Тренування зараховано, тепер ви на крок ближче до своєї мети! 💪</strong></h6>
+        </div>
+        <div id="uncompleted-warning-text" style="display: ${isCompletedPlan ? 'none' : 'block'}; margin-top: 10px; color: #dc3545; text-align: center; font-size: 0.9em; font-style: italic;">
+            Натисніть, щоб підтвердити виконання. Непідтверджені тренування зараховуються як пропущені. ⚠️
+        </div>
+        <div id="completion-status" style="min-height: 1em; margin-top: 5px; text-align: center;"></div>
+    `;
+  exercisesContainer.appendChild(completionDiv);
+
+  const completeButton = completionDiv.querySelector(
+    '#complete-workout-button'
+  );
+  if (completeButton) {
+    completeButton.addEventListener('click', async () => {
+      const currentStatus = completeButton.classList.contains('completed');
+      const newStatus = !currentStatus; // Інвертуємо статус для відправки
+      const planIdToUpdate = completeButton.dataset.planId;
+      const statusElementId = 'completion-status'; // ID для повідомлень статусу
+
+      try {
+        // Використовуємо fetchWithAuth для PATCH запиту
+        const { data: updatedPlan, response: patchResponse } =
+          await fetchWithAuth(
+            `${baseURL}/training_plans/${planIdToUpdate}/status`,
+            {
+              method: 'PATCH',
+              body: JSON.stringify({
+                completed: newStatus,
+              }),
+            }
+          );
+
+        if (!patchResponse.ok) {
+          // ВИПРАВЛЕНО: Використовуємо 'updatedPlan' для деталей помилки, а не 'errorData'
+          throw new Error(
+            updatedPlan.detail || `Помилка сервера: ${patchResponse.status}`
+          );
+        }
+
+        // Оновлюємо UI на основі відповіді сервера
+        completeButton.textContent = updatedPlan.completed
+          ? '✔ Виконано'
+          : 'Позначити тренування виконаним';
+        completeButton.classList.toggle('completed', updatedPlan.completed);
+        completeButton.classList.toggle(
+          'not-completed',
+          !updatedPlan.completed
+        );
+
+        // Керуємо видимістю ОБОХ текстових повідомлень
+        const greetingTextDiv = document.getElementById('greeting-text');
+        const warningTextDiv = document.getElementById(
+          'uncompleted-warning-text'
+        );
+
+        if (greetingTextDiv) {
+          greetingTextDiv.style.display = updatedPlan.completed
+            ? 'block'
+            : 'none';
+        }
+        if (warningTextDiv) {
+          warningTextDiv.style.display = updatedPlan.completed
+            ? 'none'
+            : 'block';
+        }
+
+        // --- ОНОВЛЕННЯ ЕЛЕМЕНТА У СПИСКУ ---
+        const listItemInList = document.querySelector(
+          `.workout-list-item[data-plan-id="${planIdToUpdate}"]`
+        );
+        if (listItemInList) {
+          // Додаємо/видаляємо клас 'completed'
+          listItemInList.classList.toggle('completed', updatedPlan.completed);
+
+          // Додаємо/видаляємо індикатор (галочку)
+          let indicator = listItemInList.querySelector('.completion-indicator');
+          if (updatedPlan.completed && !indicator) {
+            indicator = document.createElement('span');
+            indicator.className = 'completion-indicator';
+            indicator.textContent = '✔';
+            listItemInList.prepend(indicator);
+          } else if (!updatedPlan.completed && indicator) {
+            indicator.remove();
+          }
+        } else {
+          console.warn(
+            `Елемент списку для плану ${planIdToUpdate} не знайдено для оновлення.`
+          );
+        }
+      } catch (error) {
+        console.error('Помилка оновлення статусу тренування:', error);
+        if (typeof displayStatus === 'function') {
+          displayStatus(
+            statusElementId,
+            `Помилка: ${error.message}`,
+            true,
+            5000
+          );
+        } else {
+          alert(`Помилка оновлення статусу: ${error.message}`);
+        }
+      }
+    });
+  }
+}
+
+/**
+ * ОНОВЛЕНО: Тепер ця функція ТІЛЬКИ завантажує дані та викликає рендерер.
+ */
+async function showWorkoutDetails(planId) {
+  const listContainer = document.getElementById('workout-list-container');
+  const detailsContainer = document.getElementById('workout-details-container');
+  const detailsStatusDiv = document.getElementById('workout-details-status');
+
+  if (!detailsContainer || !listContainer || !detailsStatusDiv) return;
 
   listContainer.style.display = 'none';
   detailsContainer.style.display = 'block';
@@ -4882,648 +5443,25 @@ async function showWorkoutDetails(planId) {
     'Завантаження деталей тренування...',
     false
   );
-  exercisesContainer.innerHTML = '';
   slowConnectionDetector.start('workout-details-status');
-  // Очищуємо контейнер фідбеку перед завантаженням
-  const feedbackSection = document.getElementById('feedback-section');
-  if (feedbackSection) feedbackSection.innerHTML = '';
-
-  detailsTitle.innerHTML = '';
-  detailsDate.innerHTML = '';
-  detailsDesc.innerHTML = '';
 
   try {
-    let userExcludedGifNamesCurrent = [];
-    try {
-      const { data: userExcludedGifNames, response: excludedResponse } =
-        await fetchWithAuth(`${baseURL}/profile/excluded-exercises`);
-      if (excludedResponse.ok) {
-        userExcludedGifNamesCurrent = userExcludedGifNames || [];
-      }
-    } catch (exError) {
-      console.warn(
-        '[showWorkoutDetails] Помилка при завантаженні списку виключених вправ:',
-        exError
-      );
+    const [planResult, profileResult] = await Promise.all([
+      fetchWithAuth(`${baseURL}/training_plans/${planId}`),
+      fetchCurrentProfileDataOnce(),
+    ]);
+
+    const { data: plan, response: planResponse } = planResult;
+    currentUserProfileData = profileResult;
+
+    if (!planResponse.ok) {
+      throw new Error(plan.detail || `Помилка сервера: ${planResponse.status}`);
     }
 
-    const { data: plan, response } = await fetchWithAuth(
-      `${baseURL}/training_plans/${planId}`
-    );
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ detail: 'Не вдалося розпарсити помилку сервера.' }));
-      throw new Error(
-        errorData.detail || `Помилка сервера: ${response.status}`
-      );
-    }
-
-    const completedExercisesDataKey = `completedPlan_${planId}`;
-    const completedExercisesMap =
-      JSON.parse(localStorage.getItem(completedExercisesDataKey)) || {};
-
-    displayStatus('workout-details-status', '', false);
-
-    detailsTitle.innerHTML = plan.title || 'Назви тренування немає =(';
-    detailsDate.innerHTML = new Date(plan.date).toLocaleDateString('uk-UA');
-    detailsDesc.innerHTML =
-      formatTextWithLineBreaks(plan.description) ||
-      'Загальний опис до тренування відсутній, схоже твій тренер вважає тебе професіоналом 💪';
-
-    // --- Викликаємо нову функцію для рендерингу фідбеку ---
-    renderFeedbackSection(plan);
-
-    let planContainsExcludedExerciseInitially = false;
-
-    if (
-      plan.exercises &&
-      Array.isArray(plan.exercises) &&
-      plan.exercises.length > 0
-    ) {
-      plan.exercises
-        .sort((a, b) => a.order - b.order)
-        .forEach((exercise) => {
-          const exerciseId = exercise.id;
-          const gifId = exercise.gif.id;
-          const gifName = exercise.gif.name ? exercise.gif.name.trim() : null;
-
-          const exerciseDiv = document.createElement('div');
-          exerciseDiv.classList.add('exercise-item');
-          exerciseDiv.setAttribute('data-exercise-id', exerciseId);
-          exerciseDiv.setAttribute('data-gif-id', gifId);
-          if (gifName) {
-            exerciseDiv.setAttribute('data-gif-name', gifName);
-          }
-
-          const isCompleted = !!completedExercisesMap[exerciseId];
-          if (isCompleted) {
-            exerciseDiv.classList.add('exercise-completed-visual');
-          }
-
-          const isEffectivelyExcluded =
-            exercise.is_excluded_by_user === true ||
-            (gifName && userExcludedGifNamesCurrent.includes(gifName));
-          if (isEffectivelyExcluded) {
-            exerciseDiv.classList.add('exercise-excluded-by-user');
-            planContainsExcludedExerciseInitially = true;
-          }
-
-          const headerDiv = document.createElement('div');
-          headerDiv.classList.add('exercise-header');
-
-          const orderSpan = document.createElement('span');
-          orderSpan.className = 'exercise-order';
-          orderSpan.textContent = `${exercise.order}.`;
-          headerDiv.appendChild(orderSpan);
-
-          const nameH5 = document.createElement('h5');
-          nameH5.className = 'exercise-name';
-          nameH5.textContent = gifName || 'Назва вправи відсутня';
-          headerDiv.appendChild(nameH5);
-
-          if (gifName && !isEffectivelyExcluded) {
-            const excludeButton = document.createElement('button');
-            excludeButton.className = 'exclude-exercise-btn';
-            excludeButton.title = 'Виключити цю вправу з майбутніх планів';
-            excludeButton.innerHTML = '&times;';
-            headerDiv.appendChild(excludeButton);
-          }
-
-          if (isCompleted) {
-            const checkmarkSpan = document.createElement('span');
-            checkmarkSpan.className = 'exercise-checkmark';
-            checkmarkSpan.title = 'Вправу виконано';
-            checkmarkSpan.textContent = ' ✔️';
-            headerDiv.appendChild(checkmarkSpan);
-          }
-          exerciseDiv.appendChild(headerDiv);
-
-          const mediaContainer = document.createElement('div');
-          mediaContainer.classList.add('exercise-media-container');
-
-          const exerciseGif = exercise.gif;
-          let pngPreviewUrl = '';
-          let gifUrl = '';
-          const baseStaticServerUrl = 'https://limaxsport.top/static/gifs/';
-
-          if (
-            exerciseGif &&
-            typeof exerciseGif.filename === 'string' &&
-            exerciseGif.filename.trim() !== ''
-          ) {
-            const relativePathWithExtension = exerciseGif.filename.trim();
-            gifUrl = `${baseStaticServerUrl}${relativePathWithExtension}`;
-            let baseRelativePath = relativePathWithExtension;
-            const lastDotIndex = baseRelativePath.lastIndexOf('.');
-            if (lastDotIndex !== -1) {
-              baseRelativePath = baseRelativePath.substring(0, lastDotIndex);
-            }
-            pngPreviewUrl = `${baseStaticServerUrl}${baseRelativePath}.png`;
-          }
-
-          const pngImg = document.createElement('img');
-          if (pngPreviewUrl) {
-            pngImg.src = pngPreviewUrl;
-          }
-          pngImg.alt = `Прев'ю: ${exerciseGif ? exerciseGif.name || 'вправа' : 'вправа'}`;
-          pngImg.classList.add('exercise-preview-png');
-          pngImg.onerror = () => {
-            pngImg.style.display = 'none';
-            if (!mediaContainer.querySelector('.preview-error-message')) {
-              const errorP = document.createElement('p');
-              errorP.textContent = "Прев'ю тимчасово недоступне";
-              errorP.classList.add('preview-error-message');
-              errorP.classList.add('media-error-message');
-              mediaContainer.insertBefore(errorP, loaderDiv);
-            }
-          };
-          mediaContainer.appendChild(pngImg);
-
-          const loaderDiv = document.createElement('div');
-          loaderDiv.classList.add('exercise-loader');
-          loaderDiv.style.display = 'none';
-          mediaContainer.appendChild(loaderDiv);
-
-          const slowLoadMessageDiv = document.createElement('div');
-          slowLoadMessageDiv.classList.add('exercise-slow-load-message');
-          slowLoadMessageDiv.textContent =
-            "Поганий інтернет зв'язок, іде завантаження анімації вправи";
-          slowLoadMessageDiv.style.display = 'none';
-          mediaContainer.appendChild(slowLoadMessageDiv);
-
-          const gifImg = document.createElement('img');
-          if (gifUrl) {
-            gifImg.alt = exerciseGif
-              ? exerciseGif.name || 'Анімація вправи'
-              : 'Анімація вправи';
-            gifImg.classList.add('exercise-gif');
-            gifImg.style.display = 'none';
-            mediaContainer.appendChild(gifImg);
-            loaderDiv.style.display = 'block';
-
-            let slowLoadTimer = setTimeout(() => {
-              if (
-                gifImg.style.display === 'none' &&
-                !gifImg.dataset.loadError &&
-                gifImg.src
-              ) {
-                slowLoadMessageDiv.style.display = 'block';
-              }
-            }, 10000);
-
-            gifImg.onload = () => {
-              clearTimeout(slowLoadTimer);
-              if (pngImg.style.display !== 'none') {
-                pngImg.style.display = 'none';
-                const previewErrorMsg = mediaContainer.querySelector(
-                  '.preview-error-message'
-                );
-                if (previewErrorMsg) previewErrorMsg.remove();
-              }
-              loaderDiv.style.display = 'none';
-              slowLoadMessageDiv.style.display = 'none';
-              gifImg.style.display = 'block';
-              gifImg.dataset.loaded = 'true';
-            };
-
-            gifImg.onerror = () => {
-              clearTimeout(slowLoadTimer);
-              loaderDiv.style.display = 'none';
-              slowLoadMessageDiv.textContent =
-                'Не вдалося завантажити анімацію.';
-              slowLoadMessageDiv.style.display = 'block';
-              gifImg.dataset.loadError = 'true';
-            };
-
-            gifImg.src = gifUrl;
-          } else {
-            loaderDiv.style.display = 'none';
-            if (
-              pngImg.style.display === 'none' &&
-              !mediaContainer.querySelector('.preview-error-message')
-            ) {
-              if (!mediaContainer.querySelector('.no-media-message')) {
-                const noMediaP = document.createElement('p');
-                noMediaP.textContent = 'Медіа для вправи відсутнє';
-                noMediaP.classList.add('no-media-message');
-                noMediaP.style.cssText =
-                  'color: #888; font-size: 0.8em; text-align: center;';
-                mediaContainer.insertBefore(noMediaP, loaderDiv);
-              }
-            }
-          }
-          exerciseDiv.appendChild(mediaContainer);
-
-          const detailsContentDiv = document.createElement('div');
-          detailsContentDiv.classList.add('exercise-details-content');
-
-          const techniqueToggle = document.createElement('div');
-          techniqueToggle.className = 'technique-toggle';
-          techniqueToggle.innerHTML = `<span>Техніка виконання вправи</span><span class="toggle-arrow">▼</span>`;
-
-          const techniqueContent = document.createElement('div');
-          techniqueContent.className = 'technique-content';
-
-          const descriptionText = document.createElement('div');
-          descriptionText.className = 'description-text';
-          // Важливо: змінюємо .textContent на .innerHTML, щоб теги <br> відображались
-          descriptionText.innerHTML =
-            formatTextWithLineBreaks(exercise.gif.description) ||
-            'Опис відсутній.';
-
-          techniqueContent.appendChild(descriptionText);
-
-          techniqueToggle.addEventListener('click', () => {
-            techniqueToggle.classList.toggle('active');
-            techniqueContent.classList.toggle('expanded');
-          });
-
-          detailsContentDiv.appendChild(techniqueToggle);
-          detailsContentDiv.appendChild(techniqueContent);
-
-          if (exercise.all_weight) {
-            const p = document.createElement('p');
-            p.innerHTML = `<strong>Загальна робоча вага:</strong> <span class="exercise-all-weight">${exercise.all_weight}</span>`;
-            detailsContentDiv.appendChild(p);
-          }
-          if (exercise.weight_range) {
-            const p = document.createElement('p');
-            p.innerHTML = `<strong>Діапазон робочих ваг:</strong> <span class="exercise-weight-range">${exercise.weight_range}</span>`;
-            detailsContentDiv.appendChild(p);
-          }
-          if (exercise.emphasis) {
-            const span = document.createElement('span');
-            span.className = 'exercise-emphasis';
-            span.innerHTML = '<strong>Акцент на цій вправі!</strong>';
-            detailsContentDiv.appendChild(span);
-          }
-          if (exercise.superset) {
-            const span = document.createElement('span');
-            span.className = 'exercise-superset';
-            span.innerHTML =
-              '<strong>Виконувати в суперсеті з наступною вправою ⇓</strong>';
-            detailsContentDiv.appendChild(span);
-          }
-
-          const executionTitle = document.createElement('h6');
-          executionTitle.innerHTML = `<strong>Виконання вправи:</strong> ${!isCompleted ? '<em style="font-size:0.8em; color: #aaa;">(клікни на повторення або вагу, щоб змінити)</em>' : ''}`;
-          detailsContentDiv.appendChild(executionTitle);
-
-          exerciseDiv.dataset.plannedReps = JSON.stringify(exercise.reps || []);
-          exerciseDiv.dataset.plannedWeights = JSON.stringify(
-            exercise.weights || []
-          );
-          exerciseDiv.dataset.plannedTime = JSON.stringify(exercise.time || []);
-
-          const setsTableContainer = document.createElement('div');
-          setsTableContainer.classList.add('sets-table-container');
-
-          if (isCompleted) {
-            const completedData = completedExercisesMap[exerciseId];
-            if (
-              completedData &&
-              Array.isArray(completedData.completedReps) &&
-              Array.isArray(completedData.completedWeights)
-            ) {
-              setsTableContainer.innerHTML = generateUserReadOnlyTableHTML(
-                completedData.plannedReps || exercise.reps || [],
-                completedData.plannedWeights || exercise.weights || [],
-                completedData.plannedTime || exercise.time || [],
-                completedData.completedReps,
-                completedData.completedWeights,
-                completedData.completedTime || []
-              );
-            } else {
-              setsTableContainer.innerHTML =
-                '<p style="color: orange;">Помилка: Збережені дані про виконання некоректні.</p>';
-            }
-          } else {
-            setsTableContainer.innerHTML =
-              generateEditableSetsTableHTML(exercise);
-          }
-          detailsContentDiv.appendChild(setsTableContainer);
-
-          if (currentUserProfileData?.is_independent && !isCompleted) {
-            // Додаємо setsInput тут!
-            const setsInput = exerciseDiv.querySelector('.sets-input');
-            addSetButtonsListeners(
-              exerciseDiv,
-              exercise,
-              setsTableContainer,
-              setsInput
-            );
-          }
-
-          if (exercise.total_weight === true) {
-            const span = document.createElement('span');
-            span.className = 'total-weight-text';
-            span.innerHTML = '⇑ загальна вага для 2-х гантелей/кросоверів ⇑';
-            detailsContentDiv.appendChild(span);
-          }
-          if (exercise.total_reps === true) {
-            const span = document.createElement('span');
-            span.className = 'total-reps-text';
-            span.innerHTML =
-              '⇑ загальна кількість повторень для обох ніг/рук ⇑';
-            detailsContentDiv.appendChild(span);
-          }
-
-          // === ТАЙМЕР ===
-          if (
-            Array.isArray(exercise.time) &&
-            exercise.time.some((t) => t !== null && t > 0)
-          ) {
-            const startWorkBtn = document.createElement('button');
-            startWorkBtn.className = 'rest-timer-button';
-            startWorkBtn.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586z"></path></svg>
-                        <span>Виконувати вправу з таймером</span>
-                    `;
-
-            addSafeEventListener(startWorkBtn, async () => {
-              unlockAudioContext();
-              openRestTimerModal();
-
-              if (!areSoundsLoaded) {
-                // ОНОВЛЕНО: Встановлюємо текст напряму, не змінюючи колір
-                timerStatusText.textContent = 'Завантаження звуків...';
-                await initAudio();
-              }
-              if (!areSoundsLoaded) {
-                // Якщо завантаження провалилось, повертаємо стандартний текст
-                timerStatusText.textContent = 'ВІДПОЧИНОК';
-                return;
-              }
-
-              const workDurations = exercise.time.filter(
-                (t) => t !== null && t > 0
-              );
-              const restDuration = exercise.rest_time || 0;
-              startWorkAndRestSequence(workDurations, restDuration);
-            });
-            detailsContentDiv.appendChild(startWorkBtn);
-
-            if (exercise.rest_time && exercise.rest_time > 0) {
-              const staticRestText = document.createElement('p');
-              staticRestText.className = 'static-rest-time';
-              staticRestText.innerHTML = `<strong>Відпочинок:</strong> ${formatSecondsToMMSS(exercise.rest_time)}`;
-              detailsContentDiv.appendChild(staticRestText);
-            }
-          } else if (exercise.rest_time && exercise.rest_time > 0) {
-            const restButton = document.createElement('button');
-            restButton.className = 'rest-timer-button';
-            restButton.title = 'Натисніть, щоб запустити таймер відпочинку';
-            restButton.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586z"></path></svg>
-                            <span>Відпочинок: ${formatSecondsToMMSS(exercise.rest_time)}</span>
-                        `;
-
-            addSafeEventListener(restButton, async () => {
-              unlockAudioContext();
-              openRestTimerModal();
-
-              if (!areSoundsLoaded) {
-                // ОНОВЛЕНО: Встановлюємо текст напряму, не змінюючи колір
-                timerStatusText.textContent = 'Завантаження звуків...';
-                await initAudio();
-              }
-              if (!areSoundsLoaded) {
-                timerStatusText.textContent = 'ВІДПОЧИНОК';
-                return;
-              }
-
-              startSimpleRestTimer(exercise.rest_time);
-            });
-            detailsContentDiv.appendChild(restButton);
-          }
-
-          // --- Кнопка "Блискавка" (ТІЛЬКИ якщо НЕ виконано) ---
-          if (!isCompleted) {
-            const saveAreaContainer = document.createElement('div');
-            saveAreaContainer.classList.add('save-preference-area');
-            const infoTextSpan = document.createElement('span');
-            infoTextSpan.classList.add('save-preference-info');
-            infoTextSpan.textContent = 'Виконав вправу - тисни блискавку:';
-            const saveButton = document.createElement('button');
-            saveButton.type = 'button';
-            saveButton.classList.add('save-preference-btn', 'icon-btn');
-            saveButton.dataset.gifId = exercise.gif.id;
-            saveButton.textContent = '⚡️';
-            saveButton.title =
-              'Позначити вправу виконаною та зберегти показники'; // Оновлено title
-            saveButton.addEventListener('click', handleSavePreferenceClick); // Додаємо обробник
-
-            saveAreaContainer.appendChild(infoTextSpan);
-            saveAreaContainer.appendChild(saveButton);
-            detailsContentDiv.appendChild(saveAreaContainer); // Додаємо в кінець деталей
-          }
-
-          // --- Додаємо блок деталей до основного блоку вправи ---
-          exerciseDiv.appendChild(detailsContentDiv);
-
-          // --- Додаємо обробники для редагування ТІЛЬКИ якщо НЕ виконано ---
-          if (!isCompleted) {
-            addEditListenersToExercise(exerciseDiv); // Додаємо обробники редагування
-          }
-
-          // --- Додаємо готову вправу до загального контейнера ---
-          exercisesContainer.appendChild(exerciseDiv);
-        }); // Кінець forEach(exercise => ...)
-
-      // Ініціалізуємо обробники для нових кнопок виключення
-      initializeExcludeExerciseButtons(planId, userExcludedGifNamesCurrent);
-
-      // ---> Фонове завантаження решти GIF (окрім першого) <---
-      //console.log("Ініціація фонового завантаження решти GIF...");
-      plan.exercises.forEach((exercise) => {
-        // Завантажуємо тільки ті, що мають order > 1 і мають ім'я файлу
-        if (exercise.order > 1 && exercise.gif && exercise.gif.filename) {
-          const subsequentGifUrl = `https://limaxsport.top/static/gifs/${exercise.gif.filename}`;
-          //console.log(`Фонове завантаження: ${subsequentGifUrl}`);
-          const imgPreloader = new Image();
-          imgPreloader.src = subsequentGifUrl;
-          // Додатково можна додати обробник помилок для діагностики
-          imgPreloader.onerror = () => {
-            console.warn(
-              `Помилка фонового завантаження GIF: ${subsequentGifUrl}`
-            );
-          };
-          imgPreloader.onload = () => {
-            //console.log(`GIF ${subsequentGifUrl} завантажено у фоні.`);
-          };
-        }
-      });
-      // --- Кінець фонового завантаження Gif ---
-    } else {
-      console.warn(
-        'Масив plan.exercises відсутній, порожній або не є масивом.'
-      );
-      exercisesContainer.innerHTML =
-        '<p>Вправи для цього тренування ще не додані.</p>';
-    }
-
-    // Оновлюємо вигляд елемента у списку тренувань, якщо потрібно
-    updateWorkoutListItemAppearance(
-      planId,
-      planContainsExcludedExerciseInitially
-    );
-
-    // --- ДОДАЄМО КНОПКУ/СТАТУС ВИКОНАННЯ (ПРАВИЛЬНЕ МІСЦЕ!) ---
-    // Цей блок виконується ПІСЛЯ генерації всіх вправ
-
-    const completionDiv = document.createElement('div');
-    completionDiv.id = 'completion-section'; // Додаємо ID для можливого пошуку
-    completionDiv.style.marginTop = '25px';
-    completionDiv.style.paddingTop = '15px';
-    completionDiv.style.borderTop = '1px dashed rgb(113, 41, 218)';
-
-    const isCompleted = plan.completed; // Поточний статус з отриманих даних
-    // ВИКОРИСТОВУЄМО НОВЕ ІМ'Я ЗМІННОЇ, щоб не конфліктувати з аргументом planId
-    const currentPlanIdForButton = plan.id;
-
-    completionDiv.innerHTML = `
-            <button id="complete-workout-button" class="${isCompleted ? 'completed' : 'not-completed'}" data-plan-id="${currentPlanIdForButton}">
-                ${isCompleted ? '✔ Виконано' : 'Позначити тренування виконаним'}
-            </button>
-            
-            <div id="greeting-text" style="display: ${isCompleted ? 'block' : 'none'}; margin-top: 10px; color: lightgreen; text-align: center;">
-                <h6><strong>Тренування зараховано, тепер ви на крок ближче до своєї мети! 💪</strong></h6>
-            </div>
-
-            <div id="uncompleted-warning-text" style="display: ${isCompleted ? 'none' : 'block'}; margin-top: 10px; color: #dc3545; text-align: center; font-size: 0.9em; font-style: italic;">
-                Натисніть, щоб підтвердити виконання. Непідтверджені тренування зараховуються як пропущені. ⚠️
-            </div>
-
-            <div id="completion-status" style="min-height: 1em; margin-top: 5px; text-align: center;"></div>
-        `;
-
-    // Знаходимо контейнер вправ
-    const exercisesContainerElement = document.getElementById(
-      'workout-details-exercises'
-    );
-    if (exercisesContainerElement) {
-      // Додаємо блок кнопки в КІНЕЦЬ контейнера вправ
-      exercisesContainerElement.appendChild(completionDiv);
-
-      // Додаємо обробник події до нової кнопки
-      const completeButton = completionDiv.querySelector(
-        '#complete-workout-button'
-      );
-      const greetingTextDiv = completionDiv.querySelector('#greeting-text');
-
-      if (completeButton) {
-        completeButton.addEventListener('click', async () => {
-          const currentStatus = completeButton.classList.contains('completed');
-          const newStatus = !currentStatus; // Інвертуємо статус для відправки
-          const planIdToUpdate = completeButton.dataset.planId;
-          const greetingTextDiv = document.getElementById('greeting-text'); // Знайдемо текст привітання
-          const statusElementId = 'completion-status'; // ID для повідомлень статусу
-
-          try {
-            // Використовуємо fetchWithAuth для PATCH запиту
-            const { data: updatedPlan, response: patchResponse } =
-              await fetchWithAuth(
-                `${baseURL}/training_plans/${planIdToUpdate}/status`,
-                {
-                  method: 'PATCH',
-                  body: JSON.stringify({ completed: newStatus }),
-                }
-              );
-
-            if (!patchResponse.ok) {
-              throw new Error(
-                errorData.detail || `Помилка сервера: ${patchResponse.status}`
-              );
-            }
-
-            // Оновлюємо UI на основі відповіді сервера
-            completeButton.textContent = updatedPlan.completed
-              ? '✔ Виконано'
-              : 'Позначити тренування виконаним';
-            completeButton.classList.toggle('completed', updatedPlan.completed);
-            completeButton.classList.toggle(
-              'not-completed',
-              !updatedPlan.completed
-            );
-
-            // ОНОВЛЕНО: Керуємо видимістю ОБОХ текстових повідомлень
-            const greetingTextDiv = document.getElementById('greeting-text');
-            const warningTextDiv = document.getElementById(
-              'uncompleted-warning-text'
-            );
-
-            if (greetingTextDiv) {
-              greetingTextDiv.style.display = updatedPlan.completed
-                ? 'block'
-                : 'none';
-            }
-            if (warningTextDiv) {
-              warningTextDiv.style.display = updatedPlan.completed
-                ? 'none'
-                : 'block';
-            }
-
-            // --- ДОДАЄМО ОНОВЛЕННЯ ЕЛЕМЕНТА У СПИСКУ ---
-            const listItemInList = document.querySelector(
-              `.workout-list-item[data-plan-id="${planIdToUpdate}"]`
-            );
-            if (listItemInList) {
-              //console.log(`Оновлення елемента списку для плану ${planIdToUpdate}, статус: ${updatedPlan.completed}`);
-              // Додаємо/видаляємо клас 'completed'
-              listItemInList.classList.toggle(
-                'completed',
-                updatedPlan.completed
-              );
-
-              // Додаємо/видаляємо індикатор (галочку)
-              let indicator = listItemInList.querySelector(
-                '.completion-indicator'
-              );
-              if (updatedPlan.completed && !indicator) {
-                // Додаємо індикатор, якщо його немає, а статус true
-                indicator = document.createElement('span');
-                indicator.className = 'completion-indicator';
-                indicator.textContent = '✔';
-                listItemInList.prepend(indicator); // Додаємо на початок елемента
-              } else if (!updatedPlan.completed && indicator) {
-                // Видаляємо індикатор, якщо він є, а статус false
-                indicator.remove();
-              }
-            } else {
-              console.warn(
-                `Елемент списку для плану ${planIdToUpdate} не знайдено для оновлення.`
-              );
-            }
-          } catch (error) {
-            console.error('Помилка оновлення статусу тренування:', error);
-            if (typeof displayStatus === 'function') {
-              displayStatus(
-                statusElementId,
-                `Помилка: ${error.message}`,
-                true,
-                5000
-              );
-            } else {
-              alert(`Помилка оновлення статусу: ${error.message}`);
-            }
-            // НЕ змінюємо стан кнопки у разі помилки
-          }
-        }); // Кінець обробника click
-      } // Кінець if (completeButton)
-    } else {
-      console.error(
-        'Елемент #workout-details-exercises не знайдено для вставки кнопки виконання.'
-      );
-    }
-    // --- КІНЕЦЬ ДОДАВАННЯ КНОПКИ ---
+    renderWorkoutDetailsFromData(plan);
   } catch (error) {
-    // Обробка помилок fetch або парсингу JSON
     console.error('Помилка завантаження деталей тренування:', error);
-    detailsStatusDiv.innerText = `Не вдалося завантажити деталі: ${error.message}.`;
-    // Очищуємо контейнер, щоб не показувати часткові дані чи повідомлення про виконання
     detailsContainer.innerHTML = `<p>Не вдалося завантажити деталі тренування: ${error.message}</p><button id="back-to-workout-list-error" class="btn-secondary">Назад до списку</button>`;
-    // Додаємо обробник для кнопки назад у випадку помилки
     const backBtnError = document.getElementById('back-to-workout-list-error');
     if (backBtnError) {
       backBtnError.addEventListener('click', () => {
@@ -5534,7 +5472,7 @@ async function showWorkoutDetails(planId) {
   } finally {
     slowConnectionDetector.stop();
   }
-} // Кінець основного блоку showWorkoutDetails
+}
 
 // Додаємо обробники для кнопок "Додати сет" та "Видалити сет"
 function addSetButtonsListeners(
@@ -7355,7 +7293,7 @@ async function handleUserGeminiGeneration() {
  * @param {object} exercise - Об'єкт вправи з даними плану (exercise.sets, .reps, .weights, .time).
  * @returns {string} HTML рядок таблиці.
  */
-function generateEditableSetsTableHTML(exercise) {
+function generateEditableSetsTableHTML(exercise, planId) {
   const numSets = exercise.sets;
   if (!numSets || numSets <= 0) {
     return '<p style="font-style: italic; color: #aaa;">Кількість підходів не вказана тренером.</p>';
@@ -7364,6 +7302,13 @@ function generateEditableSetsTableHTML(exercise) {
   const plannedReps = exercise.reps || [];
   const plannedWeights = exercise.weights || [];
   const plannedTime = exercise.time || [];
+
+  // Це ключовий момент для логіки кнопки видалення. Ми "запам'ятовуємо", скільки підходів дав тренер.
+  const originalSetCount = Math.max(
+    plannedReps.length,
+    plannedWeights.length,
+    plannedTime.length
+  );
 
   const hasActualDataInPlan = (arr) =>
     Array.isArray(arr) && arr.some((val) => val !== null && val !== undefined);
@@ -7444,14 +7389,28 @@ function generateEditableSetsTableHTML(exercise) {
     setsTableHTML += `<tr>${rowHTML}</tr>`;
   }
   setsTableHTML += `</tbody></table>`;
-  if (currentUserProfileData?.is_independent && !exercise.isCompleted) {
+
+  // --- ПОЧАТОК НОВОГО БЛОКУ: Додаємо кнопки керування підходами ---
+  const isCompleted = document
+    .querySelector(`.exercise-item[data-exercise-id="${exercise.id}"]`)
+    ?.classList.contains('exercise-completed-visual');
+
+  if (!isCompleted) {
     setsTableHTML += `
-    <div class="sets-actions">
-      <button class="add-set-btn green-btn" title="Додати підхід">+</button>
-      <button class="remove-set-btn red-btn" title="Видалити підхід">-</button>
-    </div>
-  `;
+          <div class="sets-actions">
+              <button class="add-set-btn green-btn" title="Додати підхід" data-plan-id="${planId}" data-exercise-id="${exercise.id}">+</button>
+      `;
+    // ОСЬ ТУТ ГОЛОВНА ЛОГІКА:
+    // Показуємо кнопку видалення, ТІЛЬКИ якщо поточна кількість підходів (numSets) більша за початкову (originalSetCount)
+    if (numSets > originalSetCount) {
+      setsTableHTML += `
+              <button class="remove-set-btn red-btn" title="Видалити останній підхід" data-plan-id="${planId}" data-exercise-id="${exercise.id}">-</button>
+            `;
+    }
+    setsTableHTML += `</div>`;
   }
+  // --- КІНЕЦЬ НОВОГО БЛОКУ ---
+
   return `<div class="table-scroll-wrapper">${setsTableHTML}</div>`;
 }
 
@@ -8477,6 +8436,94 @@ if (logoutButton) {
     // Перезавантаження сторінки або перенаправлення (опціонально)
     window.location.href = '/'; // Перенаправляємо на головну
   });
+}
+
+/**
+ * Обробляє клік на кнопку "+ Додати підхід".
+ * Відправляє запит на бекенд і оновлює вигляд тренування.
+ * @param {Event} event - Подія кліку.
+ */
+async function handleAddSetClick(event) {
+  const button = event.currentTarget;
+  const planId = button.dataset.planId;
+  const exerciseId = button.dataset.exerciseId;
+
+  if (!planId || !exerciseId) {
+    alert('Помилка: не вдалося визначити ID тренування або вправи.');
+    return;
+  }
+
+  button.disabled = true; // Блокуємо кнопку на час запиту
+  displayStatus('workout-details-status', 'Додаємо підхід...', false);
+
+  try {
+    const { data: updatedPlan, response } = await fetchWithAuth(
+      `${baseURL}/training_plans/${planId}/exercises/${exerciseId}/add-set`,
+      {
+        method: 'POST',
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(updatedPlan.detail || 'Не вдалося додати підхід.');
+    }
+
+    // Бекенд повертає оновлений план, тому ми просто перемальовуємо все тренування
+    // Це найнадійніший спосіб оновити UI
+    renderWorkoutDetailsFromData(updatedPlan);
+  } catch (error) {
+    console.error('Помилка додавання підходу:', error);
+    displayStatus(
+      'workout-details-status',
+      `Помилка: ${error.message}`,
+      true,
+      5000
+    );
+  } finally {
+    // Кнопку не розблоковуємо, бо вона перемалюється разом з усім блоком
+  }
+}
+
+/**
+ * Обробляє клік на кнопку "- Видалити підхід".
+ * @param {Event} event - Подія кліку.
+ */
+async function handleRemoveLastSetClick(event) {
+  const button = event.currentTarget;
+  const planId = button.dataset.planId;
+  const exerciseId = button.dataset.exerciseId;
+
+  if (!planId || !exerciseId) {
+    alert('Помилка: не вдалося визначити ID тренування або вправи.');
+    return;
+  }
+
+  button.disabled = true;
+  displayStatus('workout-details-status', 'Видаляємо підхід...', false);
+
+  try {
+    const { data: updatedPlan, response } = await fetchWithAuth(
+      `${baseURL}/training_plans/${planId}/exercises/${exerciseId}/remove-last-set`,
+      {
+        method: 'DELETE',
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(updatedPlan.detail || 'Не вдалося видалити підхід.');
+    }
+
+    // Перемальовуємо тренування з оновленими даними
+    renderWorkoutDetailsFromData(updatedPlan);
+  } catch (error) {
+    console.error('Помилка видалення підходу:', error);
+    displayStatus(
+      'workout-details-status',
+      `Помилка: ${error.message}`,
+      true,
+      5000
+    );
+  }
 }
 
 // ==========================================================
