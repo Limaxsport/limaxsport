@@ -4445,21 +4445,6 @@ input:checked + .slider:before {
 
 /* --- КІНЕЦЬ блоку самостійного тренування --- */
 
-/* --- Nutrition Tab --- */
-#nutrition h3 {
-  /* Стилі для заголовка, якщо потрібно */
-}
-#nutrition p {
-  /* Стилі для тексту */
-}
-/* --- End Nutrition Tab --- */
-
-/* --- Logout Tab --- */
-#logout p {
-  /* Стилі для тексту */
-}
-/* --- End Logout Tab --- */
-
 /* Допоміжний клас для візуального приховування (для міток полів пошуку тощо) */
 .visually-hidden {
   position: absolute;

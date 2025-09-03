@@ -41,6 +41,9 @@ let accessTokenExpiresAt = null; // Час (timestamp) коли access token з�
 
 let aiAnalysisPollInterval = null; // ID для таймера, що перевіряє готовність аналізу
 
+// Змінна для зберігання "оригінальної" версії тренування, яке переглядається
+let originalPlanDataForDetails = null;
+
 // === NEW: Змінні для пагінації тренувань користувача ===
 const WORKOUTS_INITIAL_LOAD = 5; // Скільки завантажувати спочатку
 const WORKOUTS_PER_PAGE_MORE = 5; // Скільки дозавантажувати по кнопці
@@ -5147,6 +5150,18 @@ function renderWorkoutDetailsFromData(plan) {
         );
         exerciseDiv.dataset.plannedTime = JSON.stringify(exercise.time || []);
 
+        // --- ЗМІНІТЬ ЦЮ ЛОГІКУ: Тепер ми беремо ОРИГІНАЛЬНІ дані ---
+        const originalExercise = originalPlanDataForDetails.exercises.find(
+          (ex) => ex.id === exercise.id
+        );
+        const originalSetCount = originalExercise
+          ? Math.max(
+              originalExercise.reps?.length || 0,
+              originalExercise.weights?.length || 0,
+              originalExercise.time?.length || 0
+            )
+          : 0;
+
         const setsTableContainer = document.createElement('div');
         setsTableContainer.classList.add('sets-table-container');
 
@@ -5161,9 +5176,12 @@ function renderWorkoutDetailsFromData(plan) {
             completedData.completedTime || []
           );
         } else {
+          // --- ЗМІНІТЬ ЦЕЙ РЯДОК: Додаємо четвертий аргумент 'isCompleted' ---
           setsTableContainer.innerHTML = generateEditableSetsTableHTML(
             exercise,
-            plan.id
+            plan.id,
+            originalSetCount,
+            isCompleted
           );
         }
         detailsContentDiv.appendChild(setsTableContainer);
@@ -5279,6 +5297,12 @@ function renderWorkoutDetailsFromData(plan) {
         // --- КІНЕЦЬ ПОВНОГО КОДУ РЕНДЕРИНГУ ---
         //
       });
+
+    // +++ ДОДАЙТЕ ЦЕЙ РЯДОК, ЩОБ ВИКОРИСТАТИ ЗМІННУ +++
+    updateWorkoutListItemAppearance(
+      plan.id,
+      planContainsExcludedExerciseInitially
+    );
 
     // Ініціалізуємо обробники для нових кнопок "+/-"
     const addSetButtons = exercisesContainer.querySelectorAll('.add-set-btn');
@@ -5458,6 +5482,9 @@ async function showWorkoutDetails(planId) {
       throw new Error(plan.detail || `Помилка сервера: ${planResponse.status}`);
     }
 
+    // +++ ДОДАЙТЕ ЦЕЙ РЯДОК: Зберігаємо глибоку копію ОРИГІНАЛЬНОГО плану +++
+    originalPlanDataForDetails = JSON.parse(JSON.stringify(plan));
+
     renderWorkoutDetailsFromData(plan);
   } catch (error) {
     console.error('Помилка завантаження деталей тренування:', error);
@@ -5471,74 +5498,6 @@ async function showWorkoutDetails(planId) {
     }
   } finally {
     slowConnectionDetector.stop();
-  }
-}
-
-// Додаємо обробники для кнопок "Додати сет" та "Видалити сет"
-function addSetButtonsListeners(
-  exerciseDiv,
-  exercise,
-  setsTableContainer,
-  setsInput
-) {
-  const addSetBtn = setsTableContainer.querySelector('.add-set-btn');
-  const removeSetBtn = setsTableContainer.querySelector('.remove-set-btn');
-  const setsTableCont = setsTableContainer;
-
-  function redrawTableAndSave() {
-    setsTableCont.innerHTML = generateEditableSetsTableHTML(exercise);
-    addEditListenersToExercise(exerciseDiv);
-    // Додаємо обробники для нових кнопок після перемальовки!
-    addSetButtonsListeners(exerciseDiv, exercise, setsTableCont, setsInput);
-
-    // Збираємо поточні значення
-    const numSets = parseInt(setsInput.value);
-    let reps = Array(numSets).fill(null);
-    let weights = Array(numSets).fill(null);
-    let time = Array(numSets).fill(null);
-
-    const repsSpans = exerciseDiv.querySelectorAll(
-      '.editable-reps .set-reps-value'
-    );
-    if (repsSpans.length)
-      reps = Array.from(repsSpans).map((s) =>
-        s.textContent === '--' ? null : parseInt(s.textContent)
-      );
-    const weightsSpans = exerciseDiv.querySelectorAll(
-      '.editable-weight .set-weight-value'
-    );
-    if (weightsSpans.length)
-      weights = Array.from(weightsSpans).map((s) => {
-        const val = s.textContent.replace(/\s*кг$/, '').trim();
-        return val === '--' ? null : parseInt(val);
-      });
-    const timeSpans = exerciseDiv.querySelectorAll(
-      '.editable-time .set-time-value'
-    );
-    if (timeSpans.length)
-      time = Array.from(timeSpans).map((s) => {
-        const val = s.textContent.replace(/\s*сек$/, '').trim();
-        return val === '--' ? null : parseInt(val);
-      });
-
-    updateExercisePreference(exercise.gif.id, reps, weights, time, null);
-  }
-
-  if (addSetBtn && setsInput && setsTableCont) {
-    addSetBtn.addEventListener('click', () => {
-      setsInput.value = parseInt(setsInput.value) + 1;
-      exercise.sets = parseInt(setsInput.value);
-      redrawTableAndSave();
-    });
-  }
-  if (removeSetBtn && setsInput && setsTableCont) {
-    removeSetBtn.addEventListener('click', () => {
-      if (parseInt(setsInput.value) > 1) {
-        setsInput.value = parseInt(setsInput.value) - 1;
-        exercise.sets = parseInt(setsInput.value);
-        redrawTableAndSave();
-      }
-    });
   }
 }
 
@@ -7293,7 +7252,12 @@ async function handleUserGeminiGeneration() {
  * @param {object} exercise - Об'єкт вправи з даними плану (exercise.sets, .reps, .weights, .time).
  * @returns {string} HTML рядок таблиці.
  */
-function generateEditableSetsTableHTML(exercise, planId) {
+function generateEditableSetsTableHTML(
+  exercise,
+  planId,
+  originalSetCount,
+  isCompleted
+) {
   const numSets = exercise.sets;
   if (!numSets || numSets <= 0) {
     return '<p style="font-style: italic; color: #aaa;">Кількість підходів не вказана тренером.</p>';
@@ -7302,13 +7266,6 @@ function generateEditableSetsTableHTML(exercise, planId) {
   const plannedReps = exercise.reps || [];
   const plannedWeights = exercise.weights || [];
   const plannedTime = exercise.time || [];
-
-  // Це ключовий момент для логіки кнопки видалення. Ми "запам'ятовуємо", скільки підходів дав тренер.
-  const originalSetCount = Math.max(
-    plannedReps.length,
-    plannedWeights.length,
-    plannedTime.length
-  );
 
   const hasActualDataInPlan = (arr) =>
     Array.isArray(arr) && arr.some((val) => val !== null && val !== undefined);
@@ -7391,21 +7348,16 @@ function generateEditableSetsTableHTML(exercise, planId) {
   setsTableHTML += `</tbody></table>`;
 
   // --- ПОЧАТОК НОВОГО БЛОКУ: Додаємо кнопки керування підходами ---
-  const isCompleted = document
-    .querySelector(`.exercise-item[data-exercise-id="${exercise.id}"]`)
-    ?.classList.contains('exercise-completed-visual');
-
   if (!isCompleted) {
     setsTableHTML += `
           <div class="sets-actions">
               <button class="add-set-btn green-btn" title="Додати підхід" data-plan-id="${planId}" data-exercise-id="${exercise.id}">+</button>
       `;
-    // ОСЬ ТУТ ГОЛОВНА ЛОГІКА:
-    // Показуємо кнопку видалення, ТІЛЬКИ якщо поточна кількість підходів (numSets) більша за початкову (originalSetCount)
+    // Логіка для кнопки видалення залишається такою ж
     if (numSets > originalSetCount) {
       setsTableHTML += `
               <button class="remove-set-btn red-btn" title="Видалити останній підхід" data-plan-id="${planId}" data-exercise-id="${exercise.id}">-</button>
-            `;
+          `;
     }
     setsTableHTML += `</div>`;
   }
