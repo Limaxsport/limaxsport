@@ -3089,12 +3089,12 @@ input:checked + .slider:before {
 }
 
 .table-scroll-wrapper {
-  width: 100%;
+  width: auto;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   margin-bottom: 15px;
   box-sizing: border-box;
-  display: flex;
+  display: inline-block;
   justify-content: left;
 }
 
@@ -3229,54 +3229,80 @@ input:checked + .slider:before {
   text-align: left;
 }
 
-/* --- Кнопки додавання/видалення підходу у вправі --- */
-.table-scroll-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  margin-bottom: 0px;
-  box-sizing: border-box;
-  display: block; /* ВАЖЛИВО: не flex! */
-}
+/*
+  Оновлені стилі для кнопок додавання/видалення підходів.
+  Цей код реалізує логіку розтягування кнопок на всю ширину.
+*/
 
+/* --- Контейнер для кнопок --- */
+/* Ми використовуємо Flexbox для керування кнопками всередині */
 .sets-actions {
-  display: flex;
-  flex-direction: row;
-  align-items: left;
-  margin-top: 5px;
-  margin-bottom: 5px;
-  width: 100%;
-  gap: 5px; /* Акуратний відступ між кнопками */
+  display: flex; /* Вмикаємо Flexbox */
+  width: 100%; /* Контейнер займає всю доступну ширину */
+  gap: 10px; /* Відстань між кнопками, коли їх дві */
+  margin-top: -15px; /* Невеликий відступ зверху від таблиці */
 }
 
-.add-set-btn.green-btn {
-  background-color: transparent;
-  border: 2px solid #28a745;
-  color: white;
+/* --- Загальний стиль для ОБИДВОХ кнопок всередині .sets-actions --- */
+/* Цей селектор застосовує стилі до будь-якої кнопки, що є прямим нащадком .sets-actions */
+.sets-actions > button {
+  flex: 1; /* МАГІЯ ТУТ: кожна кнопка розтягується, щоб заповнити вільний простір */
+  padding: 8px 15px; /* Зробимо кнопки трохи більшими для зручності */
   border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 1em;
+  font-size: 1.1em; /* Збільшимо шрифт для кращої читабельності */
   font-weight: bold;
+  text-align: center;
   cursor: pointer;
-}
-
-.add-set-btn.green-btn:hover {
-  background-color: #218838;
-}
-
-.remove-set-btn.red-btn {
+  border: 2px solid; /* Встановлюємо загальну рамку */
   background-color: transparent;
-  border: 2px solid #dc3545;
-  color: white;
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 1em;
-  font-weight: bold;
-  cursor: pointer;
+  color: #b0b0b0;
+  transition: all 0.2s ease-in-out; /* Плавний перехід для всіх властивостей при наведенні */
+  min-width: 0;
 }
 
-.remove-set-btn.red-btn:hover {
-  background-color: #c82333;
+/* --- Стилі для зеленої кнопки "+" --- */
+.sets-actions .add-set-btn.green-btn {
+  border-color: #072f07; /* Зелена рамка */
+}
+
+/* --- Стилі для червоної кнопки "-" --- */
+.sets-actions .remove-set-btn.red-btn {
+  border-color: #59171d; /* Червона рамка */
+}
+
+/* 1. Ефект натискання (:active) для ВСІХ пристроїв */
+/* Цей стиль спрацює миттєво при торканні пальцем або кліку мишкою */
+.sets-actions .add-set-btn.green-btn:active {
+  background-color: #072f07; /* Трохи темніший зелений */
+  transform: scale(0.98); /* Ефект "втискання" кнопки */
+}
+
+/* 2. Ефект наведення (:hover) ТІЛЬКИ для пристроїв з мишкою */
+/* Цей блок стилів просто не буде застосовуватись на телефонах і планшетах */
+@media (hover: hover) {
+  .sets-actions .add-set-btn.green-btn:hover {
+    background-color: #072f07; /* Заливка зеленим при наведенні */
+    color: #fff;
+  }
+}
+
+/* --- Стилі для червоної кнопки "-" --- */
+.sets-actions .remove-set-btn.red-btn {
+  border-color: #59171d; /* Червона рамка */
+}
+
+/* 1. Ефект натискання (:active) для ВСІХ пристроїв */
+.sets-actions .remove-set-btn.red-btn:active {
+  background-color: #59171d; /* Трохи темніший червоний */
+  transform: scale(0.98);
+}
+
+/* 2. Ефект наведення (:hover) ТІЛЬКИ для пристроїв з мишкою */
+@media (hover: hover) {
+  .sets-actions .remove-set-btn.red-btn:hover {
+    background-color: #59171d; /* Заливка червоним при наведенні */
+    color: #fff;
+  }
 }
 
 /* Кнопка виконання тренування (контейнер) */
