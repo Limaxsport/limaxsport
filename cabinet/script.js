@@ -5984,6 +5984,8 @@ const FOLDER_TRANSLATIONS = {
   functional: 'Функціонал',
   resistance_band: 'Гумові петлі',
   dumbbells: 'Гантелі',
+  kettlebell: 'Гиря',
+  body_weight: 'Вага тіла',
 };
 
 function translateFolderName(name) {
