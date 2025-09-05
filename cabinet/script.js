@@ -41,9 +41,6 @@ let accessTokenExpiresAt = null; // Час (timestamp) коли access token з�
 
 let aiAnalysisPollInterval = null; // ID для таймера, що перевіряє готовність аналізу
 
-// Об'єкт для зберігання фактичних даних вправ під час сесії
-let inProgressExerciseData = {};
-
 // Змінна для зберігання "оригінальної" версії тренування, яке переглядається
 let originalPlanDataForDetails = null;
 
@@ -111,6 +108,23 @@ const processQueue = (error, token = null) => {
   });
   failedQueue = [];
 };
+
+// +++ ДОДАНО: Нові функції для роботи з тимчасовою "пам'яттю" тренування +++
+function getInProgressWorkoutData(planId) {
+  const inProgressKey = `inProgressPlan_${planId}`;
+  return JSON.parse(localStorage.getItem(inProgressKey)) || {};
+}
+
+function setInProgressWorkoutData(planId, data) {
+  const inProgressKey = `inProgressPlan_${planId}`;
+  localStorage.setItem(inProgressKey, JSON.stringify(data));
+}
+
+function clearInProgressWorkoutData(planId) {
+  const inProgressKey = `inProgressPlan_${planId}`;
+  localStorage.removeItem(inProgressKey);
+}
+// +++ КІНЕЦЬ НОВИХ ФУНКЦІЙ +++
 
 // Функції для роботи з токенами в localStorage
 function setTokens(accessToken, refreshToken, expiresInSeconds) {
@@ -5385,6 +5399,11 @@ function renderWorkoutDetailsFromData(plan) {
           );
         }
 
+        // +++ ДОДАЙТЕ ЦЕЙ РЯДОК: Очищуємо пам'ять, якщо тренування ВИКОНАНО +++
+        if (newStatus === true) {
+          clearInProgressWorkoutData(planIdToUpdate);
+        }
+
         // Оновлюємо UI на основі відповіді сервера
         completeButton.textContent = updatedPlan.completed
           ? '✔ Виконано'
@@ -5489,44 +5508,23 @@ async function showWorkoutDetails(planId) {
     // 2. Зберігаємо ОРИГІНАЛ для порівняння
     originalPlanDataForDetails = JSON.parse(JSON.stringify(plan));
 
-    // 3. Очищуємо "пам'ять" для нової сесії
-    inProgressExerciseData = {};
+    // 3. Отримуємо збережені зміни САМЕ ДЛЯ ЦЬОГО ТРЕНУВАННЯ з localStorage
+    const inProgressKey = `inProgressPlan_${planId}`;
+    const savedProgress = JSON.parse(localStorage.getItem(inProgressKey)) || {};
 
-    // 4. Збираємо ID всіх GIF і робимо ОДИН запит за перевагами
-    const gifIds = plan.exercises.map((ex) => ex.gif.id);
-
-    if (gifIds.length > 0) {
-      const { data: preferences } = await fetchWithAuth(
-        `${baseURL}/exercises/preferences/batch`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ gif_ids: gifIds }),
-        }
-      );
-
-      if (preferences) {
-        // 5. "Змішуємо" планові дані з фактичними
-        plan.exercises.forEach((exercise) => {
-          const preference = preferences.find(
-            (p) => p.gif_id === exercise.gif.id
-          );
-          if (preference) {
-            // Якщо є збережені показники, оновлюємо дані вправи
-            exercise.reps = preference.reps;
-            exercise.weights = preference.weights;
-            exercise.time = preference.time;
-            // Зберігаємо в нашу "пам'ять"
-            inProgressExerciseData[exercise.id] = {
-              reps: preference.reps,
-              weights: preference.weights,
-              time: preference.time,
-            };
-          }
-        });
+    // 4. "Змішуємо" планові дані зі збереженими змінами
+    plan.exercises.forEach((exercise) => {
+      if (savedProgress[exercise.id]) {
+        const savedData = savedProgress[exercise.id];
+        // Застосовуємо збережені показники поверх планових
+        exercise.reps = savedData.reps;
+        exercise.weights = savedData.weights;
+        exercise.time = savedData.time;
+        exercise.sets = savedData.sets; // Важливо також оновити кількість підходів
       }
-    }
+    });
 
-    // 6. Викликаємо рендер з уже готовими даними
+    // 5. Викликаємо рендер з уже правильними даними
     renderWorkoutDetailsFromData(plan);
   } catch (error) {
     console.error('Помилка завантаження деталей тренування:', error);
@@ -7706,17 +7704,24 @@ async function updateExercisePreference(
       throw new Error(errorData.detail || `Помилка ${response.status}`);
     }
 
-    // +++ ДОДАЙТЕ ЦЕЙ КОД: Оновлюємо нашу локальну "пам'ять" +++
+    // Оновлюємо нашу локальну "пам'ять"
     const exerciseDiv = feedbackElement?.closest('.exercise-item');
-    if (exerciseDiv && exerciseDiv.dataset.exerciseId) {
+    const planId = document.getElementById('workout-details-container')?.dataset
+      .currentPlanId;
+
+    if (exerciseDiv && exerciseDiv.dataset.exerciseId && planId) {
       const exerciseId = exerciseDiv.dataset.exerciseId;
-      inProgressExerciseData[exerciseId] = {
+      const savedProgress = getInProgressWorkoutData(planId);
+
+      savedProgress[exerciseId] = {
         reps: repsArray,
         weights: weightsArray,
         time: timeArray,
+        sets: repsArray.length,
       };
+
+      setInProgressWorkoutData(planId, savedProgress);
     }
-    // +++ КІНЕЦЬ НОВОГО КОДУ +++
 
     //console.log("Переваги успішно оновлено:", updatedPreference);
 
@@ -8458,7 +8463,6 @@ if (logoutButton) {
 
 /**
  * Обробляє клік на кнопку "+ Додати підхід".
- * Відправляє запит на бекенд і оновлює вигляд тренування.
  * @param {Event} event - Подія кліку.
  */
 async function handleAddSetClick(event) {
@@ -8470,50 +8474,59 @@ async function handleAddSetClick(event) {
     alert('Помилка: не вдалося визначити ID тренування або вправи.');
     return;
   }
-
-  button.disabled = true; // Блокуємо кнопку на час запиту
-  displayStatus('workout-details-status', 'Додаємо підхід...', false);
+  button.disabled = true;
 
   try {
     const { data: updatedPlan, response } = await fetchWithAuth(
       `${baseURL}/training_plans/${planId}/exercises/${exerciseId}/add-set`,
-      {
-        method: 'POST',
-      }
+      { method: 'POST' }
     );
 
     if (!response.ok) {
       throw new Error(updatedPlan.detail || 'Не вдалося додати підхід.');
     }
 
-    // --- ДОДАЙТЕ ЦЕЙ БЛОК ПЕРЕД РЕНДЕРОМ ---
-    // "Змішуємо" відповідь сервера з нашою локальною "пам'яттю"
-    updatedPlan.exercises.forEach((exercise) => {
-      if (inProgressExerciseData[exercise.id]) {
-        const memory = inProgressExerciseData[exercise.id];
-        // Залишаємо структуру (кількість підходів) з сервера, але заповнюємо значеннями з пам'яті
-        exercise.reps = exercise.reps.map((val, i) => memory.reps[i] ?? val);
-        exercise.weights = exercise.weights.map(
-          (val, i) => memory.weights[i] ?? val
+    const savedProgress = getInProgressWorkoutData(planId);
+    const updatedExerciseFromServer = updatedPlan.exercises.find(
+      (ex) => ex.id == exerciseId
+    );
+
+    if (updatedExerciseFromServer) {
+      // ВИПРАВЛЕНО: Беремо дані з "пам'яті", АБО з ОРИГІНАЛЬНОГО плану, якщо їх там немає
+      const exerciseDataToModify =
+        savedProgress[exerciseId] ||
+        JSON.parse(
+          JSON.stringify(
+            originalPlanDataForDetails.exercises.find(
+              (ex) => ex.id == exerciseId
+            )
+          )
         );
-        exercise.time = exercise.time.map((val, i) => memory.time[i] ?? val);
+
+      exerciseDataToModify.reps.push(null);
+      exerciseDataToModify.weights.push(null);
+      exerciseDataToModify.time.push(null);
+      exerciseDataToModify.sets = updatedExerciseFromServer.sets;
+
+      savedProgress[exerciseId] = exerciseDataToModify;
+      setInProgressWorkoutData(planId, savedProgress);
+    }
+
+    // ВИПРАВЛЕНО: "Змішуємо" відповідь сервера з "пам'яттю" перед відображенням
+    updatedPlan.exercises.forEach((exercise) => {
+      if (savedProgress[exercise.id]) {
+        const memory = savedProgress[exercise.id];
+        exercise.reps = memory.reps;
+        exercise.weights = memory.weights;
+        exercise.time = memory.time;
+        exercise.sets = memory.sets;
       }
     });
-    // --- КІНЕЦЬ НОВОГО БЛОКУ ---
 
-    // Бекенд повертає оновлений план, тому ми просто перемальовуємо все тренування
-    // Це найнадійніший спосіб оновити UI
     renderWorkoutDetailsFromData(updatedPlan);
   } catch (error) {
-    console.error('Помилка додавання підходу:', error);
-    displayStatus(
-      'workout-details-status',
-      `Помилка: ${error.message}`,
-      true,
-      5000
-    );
-  } finally {
-    // Кнопку не розблоковуємо, бо вона перемалюється разом з усім блоком
+    alert(`Помилка додавання підходу: ${error.message}`);
+    button.disabled = false;
   }
 }
 
@@ -8530,45 +8543,62 @@ async function handleRemoveLastSetClick(event) {
     alert('Помилка: не вдалося визначити ID тренування або вправи.');
     return;
   }
-
   button.disabled = true;
-  displayStatus('workout-details-status', 'Видаляємо підхід...', false);
 
   try {
     const { data: updatedPlan, response } = await fetchWithAuth(
       `${baseURL}/training_plans/${planId}/exercises/${exerciseId}/remove-last-set`,
-      {
-        method: 'DELETE',
-      }
+      { method: 'DELETE' }
     );
 
     if (!response.ok) {
-      throw new Error(updatedPlan.detail || 'Не вдалося видалити підхід.');
+      throw new Error(
+        updatedPlan.detail || `Помилка сервера: ${response.status}`
+      );
     }
 
-    // --- ДОДАЙТЕ ЦЕЙ БЛОК ПЕРЕД РЕНДЕРОМ (такий самий, як і вище) ---
-    updatedPlan.exercises.forEach((exercise) => {
-      if (inProgressExerciseData[exercise.id]) {
-        const memory = inProgressExerciseData[exercise.id];
-        exercise.reps = exercise.reps.map((val, i) => memory.reps[i] ?? val);
-        exercise.weights = exercise.weights.map(
-          (val, i) => memory.weights[i] ?? val
+    const savedProgress = getInProgressWorkoutData(planId);
+    const updatedExerciseFromServer = updatedPlan.exercises.find(
+      (ex) => ex.id == exerciseId
+    );
+
+    if (updatedExerciseFromServer) {
+      // ВИПРАВЛЕНО: Беремо дані з "пам'яті", АБО з ОРИГІНАЛЬНОГО плану
+      const exerciseDataToModify =
+        savedProgress[exerciseId] ||
+        JSON.parse(
+          JSON.stringify(
+            originalPlanDataForDetails.exercises.find(
+              (ex) => ex.id == exerciseId
+            )
+          )
         );
-        exercise.time = exercise.time.map((val, i) => memory.time[i] ?? val);
+
+      if (exerciseDataToModify.reps.length > 0) exerciseDataToModify.reps.pop();
+      if (exerciseDataToModify.weights.length > 0)
+        exerciseDataToModify.weights.pop();
+      if (exerciseDataToModify.time.length > 0) exerciseDataToModify.time.pop();
+      exerciseDataToModify.sets = updatedExerciseFromServer.sets;
+
+      savedProgress[exerciseId] = exerciseDataToModify;
+      setInProgressWorkoutData(planId, savedProgress);
+    }
+
+    // ВИПРАВЛЕНО: "Змішуємо" відповідь сервера з "пам'яттю" перед відображенням
+    updatedPlan.exercises.forEach((exercise) => {
+      if (savedProgress[exercise.id]) {
+        const memory = savedProgress[exercise.id];
+        exercise.reps = memory.reps;
+        exercise.weights = memory.weights;
+        exercise.time = memory.time;
+        exercise.sets = memory.sets;
       }
     });
-    // --- КІНЕЦЬ НОВОГО БЛОКУ ---
 
-    // Перемальовуємо тренування з оновленими даними
     renderWorkoutDetailsFromData(updatedPlan);
   } catch (error) {
-    console.error('Помилка видалення підходу:', error);
-    displayStatus(
-      'workout-details-status',
-      `Помилка: ${error.message}`,
-      true,
-      5000
-    );
+    alert(`Помилка видалення підходу: ${error.message}`);
+    button.disabled = false;
   }
 }
 
