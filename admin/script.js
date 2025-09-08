@@ -5620,7 +5620,96 @@ async function handleSchedulerTrigger(taskType) {
     button.disabled = false;
     button.textContent = originalButtonText;
   }
-} // ========== КІНЕЦЬ вкладки "ДІЇ" ==========
+}
+
+/**
+ * [Admin Debug] Обробляє перемотку часу для 30-денного плану.
+ * @param {Event} event - Подія натискання кнопки.
+ */
+async function handlePlanTimeTravel(event) {
+  const phoneInput = document.getElementById('debug-plan-user-phone');
+  const userPhone = phoneInput.value.trim();
+  const statusDiv = document.getElementById('debug-plan-status');
+  const button = event.target;
+
+  if (!userPhone) {
+    statusDiv.textContent = 'Будь ласка, введіть номер телефону.';
+    statusDiv.style.color = '#ff6b6b'; // Колір помилки
+    return;
+  }
+
+  const originalButtonText = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Змінюємо...';
+  statusDiv.innerHTML = ''; // Очищуємо статус
+
+  try {
+    const { data } = await fetchWithAuth(
+      '/admin/debug/set-plan-end-date',
+      {
+        method: 'POST',
+        body: JSON.stringify({ user_phone: userPhone }),
+      },
+      'debug-plan-status' // Передаємо ID для обробки помилок
+    );
+
+    displayStatus('debug-plan-status', data.message, false, 5000); // Показуємо успішне повідомлення на 5 секунд
+  } catch (error) {
+    // fetchWithAuth вже обробить і покаже помилку в statusDiv
+    console.error('Помилка при зміщенні дати плану:', error);
+  } finally {
+    button.disabled = false;
+    button.textContent = originalButtonText;
+  }
+}
+
+/**
+ * [Admin Debug] Обробляє перемотку часу для підписки користувача.
+ * @param {Event} event - Подія натискання кнопки.
+ */
+async function handleSubscriptionTimeTravel(event) {
+  const phoneInput = document.getElementById('debug-sub-user-phone');
+  const userPhone = phoneInput.value.trim();
+  const statusDiv = document.getElementById('debug-sub-status');
+  const button = event.target;
+
+  if (!userPhone) {
+    // Використовуємо displayStatus для помилки, щоб вона зникла
+    displayStatus(
+      'debug-sub-status',
+      'Будь ласка, введіть номер телефону.',
+      true,
+      5000
+    );
+    return;
+  }
+
+  const originalButtonText = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Змінюємо...';
+  statusDiv.innerHTML = ''; // Очищуємо статус
+
+  try {
+    const { data } = await fetchWithAuth(
+      '/admin/debug/set-subscription-end-date',
+      {
+        method: 'POST',
+        body: JSON.stringify({ user_phone: userPhone }),
+      },
+      'debug-sub-status' // Передаємо ID для обробки помилок
+    );
+
+    // Використовуємо displayStatus для успішного повідомлення на 5 секунд
+    displayStatus('debug-sub-status', data.message, false, 5000);
+  } catch (error) {
+    // fetchWithAuth вже обробить і покаже помилку в statusDiv
+    console.error('Помилка при зміщенні дати підписки:', error);
+  } finally {
+    button.disabled = false;
+    button.textContent = originalButtonText;
+  }
+}
+// ========== КІНЕЦЬ вкладки "ДІЇ" ==========
 
 // ========== ПРИВ'ЯЗКА ОБРОБНИКІВ ПОДІЙ ==========
 

@@ -585,26 +585,63 @@
               Створює нові 30-денні плани для користувачів, у яких поточний план
               добігає кінця.
             </p>
+
+            <!-- +++ ПОЧАТОК ЗМІН: ВСТАВ ЦЕЙ БЛОК +++ -->
+            <div class="debug-wrapper">
+              <p class="debug-title">Тестування для конкретного користувача (опціонально):</p>
+              <div class="debug-controls">
+                <div class="debug-input-group">
+                  <label for="debug-plan-user-phone">Телефон:</label>
+                  <input type="text" id="debug-plan-user-phone" class="debug-input" placeholder="380XXXXXXXXX">
+                </div>
+                <!-- Ми використовуємо кнопку замість другого поля, бо дія фіксована -->
+                <div class="debug-input-group">
+                  <label>&nbsp;</label> <!-- Пустий лейбл для вирівнювання -->
+                  <button class="action-btn" onclick="handlePlanTimeTravel(event)">Встановити кінець плану на "через 3 дні"</button>
+                </div>
+              </div>
+              <div id="debug-plan-status" class="action-status" style="text-align: left; margin-top: 15px;"></div>
+            </div>
+            <!-- +++ КІНЕЦЬ ЗМІН +++ -->
+
           </div>
           <div class="action-controls">
             <button class="action-btn" data-task="monthly" onclick="handleSchedulerTrigger('monthly')">Запустити</button>
             <div id="scheduler-status-monthly" class="action-status"></div>
           </div>
-       </div>
+        </div>
 
        <div class="action-item">
-          <div class="action-info">
-            <h4>Автопоновлення підписок</h4>
-            <p>
-              Перевіряє та поновлює підписки для користувачів, у яких увімкнено
-              цю опцію.
-            </p>
+        <div class="action-info">
+          <h4>Автопоновлення підписок</h4>
+          <p>
+            Перевіряє та поновлює підписки для користувачів, у яких увімкнено
+            цю опцію.
+          </p>
+
+          <!-- +++ ПОЧАТОК ЗМІН: ВСТАВ ЦЕЙ БЛОК +++ -->
+          <div class="debug-wrapper">
+            <p class="debug-title">Тестування для конкретного користувача (опціонально):</p>
+            <div class="debug-controls">
+              <div class="debug-input-group">
+                <label for="debug-sub-user-phone">Телефон:</label>
+                <input type="text" id="debug-sub-user-phone" class="debug-input" placeholder="380XXXXXXXXX">
+              </div>
+              <div class="debug-input-group">
+                 <label>&nbsp;</label> <!-- Пустий лейбл для вирівнювання -->
+                 <button class="action-btn" onclick="handleSubscriptionTimeTravel(event)">Встановити кінець підписки на сьогодні</button>
+              </div>
+            </div>
+            <div id="debug-sub-status" class="action-status" style="text-align: left; margin-top: 15px;"></div>
           </div>
-          <div class="action-controls">
-            <button class="action-btn" data-task="renewal" onclick="handleSchedulerTrigger('renewal')">Запустити</button>
-            <div id="scheduler-status-renewal" class="action-status"></div>
-          </div>
+          <!-- +++ КІНЕЦЬ ЗМІН +++ -->
+
         </div>
+        <div class="action-controls">
+          <button class="action-btn" data-task="renewal" onclick="handleSchedulerTrigger('renewal')">Запустити</button>
+          <div id="scheduler-status-renewal" class="action-status"></div>
+        </div>
+      </div>
       <!-- ===== КІНЕЦЬ БЛОКУ "ДІЇ" ===== -->
 
       <!-- Вкладка "Вихід" -->
