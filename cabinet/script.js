@@ -1361,6 +1361,7 @@ async function loadAndDisplayNotifications() {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        timeZone: 'Europe/Kyiv',
       });
 
       // ▼▼▼ ОСНОВНА ЗМІНА ТУТ - НОВИЙ, ПРОСТІШИЙ HTML-ШАБЛОН ▼▼▼
