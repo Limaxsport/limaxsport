@@ -2579,6 +2579,44 @@ th {
   font-style: italic;
   color: #aaa;
 }
+
+/* --- СТИЛІ ДЛЯ БЛОКУ АНАЛІТИКИ ВОРОНКИ --- */
+.funnel-metric-cell {
+  align-items: center;
+  gap: 15px; /* Простір між елементами */
+}
+
+.funnel-metric-cell .stats-value {
+  min-width: 50px; /* Фіксована ширина для числа, щоб бари вирівнялись */
+  text-align: right;
+}
+
+.funnel-progress-container {
+  flex-grow: 1; /* Займає весь доступний простір */
+  height: 18px;
+  background-color: #333;
+  border-radius: 9px;
+  overflow: hidden;
+  border: 1px solid #555;
+}
+
+.funnel-progress-fill {
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    #28a745,
+    #90ee90
+  ); /* Градієнт, як у воронці */
+  border-radius: 9px;
+  transition: width 0.5s ease-in-out;
+}
+
+.funnel-percentage-label {
+  min-width: 60px; /* Фіксована ширина для відсотка */
+  font-size: 0.9em;
+  color: #ccc;
+  font-weight: bold;
+}
 /* --- КІНЕЦЬ СТИЛІВ ДЛЯ ВКЛАДКИ "АНАЛІТИКА" --- */
 
 /* --- СТИЛІ ДЛЯ ВКЛАДКИ "ДІЇ" --- */

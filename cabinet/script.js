@@ -5484,6 +5484,7 @@ async function showWorkoutDetails(planId) {
 
   listContainer.style.display = 'none';
   detailsContainer.style.display = 'block';
+  window.scrollTo(0, 0);
 
   displayStatus(
     'workout-details-status',

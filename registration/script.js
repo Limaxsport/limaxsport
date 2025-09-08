@@ -54,6 +54,43 @@ async function fetchWithAuth(url, options = {}) {
   }
 }
 
+/**
+ * Надсилає подію аналітики воронки на бекенд (без очікування відповіді).
+ * @param {string} stepId - ID кроку (напр., 'welcome', 'goal', 'confirmation').
+ * @param {string} eventType - Тип події (напр., 'step_view', 'register_attempt', 'register_success').
+ */
+function trackFunnelEvent(stepId, eventType) {
+  try {
+    if (!funnelManager.state.funnelSessionId) {
+      console.warn(
+        'Неможливо відстежити подію: funnelSessionId ще не встановлено.'
+      );
+      return;
+    }
+
+    const payload = {
+      session_id: funnelManager.state.funnelSessionId,
+      step_id: stepId,
+      event_type: eventType,
+    };
+
+    // Використовуємо fetch, але не очікуємо (await) відповіді.
+    // Ми також додаємо keepalive: true, що є критичним для подій,
+    // які відбуваються прямо перед перенаправленням (register_success).
+    fetch(`${baseURL}/analytics/funnel-event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch((err) => {
+      // Локально ловимо помилку, щоб вона не зламала основний потік
+      console.warn(`Помилка відправки аналітики (${stepId}):`, err.message);
+    });
+  } catch (error) {
+    console.warn('Синхронна помилка trackFunnelEvent:', error.message);
+  }
+}
+
 // Менеджер таймерів для повільного з'єднання ---
 const loadingTimerManager = {
   timerId: null,
@@ -103,6 +140,8 @@ const funnelManager = {
     currentStepIndex: 0,
     isSubmitting: false,
     registrationData: {},
+    countdownTimerId: null,
+    funnelSessionId: null,
   },
   steps: [
     {
@@ -606,6 +645,14 @@ const funnelManager = {
     if (!this.elements.overlay) return;
     this.state.currentStepIndex = 0;
     this.state.registrationData = {};
+
+    // --- ДОДАНО: Створюємо унікальний ID для цієї сесії воронки ---
+    this.state.funnelSessionId =
+      typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).substring(2);
+    // --- КІНЕЦЬ ЗМІНИ ---
+
     this.elements.overlay.style.display = 'flex';
     this.renderCurrentStep();
   },
@@ -619,6 +666,9 @@ const funnelManager = {
   renderCurrentStep() {
     const step = this.steps[this.state.currentStepIndex];
     if (!step) return;
+
+    // --- ДОДАНО: Аналітика перегляду кроку ---
+    trackFunnelEvent(step.id, 'step_view');
 
     // --- Фінальна логіка для прогрес-бару ---
     const fillElement = document.getElementById('funnel-progress-fill');
@@ -733,22 +783,16 @@ const funnelManager = {
     if (this.state.isSubmitting) return;
 
     this.state.isSubmitting = true;
+
+    // --- ДОДАНО: Аналітика спроби реєстрації ---
+    trackFunnelEvent('confirmation', 'register_attempt');
+
     const registerBtn = this.elements.nextBtn; // Створюємо коротку змінну для зручності
     this.elements.nextBtn.disabled = true;
     this.elements.nextBtn.textContent = 'Реєстрація...';
 
-    // --- ПОЧАТОК ЗМІН: Додаємо анімацію всередину кнопки ---
-    registerBtn.classList.add('loading'); // Додаємо клас для вирівнювання
-
-    const loader = document.createElement('div');
-    loader.className = 'funnel-loader';
-    registerBtn.appendChild(loader); // Вставляємо анімацію всередину кнопки
-    // --- КІНЕЦЬ ЗМІН ---
-
     this.elements.statusMsg.style.color = 'lightgreen';
     this.elements.statusMsg.textContent = 'Створюємо ваш акаунт та профіль...';
-
-    loadingTimerManager.start(this.elements.statusMsg);
 
     try {
       // --- КРОК А: Збираємо ВСІ дані в один об'єкт ---
@@ -809,23 +853,13 @@ const funnelManager = {
         responseData.expires_in
       );
 
-      loadingTimerManager.stop();
-      // --- ОСНОВНА ЗМІНА ТУТ ---
-      // Запускаємо перевірку замість прямого перенаправлення
-      this.elements.statusMsg.textContent =
-        'Успішно! Генеруємо ваш персональний план (30 секунд)...';
+      // Запускаємо наш зворотний відлік на 30 секунд
+      this.startFinalCountdown(30);
+      // Паралельно запускаємо перевірку готовності плану
       pollForPlanAndRedirect();
     } catch (error) {
-      // --- ПОЧАТОК ЗМІН: Прибираємо анімацію у випадку помилки ---
-      const loader = registerBtn.querySelector('.funnel-loader');
-      if (loader) {
-        loader.remove();
-      }
-      registerBtn.classList.remove('loading');
-      // --- КІНЕЦЬ ЗМІН ---
-
-      // ПОМИЛКА: Зупиняємо таймер і обробляємо помилку
-      loadingTimerManager.stop();
+      // ПОМИЛКА: Зупиняємо наш таймер зворотного відліку, якщо він був запущений
+      this.clearFinalCountdown();
 
       const errorMessage = error.message || 'Сталася невідома помилка.';
       let errorHandled = false;
@@ -867,6 +901,46 @@ const funnelManager = {
       this.elements.nextBtn.textContent = 'Зареєструватися';
     }
   },
+
+  /**
+   * Запускає візуальний зворотний відлік на кнопці та у статусі.
+   * @param {number} duration - Тривалість у секундах.
+   */
+  startFinalCountdown(duration) {
+    this.clearFinalCountdown(); // Очищуємо попередній таймер, якщо він був
+
+    const registerBtn = this.elements.nextBtn;
+    const statusMsg = this.elements.statusMsg;
+    let remaining = duration;
+
+    const updateTimer = () => {
+      if (remaining <= 0) {
+        this.clearFinalCountdown();
+        // Таймер завершився, але pollForPlanAndRedirect продовжує працювати
+        // (він має власний таймаут на 100 секунд).
+        // Просто залишаємо повідомлення про очікування.
+        statusMsg.textContent = 'Майже готово, очікуємо відповідь...';
+        registerBtn.textContent = 'Очікуємо...';
+      } else {
+        statusMsg.textContent = `Генерація плану... Залишилось: ${remaining} сек.`;
+        registerBtn.textContent = `Зачекайте... ${remaining}`;
+        remaining--;
+      }
+    };
+
+    updateTimer(); // Викликаємо одразу, щоб не чекати першу секунду
+    this.state.countdownTimerId = setInterval(updateTimer, 1000);
+  },
+
+  /**
+   * Зупиняє та очищує активний таймер зворотного відліку.
+   */
+  clearFinalCountdown() {
+    if (this.state.countdownTimerId) {
+      clearInterval(this.state.countdownTimerId);
+      this.state.countdownTimerId = null;
+    }
+  },
 };
 
 /**
@@ -875,7 +949,7 @@ const funnelManager = {
 function pollForPlanAndRedirect() {
   const statusElement = funnelManager.elements.statusMsg;
   let attempts = 0;
-  const maxAttempts = 20; // Макс. спроб (20 * 5 сек = 100 секунд)
+  const maxAttempts = 40; // Макс. спроб (40 * 5 сек = 200 секунд)
 
   const intervalId = setInterval(async () => {
     attempts++;
@@ -900,6 +974,10 @@ function pollForPlanAndRedirect() {
       // Якщо запит успішний і масив планів не порожній
       if (response.ok && Array.isArray(plans) && plans.length > 0) {
         clearInterval(intervalId);
+
+        // --- ДОДАНО: Аналітика УСПІШНОЇ реєстрації та генерації ---
+        trackFunnelEvent('confirmation', 'register_success');
+
         if (statusElement) {
           statusElement.textContent = 'План готовий! Перенаправляємо...';
         }

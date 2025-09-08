@@ -5482,7 +5482,79 @@ function renderAdminStats(stats) {
         </table>
     `;
 
-  html += `<p style="font-size: 0.8em; color: #888; margin-top: 10px;">*Примітка: Статистика по тренеру відображається, якщо у вкладці "Профілі" обрати користувача з роллю "Тренер".</p>`;
+  html += `<p style="font-size: 0.8em; color: #888; margin-top: 10px;">*Примітка: Статистика по тренеру відображається, якщо у вкладці "Профілі" обрати користувача з роллю "Тренер".</p><br>`;
+
+  // ==========================================================
+  // === ПОЧАТОК НОВОГО БЛОКУ: АНАЛІТИКА ВОРОНКИ РЕЄСТРАЦІЇ ===
+  // ==========================================================
+  html += `<br><h3>Аналітика воронки самостійної реєстрації 💰</h3>`;
+
+  // Перевіряємо, чи є дані для відображення
+  if (
+    stats.funnel_analytics &&
+    Object.keys(stats.funnel_analytics.step_views).length > 0
+  ) {
+    const funnelData = stats.funnel_analytics;
+    // Визначаємо правильний порядок кроків, як у воронці
+    const funnelStepsOrder = [
+      { id: 'welcome', label: 'Відкриття воронки' },
+      { id: 'goal', label: '1. Ціль' },
+      { id: 'training_type', label: '2. Тип тренувань' },
+      { id: 'daytime_activity', label: '3. Активність' },
+      { id: 'level_of_training', label: '4. Рівень підготовки' },
+      { id: 'training_days', label: '5. К-сть тренувань' },
+      { id: 'measurements', label: '6. Антропометрія' },
+      { id: 'gender', label: '7. Стать' },
+      { id: 'health', label: "8. Здоров'я" },
+      { id: 'excluded_exercises', label: '9. Виключені вправи' },
+      { id: 'full_name', label: "10. Ім'я та Прізвище" },
+      { id: 'display_name', label: "11. Публічне ім'я" },
+      { id: 'socials', label: '12. Соцмережі' },
+      { id: 'phone', label: '13. Телефон' },
+      { id: 'password', label: '14. Пароль' },
+      { id: 'email', label: '15. Email' },
+      { id: 'confirmation', label: '16. Фінальний крок' },
+    ];
+
+    // Початкова кількість користувачів (100%)
+    const initialUsers = funnelData.step_views['welcome'] || 0;
+
+    let funnelRows = '';
+
+    funnelStepsOrder.forEach((step) => {
+      const count = funnelData.step_views[step.id] || 0;
+      const percentage = initialUsers > 0 ? (count / initialUsers) * 100 : 0;
+
+      funnelRows += `
+            <tr>
+                <td>${step.label}</td>
+                <td class="funnel-metric-cell">
+                    <span class="stats-value">${count}</span>
+                    <div class="funnel-progress-container">
+                        <div class="funnel-progress-fill" style="width: ${percentage.toFixed(1)}%;"></div>
+                    </div>
+                    <span class="funnel-percentage-label">${percentage.toFixed(1)}%</span>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `
+        <table class="stats-table">
+            <tbody>
+                ${funnelRows}
+                ${createRow('Натиснули "Зареєструватися"', funnelData.register_attempts, { valueClass: 'stats-value-orange' })}
+                ${createRow('Успішно завершили реєстрацію', funnelData.register_successes, { valueClass: 'stats-value-total' })}
+                ${createRow('Конверсія в реєстрацію', `${funnelData.conversion_rate_percent.toFixed(2)}%`, { valueClass: 'stats-value-purple' })}
+            </tbody>
+        </table>
+    `;
+  } else {
+    html += `<p>Дані по воронці реєстрації ще не зібрані.</p>`;
+  }
+  // ==========================================================
+  // === КІНЕЦЬ НОВОГО БЛОКУ ===
+  // ==========================================================
 
   container.innerHTML = html;
 }
