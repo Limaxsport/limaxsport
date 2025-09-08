@@ -535,7 +535,7 @@
       </div>
 
       <!-- ===== ПОЧАТОК НОВОГО БЛОКУ ДЛЯ ВКЛАДКИ "ДІЇ" ===== -->
-      <div id="actions" class="tab-content" style="display: none">
+      <div id="actions" class="tab-content">
         <h3>Примусовий запуск планувальників</h3>
         <p class="actions-description">
           Цей розділ дозволяє вручну запустити нічні завдання. Використовуйте це
@@ -543,6 +543,7 @@
           спрацював або виникла помилка. Виконання може зайняти деякий час.
         </p>
 
+        <!-- === Блок Генератора тижневих тренувань (ОНОВЛЕНО) === -->
         <div class="action-item">
           <div class="action-info">
             <h4>Генератор тижневих тренувань</h4>
@@ -550,9 +551,29 @@
               Створює конкретні тренування на наступний тиждень для користувачів
               "без тренера" на основі їх 30-денного плану.
             </p>
+
+            <!-- +++ ПОЧАТОК ЗМІН: Нові поля для тестування +++ -->
+            <div class="debug-wrapper">
+              <p class="debug-title">Тестування для конкретного користувача (опціонально):</p>
+              <div class="debug-controls">
+                <div class="debug-input-group">
+                  <label for="debug-user-phone">Телефон:</label>
+                  <input type="text" id="debug-user-phone" class="debug-input" placeholder="380XXXXXXXXX">
+                </div>
+                <div class="debug-input-group">
+                  <label for="debug-days-subtract">Відмотати час на (днів):</label>
+                  <input type="number" id="debug-days-subtract" class="debug-input" min="1" placeholder="напр., 7">
+                </div>
+              </div>
+              <p class="debug-note">
+                Якщо заповнити ці поля, для вказаного користувача дата останньої генерації буде зміщена в минуле перед запуском планувальника.
+              </p>
+            </div>
+            <!-- +++ КІНЕЦЬ ЗМІН +++ -->
+
           </div>
           <div class="action-controls">
-            <button class="action-btn" data-task="weekly">Запустити</button>
+            <button class="action-btn" data-task="weekly" onclick="handleSchedulerTrigger('weekly')">Запустити</button>
             <div id="scheduler-status-weekly" class="action-status"></div>
           </div>
         </div>
@@ -566,12 +587,12 @@
             </p>
           </div>
           <div class="action-controls">
-            <button class="action-btn" data-task="monthly">Запустити</button>
+            <button class="action-btn" data-task="monthly" onclick="handleSchedulerTrigger('monthly')">Запустити</button>
             <div id="scheduler-status-monthly" class="action-status"></div>
           </div>
-        </div>
+       </div>
 
-        <div class="action-item">
+       <div class="action-item">
           <div class="action-info">
             <h4>Автопоновлення підписок</h4>
             <p>
@@ -580,11 +601,10 @@
             </p>
           </div>
           <div class="action-controls">
-            <button class="action-btn" data-task="renewal">Запустити</button>
+            <button class="action-btn" data-task="renewal" onclick="handleSchedulerTrigger('renewal')">Запустити</button>
             <div id="scheduler-status-renewal" class="action-status"></div>
           </div>
         </div>
-      </div>
       <!-- ===== КІНЕЦЬ БЛОКУ "ДІЇ" ===== -->
 
       <!-- Вкладка "Вихід" -->

@@ -2712,6 +2712,58 @@ th {
   align-self: flex-end; /* Кнопка буде справа */
   min-width: 100px;
 }
+
+.debug-wrapper {
+  background-color: rgba(255, 255, 255, 0.03); /* Ледь помітний фон */
+  border: 1px dashed #555;
+  padding: 15px;
+  margin-top: 20px;
+  border-radius: 6px;
+}
+
+.debug-title {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-weight: bold;
+  color: #ccc;
+  font-size: 0.95em;
+}
+
+.debug-controls {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.debug-input-group {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.debug-input-group label {
+  font-size: 0.85em;
+  color: #aaa;
+}
+
+.debug-input {
+  background-color: #111;
+  border: 1px solid #444;
+  color: #ddd;
+  padding: 8px 10px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.debug-note {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 15px;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
 /* === КІНЕЦЬ вкладки "ДІЇ" === */
 
 /* === Адаптивність === */

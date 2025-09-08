@@ -1340,7 +1340,7 @@ async function loadAndDisplayNotifications() {
       );
     }
 
-    let content = `<p class="notifications-intro-text">В цій вкладці вам будуть надходити важливі повідомлення від команди Lily & Max sport, а також інформація про внесені оновлення в функціонал особистого кабінету.</p>`;
+    let content = '<h3>Повідомлення</h3>';
 
     if (!notifications || notifications.length === 0) {
       content += '<p>Нових повідомлень немає.</p>';

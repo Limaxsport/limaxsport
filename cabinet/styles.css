@@ -982,16 +982,6 @@ textarea {
 
 /* --- Стилі для списку повідомлень в особистому кабінеті --- */
 
-.notifications-intro-text {
-  font-style: italic;
-  color: #ccc;
-  margin-bottom: 25px;
-  text-align: center;
-  border: 1px dashed #555;
-  padding: 15px;
-  border-radius: 5px;
-}
-
 #notifications-container {
   /* Тепер це ID контейнера списку */
   display: flex;

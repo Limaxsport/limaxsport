@@ -5489,7 +5489,7 @@ function renderAdminStats(stats) {
 // ========== КІНЕЦЬ функцій вкладки "АНАЛІТИКА" ==========
 
 // ==========================================================
-// === НОВИЙ БЛОК: ЛОГІКА ДЛЯ ВКЛАДКИ "ДІЇ" ===
+// === ОНОВЛЕНИЙ БЛОК: ЛОГІКА ДЛЯ ВКЛАДКИ "ДІЇ" ===
 // ==========================================================
 
 /**
@@ -5526,6 +5526,16 @@ async function handleSchedulerTrigger(taskType) {
     return;
   }
 
+  // +++ ПОЧАТОК ЗМІН: Зчитуємо дані з нових полів +++
+  const userPhoneInput = document.getElementById('debug-user-phone');
+  const daysSubtractInput = document.getElementById('debug-days-subtract');
+
+  const userPhone = userPhoneInput ? userPhoneInput.value.trim() : '';
+  const daysToSubtract = daysSubtractInput
+    ? parseInt(daysSubtractInput.value, 10)
+    : 0;
+  // +++ КІНЕЦЬ ЗМІН +++
+
   if (!confirm(details.confirmText)) {
     return;
   }
@@ -5537,9 +5547,47 @@ async function handleSchedulerTrigger(taskType) {
   button.disabled = true;
   button.textContent = 'Виконується...';
   if (statusDiv) statusDiv.innerHTML = '';
-  displayStatus(details.statusId, 'Відправка запиту...', false, 10000); // Повідомлення зникне, якщо не буде логів
+  displayStatus(details.statusId, 'Відправка запиту...', false, 10000);
 
   try {
+    // +++ ПОЧАТОК ЗМІН: Логіка "перемотки часу" +++
+    // Якщо це тижнева генерація і обидва поля заповнені, спочатку зміщуємо час
+    if (taskType === 'weekly' && userPhone && daysToSubtract > 0) {
+      displayStatus(
+        details.statusId,
+        `Зміщуємо час для ${userPhone}...`,
+        false,
+        10000
+      );
+
+      const timeTravelResponse = await fetchWithAuth(
+        '/admin/debug/set-generation-date',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            user_phone: userPhone,
+            days_to_subtract: daysToSubtract,
+          }),
+        },
+        details.statusId // Передаємо ID для обробки помилок
+      );
+
+      // Показуємо успішне повідомлення про зміщення часу, воно зникне
+      displayStatus(
+        details.statusId,
+        timeTravelResponse.data.message,
+        false,
+        5000
+      );
+
+      // Невелика пауза, щоб користувач побачив повідомлення
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    // +++ КІНЕЦЬ ЗМІН +++
+
+    // Тепер виконуємо основний запит на запуск планувальника
+    displayStatus(details.statusId, 'Запускаємо планувальник...', false, 10000);
+
     const { data } = await fetchWithAuth(
       '/admin/debug/trigger-scheduler',
       {
@@ -5549,7 +5597,7 @@ async function handleSchedulerTrigger(taskType) {
       details.statusId
     );
 
-    // ===== ОНОВЛЕНА ЛОГІКА: ВІДКРИВАЄМО МОДАЛЬНЕ ВІКНО =====
+    // ===== Існуюча логіка для відображення логів у модальному вікні =====
     if (data.logs && Array.isArray(data.logs) && data.logs.length > 0) {
       const logModalOverlay = document.getElementById('log-modal-overlay');
       const logModalMessage = document.getElementById('log-modal-message');
@@ -5558,18 +5606,15 @@ async function handleSchedulerTrigger(taskType) {
       const logText = data.logs.join('\n');
 
       logModalMessage.textContent = data.message;
-      logModalContent.textContent = logText; // Використовуємо .textContent для безпеки
+      logModalContent.textContent = logText;
       logModalOverlay.style.display = 'flex';
 
-      // Очищуємо тимчасовий статус, оскільки показали модальне вікно
       displayStatus(details.statusId, '', false);
     } else {
-      // Якщо логів немає, показуємо звичайне повідомлення, яке зникне
       displayStatus(details.statusId, data.message, false, 10000);
     }
   } catch (error) {
     console.error(`Помилка запуску планувальника '${taskType}':`, error);
-    // displayStatus вже покаже помилку, яка зникне через 15 сек
     displayStatus(details.statusId, `Помилка: ${error.message}`, true, 15000);
   } finally {
     button.disabled = false;
