@@ -545,6 +545,39 @@ function addSafeEventListener(element, callback) {
   });
 }
 
+/**
+ * Ініціалізує обробники кліків для всіх головних вкладок кабінету.
+ */
+function initializeTabListeners() {
+  const allTabs = document.querySelectorAll('.tab-link');
+
+  allTabs.forEach((button) => {
+    // Спочатку видаляємо старий обробник, якщо він був доданий раніше, щоб уникнути дублювання
+    button.removeEventListener('click', handleTabClick);
+    // Додаємо новий, правильний обробник
+    button.addEventListener('click', handleTabClick);
+  });
+}
+
+/**
+ * Єдина функція-обробник для кліку по вкладці.
+ * @param {Event} event
+ */
+function handleTabClick(event) {
+  const tabButton = event.currentTarget;
+  const tabName = tabButton.dataset.tabName;
+
+  if (!tabName) return;
+
+  // --- АНАЛІТИКА: відстежуємо клік по вкладці "Підписка" ---
+  if (tabName === 'subscription') {
+    trackPaymentFunnelEvent('subscription_view');
+  }
+
+  // Викликаємо існуючу функцію для відкриття вкладки
+  openTab(event, tabName);
+}
+
 // --- Допоміжні функції для відображення тексту в "Мій профіль" ---
 
 function getGoalText(value) {
@@ -839,6 +872,61 @@ function formatSecondsToMMSS(totalSeconds) {
 }
 
 /**
+ * ОНОВЛЕНО v2: Надсилає подію аналітики воронки оплати для нових користувачів,
+ * враховуючи, що вони можуть повернутись пізніше. Маркер живе 3 дні.
+ * @param {string} eventType - 'plan_view', 'subscription_view', 'initiate_payment', 'payment_success'
+ */
+function trackPaymentFunnelEvent(eventType) {
+  const markerString = localStorage.getItem('newUserJourneyMarker');
+  if (!markerString) {
+    return; // Якщо маркера немає, нічого не робимо
+  }
+
+  // Перевіряємо термін придатності маркера (3 дні)
+  try {
+    const marker = JSON.parse(markerString);
+    const threeDaysInMillis = 72 * 60 * 60 * 1000;
+
+    // Якщо з моменту створення маркера пройшло більше 3 днів, видаляємо його і виходимо
+    if (Date.now() - marker.timestamp > threeDaysInMillis) {
+      localStorage.removeItem('newUserJourneyMarker');
+      return;
+    }
+  } catch (e) {
+    // Якщо в маркері сміття, видаляємо його і виходимо
+    localStorage.removeItem('newUserJourneyMarker');
+    return;
+  }
+
+  // Перевірка, щоб не надсилати ту саму подію повторно
+  const eventKey = `payment_funnel_event_${eventType}`;
+  if (sessionStorage.getItem(eventKey)) {
+    return;
+  }
+
+  fetchWithAuth(`${baseURL}/analytics/payment-funnel-event`, {
+    method: 'POST',
+    body: JSON.stringify({ event_type: eventType }),
+  })
+    .then(({ response }) => {
+      if (response.ok) {
+        // Позначаємо, що ця подія успішно надіслана (в рамках сесії)
+        sessionStorage.setItem(eventKey, 'true');
+
+        // --- ВИДАЛЕННЯ МАРКЕРА ---
+        // Якщо воронка успішно завершена (користувач оплатив),
+        // видаляємо головний маркер з localStorage, щоб він більше не вважався "новим".
+        if (eventType === 'payment_success') {
+          localStorage.removeItem('newUserJourneyMarker');
+        }
+      }
+    })
+    .catch((err) => {
+      console.warn(`Помилка відправки аналітики (${eventType}):`, err);
+    });
+}
+
+/**
  * Відображає статус повідомлення у вказаному елементі.
  * @param {string} elementId - ID елемента для відображення статусу.
  * @param {string} message - Текст повідомлення.
@@ -1023,6 +1111,7 @@ function showNewPlanNotificationModal() {
  * @returns {Promise<void>}
  */
 function showDaySelectorModal(planToSchedule, userProfile) {
+  trackPaymentFunnelEvent('payment_success');
   return new Promise((resolve) => {
     const overlay = document.getElementById('day-selector-modal-overlay');
     const modal = document.getElementById('day-selector-modal');
@@ -1885,6 +1974,7 @@ async function handlePayment(event) {
     form.appendChild(dataInput);
     form.appendChild(signatureInput);
     document.body.appendChild(form);
+    trackPaymentFunnelEvent('initiate_payment');
     form.submit();
   } catch (error) {
     console.error('Помилка ініціації платежу:', error);
@@ -2316,6 +2406,7 @@ function handleGenerateWorkoutsClick(planId) {
     '.tab-link[data-tab-name="subscription"]'
   );
   if (subscriptionTabButton) {
+    trackPaymentFunnelEvent('subscription_view');
     openTab({ currentTarget: subscriptionTabButton }, 'subscription');
 
     // Прокручуємо до верхньої частини вкладки "Підписка"
@@ -8939,6 +9030,7 @@ async function runAuthenticatedCabinet() {
 
   // Відкриваємо потрібну вкладку ПІСЛЯ перевірки
   if (hash === 'plan') {
+    trackPaymentFunnelEvent('plan_view');
     const planTabButton = document.querySelector(
       '.tab-link[data-tab-name="plan"]'
     );
@@ -9023,6 +9115,8 @@ function startApp() {
       console.log('Вкладка стала невидимою.');
     }
   });
+  // Ініціалізуємо обробники для вкладок
+  initializeTabListeners();
 }
 
 /**

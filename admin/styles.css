@@ -2617,6 +2617,30 @@ th {
   color: #ccc;
   font-weight: bold;
 }
+
+/* --- Стилі для скидання аналітики --- */
+.analytics-reset-container {
+  width: auto;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+/* Припускаючи, що у вас є базовий клас .admin-button */
+.admin-button.button-danger {
+  background-color: #d9534f; /* Червоний колір */
+  color: white;
+  border-color: #d43f3a;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+.admin-button.button-danger:hover,
+.admin-button.button-danger:focus {
+  background-color: #c9302c;
+  border-color: #ac2925;
+  color: white;
+  outline: none;
+}
 /* --- КІНЕЦЬ СТИЛІВ ДЛЯ ВКЛАДКИ "АНАЛІТИКА" --- */
 
 /* --- СТИЛІ ДЛЯ ВКЛАДКИ "ДІЇ" --- */

@@ -5485,9 +5485,9 @@ function renderAdminStats(stats) {
   html += `<p style="font-size: 0.8em; color: #888; margin-top: 10px;">*Примітка: Статистика по тренеру відображається, якщо у вкладці "Профілі" обрати користувача з роллю "Тренер".</p><br>`;
 
   // ==========================================================
-  // === ПОЧАТОК НОВОГО БЛОКУ: АНАЛІТИКА ВОРОНКИ РЕЄСТРАЦІЇ ===
+  // === АНАЛІТИКА ВОРОНКИ РЕЄСТРАЦІЇ ===
   // ==========================================================
-  html += `<br><h3>Аналітика воронки самостійної реєстрації 💰</h3>`;
+  html += `<br><h3>Аналітика воронки самостійної реєстрації 📊</h3>`;
 
   // Перевіряємо, чи є дані для відображення
   if (
@@ -5553,10 +5553,154 @@ function renderAdminStats(stats) {
     html += `<p>Дані по воронці реєстрації ще не зібрані.</p>`;
   }
   // ==========================================================
-  // === КІНЕЦЬ НОВОГО БЛОКУ ===
+  // === КІНЕЦЬ БЛОКУ АНАЛІТИКИ ВОРОНКИ РЕЄСТРАЦІЇ ===
+  // ==========================================================
+
+  // ================================================================
+  // === ПОЧАТОК БЛОКУ: АНАЛІТИКА ВОРОНКИ КОНВЕРСІЇ В ОПЛАТУ ===
+  // ================================================================
+  html += `<br><h3>Аналітика воронки оплати після самостійної реєстрації 💰</h3>`;
+
+  // Перевіряємо, чи є дані для відображення
+  if (stats.payment_funnel_analytics) {
+    const paymentData = stats.payment_funnel_analytics;
+
+    // Розраховуємо проміжні конверсії для наочності
+    const conversionToSubView =
+      paymentData.plan_view_users > 0
+        ? (
+            (paymentData.subscription_view_users /
+              paymentData.plan_view_users) *
+            100
+          ).toFixed(1) + '%'
+        : 'N/A';
+
+    const conversionToInitiate =
+      paymentData.subscription_view_users > 0
+        ? (
+            (paymentData.initiate_payment_users /
+              paymentData.subscription_view_users) *
+            100
+          ).toFixed(1) + '%'
+        : 'N/A';
+
+    const conversionToSuccess =
+      paymentData.initiate_payment_users > 0
+        ? (
+            (paymentData.payment_success_users /
+              paymentData.initiate_payment_users) *
+            100
+          ).toFixed(1) + '%'
+        : 'N/A';
+
+    html += `
+          <table class="stats-table">
+              <tbody>
+                  ${createRow('Побачили безкоштовний "План"', paymentData.plan_view_users, { valueClass: 'stats-value-total' })}
+                  ${createRow('1. Перейшли на вкладку "Підписка"', `${paymentData.subscription_view_users} <span class="stats-value-orange">(${conversionToSubView})</span>`, { isSubItem: true })}
+                  ${createRow('2. Перейшли на сторінку оплати', `${paymentData.initiate_payment_users} <span class="stats-value-orange">(${conversionToInitiate})</span>`, { isSubItem: true })}
+                  ${createRow('3. Успішно оплатили', `${paymentData.payment_success_users} <span class="stats-value-orange">(${conversionToSuccess})</span>`, { isSubItem: true })}
+                  ${createRow('Конверсія в оплату', `${paymentData.conversion_to_success_percent.toFixed(2)}%`, { valueClass: 'stats-value-purple' })}
+              </tbody>
+          </table>
+      `;
+  } else {
+    html += `<p>Дані по воронці оплати ще не зібрані.</p>`;
+  }
+  // ==========================================================
+  // === КІНЕЦЬ БЛОКУ ВОРОНКИ ОПЛАТИ ===
+  // ==========================================================
+
+  // ================================================================
+  // === ПОЧАТОК БЛОКУ: ФІНАЛЬНА КОНВЕРСІЯ ЗАЛУЧЕННЯ КЛІЄНТІВ ===
+  // ================================================================
+  html += `<br><h3>КЛЮЧОВИЙ ПОКАЗНИК:\nЗалучення Нових Клієнтів 🏆</h3>`;
+
+  if (stats.customer_acquisition) {
+    const acqData = stats.customer_acquisition;
+
+    html += `
+          <table class="stats-table">
+              <tbody>
+                  ${createRow('Завершили реєстрацію (Ліди)', acqData.successfully_registered, { valueClass: 'stats-value-total' })}
+                  ${createRow('Стали платними клієнтами', acqData.became_paying_customers, { isSubItem: true, valueClass: 'stats-value-total' })}
+                  <tr>
+                      <td><strong>Фінальна конверсія (Lead-to-Customer)</strong></td>
+                      <td><span class="stats-value stats-value-purple">${acqData.conversion_rate_percent.toFixed(2)}%</span></td>
+                 </tr>
+              </tbody>
+         </table>
+     `;
+
+    html += `
+        <div class="analytics-reset-container">
+          <button id="reset-funnel-stats-btn" class="admin-button button-danger">
+              🗑️ Скинути статистику
+          </button>
+        </div>
+    `;
+  } else {
+    html += `<p>Дані для розрахунку фінальної конверсії ще не зібрані.</p>`;
+  }
+  // ==========================================================
+  // === КІНЕЦЬ БЛОКУ КОНВЕРСІЇ ЗАЛУЧЕННЯ НОВИХ КЛІЄНТІВ===
   // ==========================================================
 
   container.innerHTML = html;
+
+  const resetButton = document.getElementById('reset-funnel-stats-btn');
+  if (resetButton) {
+    resetButton.addEventListener('click', handleResetFunnelStats);
+  }
+}
+
+/**
+ * [Admin] Обробник для кнопки скидання статистики воронки.
+ */
+async function handleResetFunnelStats() {
+  // КРИТИЧНО: Завжди питаємо підтвердження на видалення.
+  const isConfirmed = confirm(
+    'ВИ ВПЕВНЕНІ?\n\nЦя дія НЕОБОРОТНО видалить ВСЮ зібрану статистику по ДВОХ воронках:\n\n1. Воронка реєстрації.\n2. Воронка конверсії в оплату.\n\nВсі лічильники почнуться з нуля. Продовжити?'
+  );
+
+  if (!isConfirmed) {
+    return;
+  }
+
+  // Припускаючи, що у вас є глобальні функції showAdminLoader/hideAdminLoader
+  if (typeof showAdminLoader === 'function')
+    showAdminLoader('Скидання статистики...');
+
+  try {
+    const { data } = await fetchWithAuth(
+      '/admin/statistics/reset-funnel-analytics',
+      {
+        method: 'DELETE', // Використовуємо правильний HTTP-метод
+      }
+    );
+
+    if (typeof hideAdminLoader === 'function') hideAdminLoader();
+
+    // Припускаючи, що у вас є глобальна функція showAdminAlert
+    if (typeof showAdminAlert === 'function') {
+      showAdminAlert(data.message || 'Статистику успішно скинуто.', 'success');
+    } else {
+      alert(data.message || 'Статистику успішно скинуто.');
+    }
+
+    // Оновлюємо дані на сторінці, щоб побачити нулі
+    loadAndDisplayAdminStats();
+  } catch (error) {
+    if (typeof hideAdminLoader === 'function') hideAdminLoader();
+
+    console.error('Помилка під час скидання статистики:', error);
+
+    if (typeof showAdminAlert === 'function') {
+      showAdminAlert(`Помилка: ${error.message}`, 'error');
+    } else {
+      alert(`Помилка: ${error.message}`);
+    }
+  }
 }
 // ========== КІНЕЦЬ функцій вкладки "АНАЛІТИКА" ==========
 

@@ -146,11 +146,11 @@ const funnelManager = {
   steps: [
     {
       id: 'welcome',
-      title: 'Вітаємо у Lily & Max sport ⚡️',
+      title: 'Вітаємо у "Lily&Max sport" ⚡️',
       fields: [], // Цей крок не збирає дані
       render: () => `
                 <p class="step-description">
-                    Будь ласка, надайте відповіді на наступні запитання та отримайте <strong>персоналізований тренувальний план</strong>, який допоможе досягти вашої мети 💪 <strong>безпечно</strong> та в <strong>найкоротші терміни</strong>.
+                    Будь ласка, надайте відповіді на наступні запитання та отримайте <strong>персоналізований тренувальний план</strong>, який допоможе досягти вашої мети <strong>безпечно</strong> та в <strong>найкоротші терміни</strong>.
                 </p>
 
                 <div style="text-align: center; margin-top: 5px; margin-bottom: -10px;">
@@ -853,6 +853,11 @@ const funnelManager = {
         responseData.expires_in
       );
 
+      localStorage.setItem(
+        'newUserJourneyMarker',
+        JSON.stringify({ timestamp: Date.now() })
+      );
+
       // Запускаємо наш зворотний відлік на 30 секунд
       this.startFinalCountdown(30);
       // Паралельно запускаємо перевірку готовності плану
@@ -1084,7 +1089,7 @@ async function funnel_loadAndRenderExcludedExercises(userExcludedNames = []) {
 
     // Робимо запит з новими параметрами
     const { data: exercises, response } = await fetchWithAuth(
-      `${baseURL}/registration/exercises?${params.toString()}`
+      `${baseURL}/self-registration/exercises?${params.toString()}`
     );
 
     if (!response.ok) {
