@@ -2343,24 +2343,29 @@ function renderWorkoutPlans(plans, hasActiveSubscription) {
     }
 
     subContentsHtml += `
-            <div id="plan-content-${plan.id}" class="plan-sub-content" style="display: ${isActive ? 'block' : 'none'};">
-                <h4 class="profile-sub-content-title">${plan.plan_title || 'Тренувальний план'}</h4>
-                <div class="plan-intro-text"><p>${formatTextWithLineBreaks(plan.introductory_text) || 'Загальний опис відсутній.'}</p></div>
-                
-                ${
-                  plan.workouts && plan.workouts.length > 0
-                    ? `
+      <div id="plan-content-${plan.id}" class="plan-sub-content" style="display: ${isActive ? 'block' : 'none'};">
+        <h4 class="profile-sub-content-title">${plan.plan_title || 'Тренувальний план'}</h4>
+        
+        <div class="plan-collapsible-section" data-collapsible="intro-${plan.id}">
+            <div class="plan-collapsible-content">
+                <div class="plan-intro-text">
+                    <p>${formatTextWithLineBreaks(plan.introductory_text) || 'Загальний опис відсутній.'}</p>
+                </div>
+            </div>
+            <button class="plan-collapsible-toggle">
+                <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path></svg>
+            </button>
+        </div>
+
+        ${
+          plan.workouts && plan.workouts.length > 0
+            ? `
+            <div class="plan-collapsible-section" data-collapsible="schedule-${plan.id}">
+                <div class="plan-collapsible-content">
                     <div class="plan-schedule">
                         <h5 class="profile-section-title">Розклад тренувань</h5>
                         <div class="table-scroll-wrapper">
                             <table class="plan-schedule-table">
-                                <!-- ЗМІНА ТУТ: Спрощуємо заголовок таблиці -->
-                                <thead>
-                                    <tr>
-                                        <th>№</th>
-                                        <th>Назва тренування</th>
-                                    </tr>
-                                </thead>
                                 <tbody>
                                     ${plan.workouts
                                       .map((workout, workoutIndex) => {
@@ -2379,23 +2384,72 @@ function renderWorkoutPlans(plans, hasActiveSubscription) {
                             </table>
                         </div>
                     </div>
-                `
-                    : ''
-                }
-
-                <div class="plan-conclusion-text">
+                </div>
+                <button class="plan-collapsible-toggle">
+                     <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path></svg>
+                </button>
+            </div>
+        `
+            : ''
+        }
+        
+        <div class="plan-collapsible-section" data-collapsible="conclusion-${plan.id}">
+            <div class="plan-collapsible-content">
+                 <div class="plan-conclusion-text">
                     <h5 class="profile-section-title">Прогноз та рекомендації</h5>
                     <p>${formatTextWithLineBreaks(plan.concluding_text) || 'Мотивуючі поради відсутні.'}</p>
                 </div>
-                
-                ${actionBlockHtml}
             </div>
-        `;
+            <button class="plan-collapsible-toggle">
+                 <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path></svg>
+            </button>
+        </div>
+
+        ${actionBlockHtml}
+      </div>
+    `;
   });
 
   subTabsHtml += '</div>';
   container.innerHTML = subTabsHtml + subContentsHtml;
+  initializePlanCollapsibleSections();
 }
+
+/**
+ * Ініціалізує згортаючі секції САМЕ ДЛЯ ВКЛАДКИ "ПЛАН".
+ * Перевіряє, чи контент дійсно потребує згортання.
+ */
+function initializePlanCollapsibleSections() {
+  const sections = document.querySelectorAll('.plan-collapsible-section');
+
+  sections.forEach((section) => {
+    const content = section.querySelector('.plan-collapsible-content');
+    const toggle = section.querySelector('.plan-collapsible-toggle');
+
+    if (content.scrollHeight <= content.clientHeight + 10) {
+      toggle.classList.add('hidden');
+    } else {
+      toggle.classList.remove('hidden');
+    }
+  });
+}
+
+/**
+ * Обробник кліків для кнопок згортання/розгортання.
+ */
+document.addEventListener('click', function (event) {
+  const toggleButton = event.target.closest('.plan-collapsible-toggle');
+
+  if (toggleButton) {
+    event.preventDefault();
+
+    const section = toggleButton.closest('.plan-collapsible-section');
+
+    if (section) {
+      section.classList.toggle('expanded');
+    }
+  }
+});
 
 /**
  * ОНОВЛЕНО: Перенаправляє користувача на вкладку підписки та прокручує до верху.

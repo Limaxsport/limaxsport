@@ -1485,7 +1485,6 @@ input:checked + .slider:before {
   background-color: #222;
   padding: 15px;
   border-radius: 6px;
-  margin-bottom: 25px;
 }
 
 .plan-conclusion-text {
@@ -1527,7 +1526,7 @@ input:checked + .slider:before {
   background-color: rgba(113, 41, 218, 0.4);
   color: #f0f0f0;
   text-align: center;
-  padding: 12px 10px;
+  padding: 8px 8px;
   border-bottom: 2px solid #555;
   font-weight: bold;
   font-size: 0.9em;
@@ -1536,7 +1535,7 @@ input:checked + .slider:before {
 }
 
 .plan-schedule-table td {
-  padding: 12px 15px;
+  padding: 8px 8px;
   text-align: left;
   border-bottom: 1px solid #404046;
   vertical-align: middle;
@@ -1550,7 +1549,7 @@ input:checked + .slider:before {
 .plan-schedule-table th:first-child,
 .plan-schedule-table td:first-child {
   text-align: center;
-  width: 50px; /* Фіксована вузька ширина для номера */
+  width: 40px; /* Фіксована вузька ширина для номера */
 }
 
 /* Стилі для другої колонки (Назва тренування) */
@@ -1677,6 +1676,83 @@ input:checked + .slider:before {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ==================================================================== */
+/* === СТИЛІ ДЛЯ ЗГОРТАННЯ БЛОКІВ (ВЕРСІЯ ДЛЯ "ПЛАНУ") === */
+/* ==================================================================== */
+
+/* Обгортка для всього блоку, що згортається */
+.plan-collapsible-section {
+  position: relative;
+  margin-bottom: 25px;
+}
+
+/* Контейнер для контенту, який буде обрізатися */
+.plan-collapsible-content {
+  max-height: 200px;
+  overflow: hidden;
+  position: relative;
+  transition: max-height 0.4s ease-in-out;
+}
+
+/* Ефект "згасання" тексту знизу */
+.plan-collapsible-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(to bottom, transparent, #222);
+  transition: opacity 0.4s ease-in-out;
+  opacity: 1;
+}
+
+/* Стилі для розгорнутого стану */
+.plan-collapsible-section.expanded .plan-collapsible-content {
+  max-height: 2500px;
+}
+
+.plan-collapsible-section.expanded .plan-collapsible-content::after {
+  opacity: 0;
+}
+
+/* Кнопка "Розгорнути/Згорнути" */
+.plan-collapsible-toggle {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 4px 0;
+  background-color: #2a2a2a;
+  border: 8px solid #222222;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  cursor: pointer;
+  margin-top: -1px;
+  transition: background-color 0.3s;
+}
+
+.plan-collapsible-toggle:hover {
+  background-color: #333;
+}
+
+/* Іконка-стрілка всередині кнопки */
+.plan-collapsible-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: #aaa;
+  transition: transform 0.4s ease-in-out;
+}
+
+/* Повертаємо стрілку вгору, коли блок розгорнутий */
+.plan-collapsible-section.expanded .plan-collapsible-toggle svg {
+  transform: rotate(180deg);
+}
+
+/* Клас для того, щоб приховати кнопку, якщо контенту мало */
+.plan-collapsible-toggle.hidden {
+  display: none;
 }
 /* --- КІНЕЦЬ стилів вкладки "План" --- */
 
