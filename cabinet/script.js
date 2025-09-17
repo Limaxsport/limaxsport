@@ -79,6 +79,8 @@ let finish2Buffer = null;
 let areSoundsLoaded = false; // Змінили назву для ясності
 let isAudioInitializing = false; // Щоб уникнути подвійного завантаження
 
+let techniqueCooldownInterval; // Глобальна змінна для таймера, щоб ми могли його зупинити
+
 // === НОВИЙ КОНТРОЛЕР ДЛЯ ПОСЛІДОВНОГО ТАЙМЕРА ===
 let workTimerController = {
   isActive: false,
@@ -967,10 +969,16 @@ function displayStatus(elementId, message, isError = false, clearAfterMs = 0) {
 async function fetchWithAuth(url, options = {}) {
   let token = getAccessToken();
 
-  const headers = {
-    ...options.headers,
-    'Content-Type': options.headers?.['Content-Type'] || 'application/json',
-  };
+  const headers = { ...options.headers };
+
+  // Додаємо Content-Type: application/json за замовчуванням,
+  // АЛЕ ТІЛЬКИ ЯКЩО тіло запиту - це НЕ FormData.
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
+  // Якщо тіло - це FormData, ми навмисно НЕ чіпаємо Content-Type,
+  // щоб браузер встановив його сам з правильним boundary.
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -2606,36 +2614,48 @@ function openPlanSubTab(event, subTabContentId) {
 }
 
 /**
- * Перевіряє тип реєстрації користувача та показує або ховає вкладку "План".
+ * ОНОВЛЕНО: Керує видимістю вкладок "План" та "Техніка"
+ * залежно від типу реєстрації користувача.
  */
-async function updatePlanTabVisibility() {
-  const planTabButton = document.querySelector(
-    '.tab-link[data-tab-name="plan"]'
+async function updateTabsVisibilityForUserType() {
+  // Знаходимо кнопки вкладок за їх data-атрибутами
+  const planTab = document.querySelector('.tab-link[data-tab-name="plan"]');
+  const techniqueTab = document.querySelector(
+    '.tab-link[data-tab-name="technique"]'
   );
-  if (!planTabButton) {
-    console.warn('Кнопка вкладки "План" не знайдена.');
+
+  if (!planTab || !techniqueTab) {
+    console.error('Не вдалося знайти кнопки вкладок "План" або "Техніка".');
     return;
   }
 
   try {
-    // Переконуємось, що дані профілю завантажені.
-    // Використовуємо кешовані дані, якщо вони є.
-    if (!currentUserProfileData) {
-      currentUserProfileData = await fetchCurrentProfileDataOnce();
+    // Використовуємо кешовані дані, якщо вони є, інакше робимо запит
+    let profileData = currentUserProfileData;
+    if (!profileData) {
+      const { data } = await fetchWithAuth(`${baseURL}/profile/my-profile`);
+      profileData = data;
+      currentUserProfileData = data; // Зберігаємо в кеш
     }
 
-    // Перевіряємо тип реєстрації та показуємо/ховаємо вкладку
-    if (
-      currentUserProfileData &&
-      currentUserProfileData.registration_type === 'self'
-    ) {
-      planTabButton.style.display = 'inline-block'; // Показуємо вкладку
+    // Перевіряємо тип реєстрації
+    if (profileData && profileData.registration_type === 'self') {
+      // Тип "Без тренера" - показуємо обидві вкладки
+      planTab.style.display = ''; // Порожнє значення повертає стиль за замовчуванням
+      techniqueTab.style.display = '';
     } else {
-      planTabButton.style.display = 'none'; // Ховаємо вкладку для всіх інших
+      // Тип "З тренером" - ховаємо обидві вкладки
+      planTab.style.display = 'none';
+      techniqueTab.style.display = 'none';
     }
   } catch (error) {
-    console.error("Помилка при визначенні видимості вкладки 'План':", error);
-    planTabButton.style.display = 'none'; // Ховаємо вкладку у разі помилки
+    console.error(
+      'Помилка отримання профілю для оновлення видимості вкладок:',
+      error
+    );
+    // За замовчуванням ховаємо вкладки, якщо сталася помилка
+    planTab.style.display = 'none';
+    techniqueTab.style.display = 'none';
   }
 }
 
@@ -6118,7 +6138,6 @@ function updateWorkoutListItemAppearance(planId, containsExcluded) {
 const FOLDER_TRANSLATIONS = {
   gym: 'Зал',
   home: 'Дім',
-  street: 'Вулиця',
   trx: 'TRX',
   arms: 'Руки',
   abs: 'Прес',
@@ -6129,8 +6148,13 @@ const FOLDER_TRANSLATIONS = {
   functional: 'Функціонал',
   resistance_band: 'Гумові петлі',
   dumbbells: 'Гантелі',
-  kettlebell: 'Гиря',
+  kettlebells: 'Гирі',
   body_weight: 'Вага тіла',
+  lower: 'Низ',
+  upper: 'Верх',
+  cardio: 'Кардіо',
+  dip_bars: 'Бруси',
+  pull_up_bar: 'Перекладина',
 };
 
 function translateFolderName(name) {
@@ -8396,6 +8420,436 @@ function closeRestTimerModal() {
 }
 // === КІНЕЦЬ БЛОКУ ФУНКЦІЙ ТАЙМЕРА Відпочинку ===
 
+// ========================================================================
+// === ЛОГІКА ВКЛАДКИ "ТЕХНІКА" ===
+// ========================================================================
+
+/**
+ * Ініціалізує та відображає вміст вкладки "Техніка".
+ * Створює HTML-структуру та запускає завантаження вправ.
+ */
+function renderTechniqueTab() {
+  const techniqueContainer = document.getElementById('technique');
+  if (!techniqueContainer || techniqueContainer.innerHTML.trim() !== '') {
+    return;
+  }
+
+  // ОНОВЛЕНА HTML-СТРУКТУРА
+  techniqueContainer.innerHTML = `
+    <div class="profile-section">
+      <h3>AI-аналіз техніки виконання вправи</h3>
+      <div id="technique-cooldown-timer" class="cooldown-timer" style="display: none;"></div>
+      
+      <div class="section-description">
+        <ul>
+          <li>🎯 <b>Що це?</b> Запишіть коротке відео (до 10 секунд) з виконанням вправи, і наш AI-тренер надасть персоналізовані поради.</li>
+          <li>⭐ <b>Для кого?</b> Ця преміум-функція доступна як бонус для користувачів на підписці "Без тренера", оформленій за повною вартістю, як подяка за вашу довіру та підтримку Платформи.</li>
+          <li>📊 <b>Що вказати?</b> Для максимально точного аналізу, будь ласка, вкажіть вагу обтяження та кількість повторень. Техніка виконання може сильно залежати від навантаження.</li>
+          <li>🤖 <b>Як це працює?</b> Аналіз проводиться індивідуально, враховуючи дані вашого профілю (вік, вага, стать, проблеми зі здоров'ям, рівень підготовки).</li>
+          <li>⏳ <b>Ліміт:</b> Функція доступна <strong>один раз на тиждень</strong> для підтримки якісного та детального аналізу вашого прогресу.</li>
+        </ul>
+      </div>
+
+      <form id="technique-analysis-form" class="technique-form">
+        <div class="technique-form-group">
+          <label for="technique-exercise-search">1. Оберіть вправу:</label>
+          <div id="technique-exercise-list-container">
+             <p>Завантаження списку вправ...</p>
+          </div>
+          <input type="hidden" id="technique-selected-exercise" name="exercise_name" required>
+          <input type="hidden" id="technique-selected-description" name="exercise_description">
+        </div>
+
+        <div class="technique-form-group">
+            <label>2. Вкажіть показники (необов'язково, але бажано):</label>
+            <div class="technique-form-grid">
+                <div>
+                    <input type="number" id="technique-weight-input" name="weight" placeholder="Вага (кг)" min="0" step="0.5">
+                </div>
+                <div>
+                    <input type="number" id="technique-reps-input" name="reps" placeholder="Повторення" min="1">
+                </div>
+            </div>
+        </div>
+
+        <div class="technique-form-group">
+          <label for="technique-video-input" class="custom-file-upload">3. Оберіть відеофайл</label>
+          <input type="file" id="technique-video-input" name="video" accept="video/mp4,video/quicktime,video/webm" required>
+        </div>
+        
+        <div class="video-preview-container" style="display: none;">
+            <video id="technique-video-preview" autoplay loop muted playsinline></video>
+        </div>
+
+        <div id="technique-status" class="status-message"></div>
+
+        <button type="submit" id="technique-submit-btn" class="main-action-button" disabled>Надіслати на аналіз</button>
+      </form>
+
+      <div id="technique-analysis-result" class="ai-analysis-container" style="display: none;">
+        <h4 class="profile-section-title">Результат аналізу</h4>
+        <div id="technique-result-content" class="ai-analysis-content"></div>
+      </div>
+    </div>
+  `;
+
+  checkTechniqueCooldown();
+}
+
+/**
+ * Перевіряє, чи активний кулдаун. Показує або таймер і збережений аналіз,
+ * або форму для нового завантаження.
+ */
+function checkTechniqueCooldown() {
+  const cooldownEndTime = localStorage.getItem('techniqueCooldownEnd');
+  const savedAnalysis = localStorage.getItem('lastTechniqueAnalysis'); // <-- Шукаємо збережений аналіз
+  const form = document.getElementById('technique-analysis-form');
+  const resultContainer = document.getElementById('technique-analysis-result');
+  const resultContent = document.getElementById('technique-result-content');
+
+  if (cooldownEndTime && Date.now() < parseInt(cooldownEndTime, 10)) {
+    // Кулдаун активний
+    form.style.display = 'none'; // Ховаємо форму
+
+    // ▼▼▼ НОВА ЛОГІКА: Показуємо збережений аналіз, якщо він є ▼▼▼
+    if (savedAnalysis && resultContainer && resultContent) {
+      const scrollToTopButton = `<button onclick="window.scrollTo({ top: 0, behavior: 'smooth' });" class="scroll-to-top-btn">На початок сторінки ↑</button>`;
+      resultContent.innerHTML =
+        formatTextWithLineBreaks(savedAnalysis) + scrollToTopButton;
+      resultContainer.style.display = 'block';
+    }
+    // ▲▲▲ КІНЕЦЬ НОВОЇ ЛОГІКИ ▲▲▲
+
+    startTechniqueCooldownTimer(parseInt(cooldownEndTime, 10)); // Запускаємо таймер
+  } else {
+    // Кулдауну немає або він закінчився
+    localStorage.removeItem('techniqueCooldownEnd'); // На всяк випадок чистимо старі дані
+    localStorage.removeItem('lastTechniqueAnalysis');
+
+    document.getElementById('technique-cooldown-timer').style.display = 'none';
+    resultContainer.style.display = 'none'; // Ховаємо старий результат
+    form.style.display = 'flex'; // Показуємо форму
+
+    loadAvailableExercisesForTechnique();
+    setupTechniqueEventListeners();
+  }
+}
+
+/**
+ * Запускає таймер зворотного відліку.
+ * @param {number} deadline - Час у мілісекундах, коли кулдаун закінчується.
+ */
+function startTechniqueCooldownTimer(deadline) {
+  const timerElement = document.getElementById('technique-cooldown-timer');
+  timerElement.style.display = 'block';
+
+  if (techniqueCooldownInterval) {
+    clearInterval(techniqueCooldownInterval); // Зупиняємо старий таймер, якщо він є
+  }
+
+  techniqueCooldownInterval = setInterval(() => {
+    const remaining = deadline - Date.now();
+
+    if (remaining <= 0) {
+      clearInterval(techniqueCooldownInterval);
+      timerElement.style.display = 'none';
+      localStorage.removeItem('techniqueCooldownEnd');
+      document.getElementById('technique-analysis-form').style.display = 'flex';
+      // Перезавантажуємо список вправ на випадок, якщо він не був завантажений
+      loadAvailableExercisesForTechnique();
+      setupTechniqueEventListeners();
+      return;
+    }
+
+    const hours = Math.floor((remaining / (1000 * 60 * 60)) % 168);
+    const minutes = Math.floor((remaining / 1000 / 60) % 60);
+    const seconds = Math.floor((remaining / 1000) % 60);
+
+    // Форматуємо для красивого вигляду (напр., 09 замість 9)
+    const fHours = String(hours).padStart(3, '0');
+    const fMinutes = String(minutes).padStart(2, '0');
+    const fSeconds = String(seconds).padStart(2, '0');
+
+    timerElement.innerHTML = `
+            <span>Наступний аналіз буде доступний через:</span>
+            <div class="timer-dials">
+                <span class="timer-value">${fHours}</span>:<span class="timer-value">${fMinutes}</span>:<span class="timer-value">${fSeconds}</span>
+            </div>
+        `;
+  }, 1000);
+}
+
+/**
+ * Завантажує список вправ та рендерить кастомний селектор з пошуком.
+ */
+async function loadAvailableExercisesForTechnique() {
+  const container = document.getElementById(
+    'technique-exercise-list-container'
+  );
+  const hiddenInputName = document.getElementById(
+    'technique-selected-exercise'
+  );
+  const hiddenInputDesc = document.getElementById(
+    'technique-selected-description'
+  );
+
+  try {
+    const { data: exercises } = await fetchWithAuth(
+      `${baseURL}/technique/available-exercises`
+    );
+    const exerciseNames = exercises
+      .map((ex) => ex.name)
+      .filter((name) => name && name.trim() !== '');
+
+    if (exerciseNames.length === 0) {
+      container.innerHTML = '<p>Не знайдено доступних вправ.</p>';
+      return;
+    }
+
+    container.innerHTML = ''; // Очищуємо контейнер
+
+    // Сортуємо вправи за назвою
+    const sortedExercises = [...exercises].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
+    // Створюємо поле пошуку
+    const searchInput = document.createElement('input');
+    searchInput.type = 'search';
+    searchInput.placeholder = 'Пошук вправи... 🔍';
+    searchInput.className = 'technique-exercise-search-input'; // Даємо унікальний клас
+    container.appendChild(searchInput);
+
+    // Створюємо контейнер для самого списку
+    const listWrapper = document.createElement('div');
+    listWrapper.className = 'technique-exercise-list-wrapper'; // Даємо унікальний клас
+    container.appendChild(listWrapper);
+
+    // Рендеримо список вправ
+    sortedExercises.forEach((exercise) => {
+      // <-- Тепер працюємо з об'єктом exercise
+      const item = document.createElement('div');
+      item.className = 'technique-exercise-item';
+      item.textContent = exercise.name;
+      item.dataset.value = exercise.name;
+      item.dataset.description = exercise.description || '';
+
+      // Обробник кліку для вибору вправи
+      item.addEventListener('click', () => {
+        // Знімаємо виділення з попереднього обраного елемента
+        const currentSelected = listWrapper.querySelector('.selected');
+        if (currentSelected) {
+          currentSelected.classList.remove('selected');
+        }
+        // Виділяємо новий елемент
+        item.classList.add('selected');
+        // Зберігаємо назву та опис у приховані поля
+        hiddenInputName.value = exercise.name;
+        hiddenInputDesc.value = exercise.description || '';
+      });
+      listWrapper.appendChild(item);
+    });
+
+    // Обробник події для фільтрації списку
+    searchInput.addEventListener('input', (event) => {
+      const searchTerm = event.target.value.toLowerCase();
+      const allItems = listWrapper.querySelectorAll('.technique-exercise-item');
+
+      allItems.forEach((item) => {
+        const exerciseName = item.textContent.toLowerCase();
+        if (exerciseName.includes(searchTerm)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Помилка завантаження списку вправ для аналізу:', error);
+    container.innerHTML = `<p style="color: red;">Не вдалося завантажити список: ${error.message}.</p>`;
+  }
+}
+
+/**
+ * Налаштовує обробники подій для форми аналізу техніки.
+ */
+function setupTechniqueEventListeners() {
+  const form = document.getElementById('technique-analysis-form');
+  const videoInput = document.getElementById('technique-video-input');
+  const submitBtn = document.getElementById('technique-submit-btn');
+
+  form.addEventListener('submit', handleTechniqueAnalysisSubmit);
+  videoInput.addEventListener('change', (event) => {
+    handleTechniqueVideoUpload(event, submitBtn);
+  });
+}
+
+/**
+ * Обробляє вибір відеофайлу: перевіряє тривалість і показує прев'ю.
+ * @param {Event} event - Подія зміни інпуту.
+ * @param {HTMLButtonElement} submitBtn - Кнопка відправки форми.
+ */
+function handleTechniqueVideoUpload(event, submitBtn) {
+  const file = event.target.files[0];
+  const previewContainer = document.querySelector('.video-preview-container');
+  const videoPreview = document.getElementById('technique-video-preview');
+
+  if (!file) {
+    previewContainer.style.display = 'none';
+    submitBtn.disabled = true;
+    return;
+  }
+
+  // Створюємо тимчасовий URL для прев'ю
+  const videoURL = URL.createObjectURL(file);
+  videoPreview.src = videoURL;
+
+  // Перевіряємо тривалість відео
+  videoPreview.onloadedmetadata = function () {
+    if (videoPreview.duration > 10) {
+      alert(
+        'Помилка: Відео довше 10 секунд. Будь ласка, оберіть коротше відео.'
+      );
+      event.target.value = ''; // Скидаємо вибір файлу
+      previewContainer.style.display = 'none';
+      submitBtn.disabled = true;
+      URL.revokeObjectURL(videoURL); // Очищуємо пам'ять
+    } else {
+      previewContainer.style.display = 'block';
+      submitBtn.disabled = false; // Активуємо кнопку
+    }
+  };
+
+  videoPreview.onerror = function () {
+    alert(
+      'Не вдалося завантажити відео для перевірки. Можливо, файл пошкоджено або має непідтримуваний формат.'
+    );
+    submitBtn.disabled = true;
+  };
+}
+
+/**
+ * Обробляє відправку форми: надсилає дані на бекенд і відображає результат.
+ * @param {Event} event - Подія відправки форми.
+ */
+async function handleTechniqueAnalysisSubmit(event) {
+  event.preventDefault();
+
+  const form = event.target;
+  const submitBtn = document.getElementById('technique-submit-btn');
+  const statusDiv = document.getElementById('technique-status');
+  const resultContainer = document.getElementById('technique-analysis-result');
+  const result_content = document.getElementById('technique-result-content');
+
+  const exerciseName = form.elements.exercise_name.value;
+  const exerciseDescription = form.elements.exercise_description.value;
+  const videoFile = form.elements.video.files[0];
+  const weight = form.elements.weight.value;
+  const reps = form.elements.reps.value;
+
+  if (!exerciseName || !videoFile) {
+    displayStatus(
+      statusDiv.id,
+      'Будь ласка, оберіть вправу та завантажте відео.',
+      true
+    );
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Аналізуємо...';
+  displayStatus(
+    statusDiv.id,
+    'Надсилаємо відео до AI-тренера. Це може зайняти до хвилини... ✨',
+    false
+  );
+  resultContainer.style.display = 'none';
+
+  const formData = new FormData();
+  formData.append('exercise_name', exerciseName);
+  if (exerciseDescription) {
+    // <-- Відправляємо опис, якщо він є
+    formData.append('exercise_description', exerciseDescription);
+  }
+  formData.append('video', videoFile);
+  if (weight) formData.append('weight', weight);
+  if (reps) formData.append('reps', reps);
+
+  try {
+    const { data, response } = await fetchWithAuth(
+      `${baseURL}/technique/analyze`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const error = new Error(
+        data.detail || `Помилка сервера: ${response.status}`
+      );
+      error.status = response.status;
+      throw error;
+    }
+
+    // Форматуємо текст відповіді, додаємо кнопку "На початок"
+    const scrollToTopButton = `<button onclick="window.scrollTo({ top: 0, behavior: 'smooth' });" class="scroll-to-top-btn">На початок сторінки ↑</button>`;
+    result_content.innerHTML =
+      formatTextWithLineBreaks(data.ai_technique_analysis) + scrollToTopButton;
+    resultContainer.style.display = 'block';
+    displayStatus(statusDiv.id, 'Аналіз успішно завершено!', false, 5000);
+
+    // ▼▼▼ ЛОГІКА ЗАПУСКУ ТАЙМЕРА ▼▼▼
+    form.style.display = 'none'; // Ховаємо форму після успішного аналізу
+
+    // Встановлюємо час закінчення кулдауну: поточний час + 7 днів у мілісекундах
+    const sevenDaysInMillis = 168 * 60 * 60 * 1000;
+    const cooldownEndTime = Date.now() + sevenDaysInMillis;
+
+    // Зберігаємо час та аналіз в localStorage, щоб вони не зникли після перезавантаження
+    localStorage.setItem('techniqueCooldownEnd', cooldownEndTime);
+    localStorage.setItem('lastTechniqueAnalysis', data.ai_technique_analysis);
+
+    // Запускаємо таймер
+    startTechniqueCooldownTimer(cooldownEndTime);
+
+    // ▼▼▼ ОНОВЛЕНА ЛОГІКА ОБРОБКИ ПОМИЛОК ▼▼▼
+    if (error.status === 429) {
+      // Якщо це помилка ліміту, ховаємо форму і показуємо повідомлення про очікування
+      const formContainer = document.getElementById('technique-analysis-form');
+      const sectionContainer = formContainer.parentElement; // Це наш .profile-section
+
+      formContainer.style.display = 'none'; // Ховаємо форму
+
+      const cooldownMessage = document.createElement('div');
+      cooldownMessage.className = 'cooldown-message';
+      // error.message містить текст з бекенду, напр. "Наступна спроба можлива через 5 дн."
+      cooldownMessage.innerHTML = `
+                <h4>Спроба використана</h4>
+                <p>${error.message}</p>
+                <p class="cooldown-subtext">Ми зберігаємо ліміт, щоб кожен аналіз був максимально якісним. Повертайтеся, коли таймер сплине!</p>
+            `;
+      // Вставляємо повідомлення після блоку з інструкціями
+      sectionContainer.insertBefore(cooldownMessage, formContainer);
+    } else {
+      // Для всіх інших помилок показуємо стандартне повідомлення
+      displayStatus(
+        statusDiv.id,
+        `Сталася помилка: ${error.message}`,
+        true,
+        10000
+      );
+    }
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Надіслати на аналіз';
+  }
+}
+
+// ========================================================================
+// === КІНЕЦЬ ЛОГІКИ ВКЛАДКИ "ТЕХНІКА" ===
+// ========================================================================
+
 // --- Керування вкладками ---
 function openTab(event, tabName) {
   const tabs = document.getElementsByClassName('tab-content');
@@ -8459,6 +8913,8 @@ function openTab(event, tabName) {
     loadAndDisplayNotifications();
   } else if (tabName === 'plan') {
     loadAndDisplayWorkoutPlans();
+  } else if (tabName === 'technique') {
+    renderTechniqueTab();
   }
   // Вкладка "logout" не потребує обробки тут, оскільки вона має власну кнопку з обробником
 }
@@ -9120,8 +9576,8 @@ function startApp() {
     if (isAuthorized()) {
       clearInterval(authCheckInterval);
 
-      // 1. Спочатку готуємо стан вкладок (ховаємо/показуємо "План")
-      await updatePlanTabVisibility();
+      // 1. Спочатку готуємо стан вкладок (ховаємо/показуємо "План" та "Техніка")
+      await updateTabsVisibilityForUserType();
 
       // 2. Тепер, коли UI готовий, запускаємо основну логіку,
       //    яка зробить кабінет видимим.

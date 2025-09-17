@@ -78,10 +78,22 @@ button,
   margin-top: 10px;
   display: inline-block; /* Щоб margin-top працював */
 }
-button:hover,
-.button-primary:hover {
-  background-color: white;
-  color: rgb(113, 41, 218);
+
+/* Ефекти наведення ТІЛЬКИ для пристроїв з мишкою */
+@media (hover: hover) {
+  .button:not(:disabled):hover {
+    background-color: #7129da;
+    border-color: #7129da;
+    color: #fff;
+  }
+}
+/* Ефекти наведення ТІЛЬКИ для пристроїв з мишкою */
+@media (hover: hover) {
+  .button-primary:not(:disabled):hover {
+    background-color: #7129da;
+    border-color: #7129da;
+    color: #fff;
+  }
 }
 
 /* Стилі для SVG-іконки всередині вкладки */
@@ -4536,6 +4548,296 @@ input:checked + .slider:before {
 }
 
 /* --- КІНЕЦЬ блоку самостійного тренування --- */
+
+/* ================================================== */
+/* === СТИЛІ ДЛЯ ВКЛАДКИ "АНАЛІЗ ТЕХНІКИ" (ОНОВЛЕНО) === */
+/* ================================================== */
+
+/* ЗМІНА: Головний контейнер вкладки тепер керує відступами між блоками */
+#technique .profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Основний відступ між заголовком, описом, формою та результатом */
+}
+
+/* Опис-інструкція на початку вкладки */
+.section-description {
+  color: #bbb;
+  line-height: 1.6;
+  background-color: #222;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 3px solid #7129da;
+  /* ВИДАЛЕНО: margin-top та margin-bottom, тепер це контролює gap батька */
+}
+
+/* Основна форма */
+.technique-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Відстань між елементами всередині самої форми */
+}
+
+/* --- СТИЛІ: для кастомної кнопки завантаження файлу --- */
+#technique-video-input {
+  display: none; /* Ховаємо стандартний інпут */
+}
+
+.custom-file-upload {
+  display: inline-block;
+  padding: 12px 20px;
+  cursor: pointer;
+  background-color: #3a3a3a;
+  color: #f0f0f0;
+  border: 1px solid #555;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: bold;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.custom-file-upload:hover {
+  background-color: #4a4a4a;
+  border-color: #777;
+}
+
+/* Контейнер для прев'ю відео */
+.video-preview-container {
+  /* ВИДАЛЕНО: margin-top, тепер це контролює gap батька */
+  text-align: center;
+}
+
+#technique-video-preview {
+  max-width: 100%;
+  max-height: 400px;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background-color: #000;
+}
+
+/* Стиль для кнопки відправки, коли вона неактивна */
+#technique-submit-btn:disabled {
+  background-color: #555;
+  border-color: #555;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Контейнер для результату аналізу від AI */
+.ai-analysis-container {
+  /* ВИДАЛЕНО: margin-top, тепер це контролює gap батька */
+  padding: 20px;
+  background-color: #111;
+  border: 1px solid #444;
+  border-radius: 8px;
+}
+
+/* Вміст результату аналізу */
+.ai-analysis-content {
+  color: #ddd;
+  line-height: 1.7;
+  text-align: justify;
+  white-space: pre-wrap;
+}
+
+.ai-analysis-content p {
+  margin-bottom: 1em;
+}
+
+.ai-analysis-content ul,
+.ai-analysis-content ol {
+  padding-left: 25px;
+  margin-bottom: 1em;
+}
+
+/* Стилі для кастомного списку вправ */
+.technique-exercise-search-input {
+  width: 100%;
+  padding: 10px;
+  background-color: #111;
+  border: 1px solid #555;
+  color: #eee;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.technique-exercise-list-wrapper {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #444;
+  border-radius: 5px;
+  background-color: #222;
+}
+
+.technique-exercise-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #404046;
+  transition: background-color 0.2s ease;
+}
+
+.technique-exercise-item:last-child {
+  border-bottom: none;
+}
+
+.technique-exercise-item:hover {
+  background-color: #333;
+}
+
+.technique-exercise-item.selected {
+  background-color: #7129da;
+  color: #fff;
+  font-weight: bold;
+}
+
+.technique-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Невеликий відступ між label та полем вводу/списком */
+}
+
+/* Стилізація нового блоку інструкцій */
+.section-description ul {
+  list-style-type: none; /* Прибираємо стандартні маркери списку */
+  padding-left: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Відступ між пунктами */
+}
+
+.section-description li {
+  padding-left: 25px; /* Відступ для іконки */
+  position: relative;
+}
+
+/* Додаємо іконку перед кожним пунктом списку */
+.section-description li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Призначаємо різні іконки для кожного пункту */
+.section-description li:nth-child(1)::before {
+  background-image: url('https://img.icons8.com/ios/50/7129da/camcorder-pro.png');
+}
+.section-description li:nth-child(2)::before {
+  background-image: url('https://img.icons8.com/ios/50/7129da/medal.png');
+}
+.section-description li:nth-child(3)::before {
+  background-image: url('https://img.icons8.com/ios/50/7129da/edit-property.png');
+}
+.section-description li:nth-child(4)::before {
+  background-image: url('https://img.icons8.com/ios/50/7129da/robot.png');
+}
+.section-description li:nth-child(5)::before {
+  background-image: url('https://img.icons8.com/ios-glyphs/30/7129da/time--v1.png');
+}
+
+/* Створюємо грід для полів "вага" та "повторення", щоб вони були в один рядок */
+.technique-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Дві колонки однакової ширини */
+  gap: 15px; /* Відстань між колонками */
+}
+
+/* Стилі для полів вводу чисел, щоб вони були схожі на інші поля */
+.technique-form-grid input[type='number'] {
+  width: 100%;
+  padding: 10px;
+  background-color: #111;
+  border: 1px solid #555;
+  color: #eee;
+  border-radius: 5px;
+}
+
+/* Стиль для повідомлення про очікування */
+.cooldown-message {
+  text-align: center;
+  background-color: #222;
+  padding: 30px 20px;
+  border-radius: 8px;
+  border: 1px solid #7129da; /* Пурпурова рамка для акценту */
+}
+
+.cooldown-message h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  color: #fff;
+}
+
+.cooldown-message p {
+  margin-bottom: 5px;
+  font-size: 1.1em;
+  color: #ddd;
+}
+
+.cooldown-message .cooldown-subtext {
+  font-size: 0.9em;
+  color: #aaa;
+  margin-top: 15px;
+}
+
+/* Стиль для кнопки "На початок сторінки" */
+.scroll-to-top-btn {
+  display: block;
+  width: fit-content;
+  margin: 25px auto 0;
+  padding: 10px 20px;
+  font-weight: bold;
+  background-color: #3a3a3a;
+  color: #f0f0f0;
+  border: 1px solid #555;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.scroll-to-top-btn:hover {
+  background-color: #4a4a4a;
+}
+
+/* Стилі для таймера зворотного відліку */
+.cooldown-timer {
+  text-align: center;
+  background-color: #1a1a1a;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  margin-bottom: 20px;
+}
+
+.cooldown-timer span {
+  color: #aaa;
+  font-size: 0.9em;
+}
+
+.timer-dials {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #e0e0e0;
+  letter-spacing: 2px;
+  margin-top: 5px;
+}
+.timer-value {
+  background-color: #111;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+/* КІНЕЦЬ СТИЛІВ ДЛЯ ВКЛАДКИ "ТЕХНІКА */
 
 /* Допоміжний клас для візуального приховування (для міток полів пошуку тощо) */
 .visually-hidden {

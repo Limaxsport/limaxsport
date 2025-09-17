@@ -163,6 +163,65 @@ const funnelManager = {
       },
     },
     {
+      id: 'gender',
+      title: 'Вкажіть вашу стать',
+      fields: ['gender', 'preferred_exercise_gender'],
+      render: () => `
+                <p class="step-description">Ми використовуємо цей показник, щоб пропонувати вам відповідний набір вправ (чоловічий або жіночий), оскільки вони мають різну специфіку та акценти.</p>
+                <label for="funnel-gender">Ваша стать:</label>
+                <select id="funnel-gender" class="funnel-input">
+                    <option value="" disabled selected>-- Оберіть --</option>
+                    <option value="male">Чоловіча</option>
+                    <option value="female">Жіноча</option>
+                    <option value="not_applicable">Не застосовується</option>
+                </select>
+                <div id="funnel-preferred-gender-container" style="display:none; margin-top: 20px;">
+                    <label for="funnel-preferred-exercise-gender">Який набір вправ вам надавати?</label>
+                    <select id="funnel-preferred-exercise-gender" class="funnel-input">
+                        <option value="" disabled selected>-- Оберіть набір --</option>
+                        <option value="male">Чоловічий набір вправ</option>
+                        <option value="female">Жіночий набір вправ</option>
+                    </select>
+                </div>
+            `,
+      onRender: () => {
+        const genderSelect = document.getElementById('funnel-gender');
+        const preferredContainer = document.getElementById(
+          'funnel-preferred-gender-container'
+        );
+        if (!genderSelect || !preferredContainer) return;
+        genderSelect.addEventListener('change', (e) => {
+          if (e.target.value === 'not_applicable') {
+            preferredContainer.style.display = 'block';
+          } else {
+            preferredContainer.style.display = 'none';
+          }
+        });
+        if (genderSelect.value === 'not_applicable') {
+          preferredContainer.style.display = 'block';
+        }
+      },
+      validate: (data) => {
+        const genderEl = document.getElementById('funnel-gender');
+        data.gender = genderEl ? genderEl.value : '';
+        if (!data.gender) return 'Будь ласка, вкажіть вашу стать.';
+
+        if (data.gender === 'not_applicable') {
+          const preferredGenderEl = document.getElementById(
+            'funnel-preferred-exercise-gender'
+          );
+          data.preferred_exercise_gender = preferredGenderEl
+            ? preferredGenderEl.value
+            : '';
+          if (!data.preferred_exercise_gender)
+            return 'Будь ласка, оберіть бажаний набір вправ.';
+        } else {
+          data.preferred_exercise_gender = null;
+        }
+        return true;
+      },
+    },
+    {
       id: 'goal',
       title: 'Яка ваша головна ціль?',
       fields: ['goal'],
@@ -292,65 +351,6 @@ const funnelManager = {
         data.height = heightEl ? heightEl.value : '';
         if (!data.age || !data.weight || !data.height)
           return 'Будь ласка, заповніть всі поля.';
-        return true;
-      },
-    },
-    {
-      id: 'gender',
-      title: 'Вкажіть вашу стать',
-      fields: ['gender', 'preferred_exercise_gender'],
-      render: () => `
-                <p class="step-description">Ми використовуємо цей показник, щоб пропонувати вам відповідний набір вправ (чоловічий або жіночий), оскільки вони мають різну специфіку та акценти.</p>
-                <label for="funnel-gender">Ваша стать:</label>
-                <select id="funnel-gender" class="funnel-input">
-                    <option value="" disabled selected>-- Оберіть --</option>
-                    <option value="male">Чоловіча</option>
-                    <option value="female">Жіноча</option>
-                    <option value="not_applicable">Не застосовується</option>
-                </select>
-                <div id="funnel-preferred-gender-container" style="display:none; margin-top: 20px;">
-                    <label for="funnel-preferred-exercise-gender">Який набір вправ вам надавати?</label>
-                    <select id="funnel-preferred-exercise-gender" class="funnel-input">
-                        <option value="" disabled selected>-- Оберіть набір --</option>
-                        <option value="male">Чоловічий набір вправ</option>
-                        <option value="female">Жіночий набір вправ</option>
-                    </select>
-                </div>
-            `,
-      onRender: () => {
-        const genderSelect = document.getElementById('funnel-gender');
-        const preferredContainer = document.getElementById(
-          'funnel-preferred-gender-container'
-        );
-        if (!genderSelect || !preferredContainer) return;
-        genderSelect.addEventListener('change', (e) => {
-          if (e.target.value === 'not_applicable') {
-            preferredContainer.style.display = 'block';
-          } else {
-            preferredContainer.style.display = 'none';
-          }
-        });
-        if (genderSelect.value === 'not_applicable') {
-          preferredContainer.style.display = 'block';
-        }
-      },
-      validate: (data) => {
-        const genderEl = document.getElementById('funnel-gender');
-        data.gender = genderEl ? genderEl.value : '';
-        if (!data.gender) return 'Будь ласка, вкажіть вашу стать.';
-
-        if (data.gender === 'not_applicable') {
-          const preferredGenderEl = document.getElementById(
-            'funnel-preferred-exercise-gender'
-          );
-          data.preferred_exercise_gender = preferredGenderEl
-            ? preferredGenderEl.value
-            : '';
-          if (!data.preferred_exercise_gender)
-            return 'Будь ласка, оберіть бажаний набір вправ.';
-        } else {
-          data.preferred_exercise_gender = null;
-        }
         return true;
       },
     },

@@ -1794,15 +1794,60 @@ async function handleChangeUserTypeClick(phone, currentType) {
 
   // Сценарій 1: Робимо користувача "БЕЗ тренера"
   if (currentType === 'by_trainer') {
-    if (
-      !confirm(
-        `Ви впевнені, що хочете змінити тип цього користувача на "без тренера"? Його поле "Зареєстрував" буде очищено.`
-      )
-    )
-      return;
+    displayStatus(messageDivId, 'Перевірка профілю користувача...');
 
-    displayStatus(messageDivId, 'Зміна типу...');
     try {
+      // Крок 1: Спочатку отримуємо актуальні дані профілю користувача
+      const { data: profile } = await fetchWithAuth(`/admin/profiles/${phone}`);
+
+      // +++ ПОЧАТОК ЗМІН: Динамічна перевірка полів +++
+      const missingFields = [];
+
+      // Перевірка №1: Стать
+      if (!profile.gender) {
+        missingFields.push('1. Стать (чоловіча/жіноча)');
+      }
+
+      // Перевірка №2: Кількість тренувань
+      if (!profile.training_days_per_week) {
+        missingFields.push('2. Кількість тренувань на тиждень');
+      }
+
+      // Перевірка №3: Бажані дні
+      if (
+        !profile.preferred_training_weekdays ||
+        profile.preferred_training_weekdays === '[]'
+      ) {
+        missingFields.push('3. Бажані дні для тренувань');
+      }
+
+      // Якщо масив не порожній, значить чогось не вистачає
+      if (missingFields.length > 0) {
+        const alertMessage =
+          'Неможливо змінити тип!\n\nКористувач повинен спочатку заповнити у своєму профілі:\n\n' +
+          missingFields.join('\n');
+
+        alert(
+          alertMessage +
+            '\n\nПопросіть користувача оновити ці дані, перш ніж змінювати його тип.'
+        );
+        displayStatus(messageDivId, '', false); // Очищуємо повідомлення "Перевірка..."
+        return;
+      }
+      // +++ КІНЕЦЬ ЗМІН +++
+
+      // Крок 3: Якщо все добре, продовжуємо зі стандартним підтвердженням
+      if (
+        !confirm(
+          `Перевірка успішна! Користувач готовий до переходу.\n\nВи впевнені, що хочете змінити тип цього користувача на "без тренера"?`
+        )
+      ) {
+        displayStatus(messageDivId, '', false); // Очищуємо повідомлення, якщо адмін скасував дію
+        return;
+      }
+
+      // Крок 4: Виконуємо зміну типу, як і раніше
+      displayStatus(messageDivId, 'Зміна типу...');
       await fetchWithAuth(
         `/admin/users/${phone}/change-type`,
         {
@@ -1811,6 +1856,7 @@ async function handleChangeUserTypeClick(phone, currentType) {
         },
         messageDivId
       );
+
       displayStatus(
         messageDivId,
         'Тип користувача успішно змінено.',
@@ -1820,7 +1866,9 @@ async function handleChangeUserTypeClick(phone, currentType) {
       usersCache = null; // Оновлюємо кеш
       loadProfileDetails(phone); // Перезавантажуємо профіль
     } catch (error) {
-      console.error('Помилка зміни типу:', error);
+      // Цей блок тепер обробляє помилки як при завантаженні профілю, так і при зміні типу
+      console.error('Помилка під час зміни типу користувача:', error);
+      displayStatus(messageDivId, `Помилка: ${error.message}`, true, 10000);
     }
     return;
   }
@@ -3638,6 +3686,34 @@ async function addExerciseToFormWithData(
     autoResize(descriptionInput);
 }
 
+// Переклад папок із вправами на українську мову
+const FOLDER_TRANSLATIONS = {
+  gym: 'Зал',
+  home: 'Дім',
+  trx: 'TRX',
+  arms: 'Руки',
+  abs: 'Прес',
+  delts: 'Дельти',
+  legs: 'Ноги',
+  chest: 'Груди',
+  back: 'Спина',
+  functional: 'Функціонал',
+  resistance_band: 'Гумові петлі',
+  dumbbells: 'Гантелі',
+  kettlebells: 'Гирі',
+  body_weight: 'Вага тіла',
+  lower: 'Низ',
+  upper: 'Верх',
+  cardio: 'Кардіо',
+  dip_bars: 'Бруси',
+  pull_up_bar: 'Перекладина',
+};
+
+function translateFolderName(name) {
+  const lowerCaseName = name ? name.toLowerCase() : '';
+  return FOLDER_TRANSLATIONS[lowerCaseName] || name;
+}
+
 /**
  * НОВА УНІВЕРСАЛЬНА ФУНКЦІЯ: Ініціалізує та керує браузером GIF,
  * використовуючи твою стару логіку навігації по всіх рівнях папок.
@@ -3706,7 +3782,7 @@ async function initializeAdminGifBrowser(exerciseFieldset, userPhone) {
     let tempPath = [];
     pathArray.forEach((segment) => {
       tempPath.push(segment);
-      breadcrumbsHTML += ` / <span class="path-segment" data-path="${tempPath.join('/')}">${segment}</span>`;
+      breadcrumbsHTML += ` / <span class="path-segment" data-path="${tempPath.join('/')}">${translateFolderName(segment)}</span>`;
     });
     pathDisplay.innerHTML = breadcrumbsHTML;
 
@@ -3722,7 +3798,7 @@ async function initializeAdminGifBrowser(exerciseFieldset, userPhone) {
       const button = document.createElement('button');
       button.className = 'directory-btn';
       button.dataset.dir = dir;
-      button.textContent = dir;
+      button.textContent = translateFolderName(dir);
       folderButtonsContainer.appendChild(button);
     });
 
@@ -5344,7 +5420,7 @@ function getWorkoutTypeClass(title) {
 // ========== КІНЕЦЬ функцій вкладки "Плани" ==========
 
 // ==========================================================
-// === НОВИЙ БЛОК: ЛОГІКА ДЛЯ ВКЛАДКИ "АНАЛІТИКА" ===
+// === БЛОК: ЛОГІКА ДЛЯ ВКЛАДКИ "АНАЛІТИКА" ===
 // ==========================================================
 
 /**
@@ -5462,11 +5538,12 @@ function renderAdminStats(stats) {
 
   // Блок 5: Статистика дій
   html += `
-        <h4 class="stats-header">Активність користувачів (за останні 2 дні)</h4>
+        <h4 class="stats-header">Активність користувачів (за останні 7 днів)</h4>
         <table class="stats-table">
             <tbody>
-                ${createRow('Використання Gemini для аналізу фідбеку', stats.feature_usage_last_2_days.feedback_analysis_users_last_2d, { valueClass: 'stats-value-red' })}
-                ${createRow('Використання Gemini для створення самостійного тренування', stats.feature_usage_last_2_days.self_generation_users_last_2d, { valueClass: 'stats-value-red' })}
+                ${createRow('Використання AI для аналізу фідбеку', stats.feature_usage_last_7_days.feedback_analysis_users_last_7d, { valueClass: 'stats-value-purple' })}
+                ${createRow('Використання AI для створення тренування', stats.feature_usage_last_7_days.self_generation_users_last_7d, { valueClass: 'stats-value-purple' })}
+                ${createRow('Використання AI для аналізу техніки', stats.feature_usage_last_7_days.technique_analysis_users_last_7d, { valueClass: 'stats-value-purple' })}
             </tbody>
         </table>
     `;
@@ -5498,13 +5575,13 @@ function renderAdminStats(stats) {
     // Визначаємо правильний порядок кроків, як у воронці
     const funnelStepsOrder = [
       { id: 'welcome', label: 'Відкриття воронки' },
-      { id: 'goal', label: '1. Ціль' },
-      { id: 'training_type', label: '2. Тип тренувань' },
-      { id: 'daytime_activity', label: '3. Активність' },
-      { id: 'level_of_training', label: '4. Рівень підготовки' },
-      { id: 'training_days', label: '5. К-сть тренувань' },
-      { id: 'measurements', label: '6. Антропометрія' },
-      { id: 'gender', label: '7. Стать' },
+      { id: 'gender', label: '1. Стать' },
+      { id: 'goal', label: '2. Ціль' },
+      { id: 'training_type', label: '3. Тип тренувань' },
+      { id: 'daytime_activity', label: '4. Активність' },
+      { id: 'level_of_training', label: '5. Рівень підготовки' },
+      { id: 'training_days', label: '6. К-сть тренувань' },
+      { id: 'measurements', label: '7. Антропометрія' },
       { id: 'health', label: "8. Здоров'я" },
       { id: 'excluded_exercises', label: '9. Виключені вправи' },
       { id: 'full_name', label: "10. Ім'я та Прізвище" },

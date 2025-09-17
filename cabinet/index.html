@@ -11,10 +11,6 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/Limaxsport/limaxsport/cabinet/styles.css"
-    />
   </head>
   <body>
     <div id="login-overlay">
@@ -165,6 +161,13 @@
           data-tab-name="workouts"
         >
           Тренування
+        </button>
+        <button
+          class="tab-link"
+          onclick="openTab(event, 'technique')"
+          data-tab-name="technique"
+        >
+          Техніка
         </button>
         <button
           class="tab-link"
@@ -889,6 +892,8 @@
         </div>
       </div>
 
+      <div id="technique" class="tab-content" style="display: none"></div>
+
       <div id="custom-confirm-overlay" class="modal-overlay"></div>
 
       <div id="custom-confirm-modal" class="custom-modal">
@@ -1003,7 +1008,5 @@
         <button id="confirm-logout">Вийти</button>
       </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/gh/Limaxsport/limaxsport/cabinet/script.js"></script>
   </body>
 </html>
